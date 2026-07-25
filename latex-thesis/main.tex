@@ -1,0 +1,42 @@
+% ============================================================
+% main.tex — documento principale della tesi
+%
+% Compilazione (da dentro latex-thesis/):
+%   latexmk -pdf -bibtex main.tex
+% ============================================================
+\documentclass[a4paper,12pt]{report}
+
+\input{preamble}
+
+\title{Graph Neural Networks per la modellazione delle relazioni tra
+    criptovalute: fondamenti teorici e prospettive applicative}
+\author{}
+\date{}
+
+\begin{document}
+
+\input{frontmatter/titlepage}
+
+\input{frontmatter/abstract}
+
+\tableofcontents
+
+\input{frontmatter/acronyms}
+
+\input{chapters/01-introduction}
+\input{chapters/02-mathematical-foundations}
+\input{chapters/03-from-cnn-to-gnn}
+\input{chapters/04-financial-series-and-graph-construction}
+\input{chapters/05-literature-review}
+
+% Capitolo 6 è MODULARE/OPZIONALE (vedi commento in testa a
+% chapters/06-case-study.tex per le opzioni A/B/C e la raccomandazione).
+% Attivare la riga seguente solo se si decide di sviluppare la
+% componente sperimentale/di caso studio.
+% \input{chapters/06-case-study}
+
+\input{chapters/07-conclusions}
+
+\printbibliography
+
+\end{document}

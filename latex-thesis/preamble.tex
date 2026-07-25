@@ -1,0 +1,105 @@
+% ============================================================
+% preamble.tex — pacchetti e configurazione del documento
+% ============================================================
+
+% --- Codifica e lingua ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{csquotes}
+
+% --- Layout di pagina ---
+\usepackage[a4paper,margin=3cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\interfootnotelinepenalty=10000 % vieta lo spezzamento di una nota a piè di pagina tra due pagine
+
+% --- Matematica ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+
+% --- Figure e tabelle ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+% --- Algoritmi (utile per Cap. 2-3-6: eigensolver, message passing, training loop) ---
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% babel non traduce il float degli algoritmi né le parole chiave di algpseudocode
+\floatname{algorithm}{Algoritmo}
+\numberwithin{algorithm}{chapter}
+\algrenewcommand\algorithmicrequire{\textbf{Input:}}
+\algrenewcommand\algorithmicensure{\textbf{Output:}}
+\algrenewcommand\algorithmicfor{\textbf{per}}
+\algrenewcommand\algorithmicdo{\textbf{esegui}}
+\algrenewcommand\algorithmicend{\textbf{fine}}
+\algrenewcommand\algorithmicreturn{\textbf{restituisci}}
+
+% --- Bibliografia ---
+\usepackage[
+    backend=biber,
+    style=numeric,
+    sorting=nyt
+]{biblatex}
+\addbibresource{bibliography/references.bib}
+
+% --- Riferimenti incrociati e link (va caricato quasi per ultimo) ---
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue,
+    bookmarksnumbered=true
+}
+\usepackage[capitalize,noabbrev]{cleveref}
+\crefname{chapter}{Capitolo}{Capitoli}
+\Crefname{chapter}{Capitolo}{Capitoli}
+\crefname{section}{Sezione}{Sezioni}
+\Crefname{section}{Sezione}{Sezioni}
+\crefname{algorithm}{Algoritmo}{Algoritmi}
+\Crefname{algorithm}{Algoritmo}{Algoritmi}
+\crefname{figure}{Figura}{Figure}
+\Crefname{figure}{Figura}{Figure}
+\crefname{table}{Tabella}{Tabelle}
+\Crefname{table}{Tabella}{Tabelle}
+\crefname{equation}{Equazione}{Equazioni}
+\Crefname{equation}{Equazione}{Equazioni}
+
+% --- Ambienti per definizioni/teoremi/proposizioni (utili nei Cap. 2-3) ---
+% Gli ambienti condividono la numerazione della sezione "definition"; senza
+% aliascnt, cleveref userebbe il nome del contatore e stamperebbe "Definition"
+% anche per proposizioni, teoremi, esempi e osservazioni.
+\usepackage{aliascnt}
+\theoremstyle{definition}
+\newtheorem{definition}{Definizione}[chapter]
+\newaliascnt{proposition}{definition}
+\newtheorem{proposition}[proposition]{Proposizione}
+\aliascntresetthe{proposition}
+\newaliascnt{theorem}{definition}
+\newtheorem{theorem}[theorem]{Teorema}
+\aliascntresetthe{theorem}
+\newaliascnt{example}{definition}
+\newtheorem{example}[example]{Esempio}
+\aliascntresetthe{example}
+\newaliascnt{remark}{definition}
+\newtheorem{remark}[remark]{Osservazione}
+\aliascntresetthe{remark}
+\renewcommand{\proofname}{Dimostrazione}
+\crefname{definition}{Definizione}{Definizioni}
+\Crefname{definition}{Definizione}{Definizioni}
+\crefname{proposition}{Proposizione}{Proposizioni}
+\Crefname{proposition}{Proposizione}{Proposizioni}
+\crefname{theorem}{Teorema}{Teoremi}
+\Crefname{theorem}{Teorema}{Teoremi}
+\crefname{example}{Esempio}{Esempi}
+\Crefname{example}{Esempio}{Esempi}
+\crefname{remark}{Osservazione}{Osservazioni}
+\Crefname{remark}{Osservazione}{Osservazioni}

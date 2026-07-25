@@ -1,0 +1,132 @@
+\chapter{Rassegna della letteratura e analisi comparativa}
+\label{ch:literature-review}
+
+\section{GNN applicati ai mercati finanziari}
+\label{sec:gnn-financial-markets}
+
+I capitoli precedenti hanno costruito gli strumenti; questo capitolo verifica cosa se ne è fatto finora e con quali risultati. È anche il capitolo in cui le due questioni di ricerca della \cref{sec:objectives-research-questions} ricevono la risposta che una tesi compilativa può dare: non una misura originale, ma una lettura critica di ciò che la letteratura ha misurato.
+
+Conviene organizzare la rassegna per **tipo di grafo** anziché per architettura, e la ragione emerge dalla rassegna stessa: le architetture usate nei lavori applicati sono quasi sempre le stesse tre o quattro già discusse nel \Cref{ch:from-cnn-to-gnn}, mentre ciò che davvero distingue un lavoro dall'altro — e che spiega buona parte delle differenze di risultato — è la struttura relazionale scelta. La domanda progettuale non è \enquote{quale GNN}, ma \enquote{quale grafo}.
+
+\subsection*{Grafi da relazioni societarie note}
+
+Il filone più consolidato costruisce il grafo da relazioni tra imprese documentate indipendentemente dai prezzi. Chen et al.\ \cite{chen2018incorporating} usano relazioni tra società quotate sul mercato cinese e mostrano che una rete convoluzionale su grafo apprende rappresentazioni che catturano quelle relazioni, migliorando la previsione rispetto a modelli che trattano ogni titolo separatamente. Feng et al.\ \cite{feng2019temporal} formulano il problema come \emph{ranking} anziché come regressione — l'obiettivo è ordinare i titoli per rendimento atteso, non prevederne il valore — e costruiscono il grafo da relazioni di settore e da relazioni fornitore-cliente estratte da una base di conoscenza. Matsunaga et al.\ \cite{matsunaga2019exploring} usano relazioni di fornitura tra imprese giapponesi e combinano convoluzione su grafo e LSTM, valutando il modello con analisi a finestra mobile sul Nikkei 225.
+
+Questi lavori condividono un vantaggio strutturale che vale la pena rendere esplicito, perché il \Cref{ch:financial-series-and-graph-construction} ne segnalava l'assenza nel caso di questa tesi: il grafo è \emph{esogeno}. Una relazione fornitore-cliente esiste indipendentemente dai prezzi, quindi il problema di circolarità della \cref{sec:dynamic-graphs-temporal-question} — la struttura stimata dagli stessi dati che si vogliono prevedere — semplicemente non si pone. In compenso, questi grafi sono statici o quasi: non catturano il cambiamento di regime che è invece il secondo oggetto di interesse di questa tesi.
+
+\subsection*{Grafi da correlazione}
+
+La famiglia a cui appartiene l'impianto proposto qui costruisce il grafo dalle serie dei rendimenti, con i criteri discussi nella \cref{sec:correlation-matrix-to-graph}. Il vantaggio è l'applicabilità universale — non serve alcuna fonte esterna, bastano i prezzi — e la capacità di seguire il mercato nel tempo. I costi sono quelli già esaminati: la circolarità appena citata, la fragilità statistica della stima (\cref{sec:correlation-dependence-pitfalls}) e la densità del grafo risultante (\cref{sec:known-limitations-gnn}).
+
+Qui si trova una conferma della separazione anticipata nella \cref{sec:correlation-matrix-to-graph}: i lavori che usano il grafo di correlazione come substrato di apprendimento lo filtrano con soglie o vicinanze, mentre l'MST e il PMFG compaiono quasi esclusivamente nei lavori descrittivi di econofisica discussi nella \cref{sec:network-structure-crisis-regimes}. Le due comunità usano la stessa matrice di partenza e la filtrano in modi diversi perché rispondono a domande diverse, e raramente si citano a vicenda.
+
+\subsection*{Grafi da testo e knowledge graph}
+
+Una terza famiglia deriva la struttura da fonti testuali: co-menzione di due società nella stessa notizia, oppure relazioni estratte da un grafo di conoscenza. HATS \cite{kim2019hats} appartiene a questo filone e introduce un elemento rilevante per il seguito: le relazioni disponibili sono di tipo eterogeneo (stesso settore, stesso gruppo, fornitura, partecipazione azionaria) e non tutte sono ugualmente informative, per cui il modello usa un meccanismo di attenzione gerarchica per pesarle invece di trattarle alla pari. È la stessa logica che nella \cref{sec:message-passing-paradigm} rendeva il GAT interessante per il caso cripto: quando la struttura è incerta, conviene farne apprendere il peso al modello.
+
+\begin{table}[t]
+\centering
+\caption[Lavori GNN su mercati finanziari per tipo di grafo]{Lavori rappresentativi di applicazione di reti neurali su grafi ai mercati finanziari, organizzati per tipo di grafo. La colonna \enquote{architettura} riporta la componente di aggregazione sul grafo; quasi tutti i lavori la combinano con un modulo temporale nel senso della \cref{sec:dynamic-graphs-temporal-question}.}
+\label{tab:gnn-finance-works}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Lavoro} & \textbf{Tipo di grafo} & \textbf{Architettura} & \textbf{Compito} \\
+\midrule
+Chen et al.\ \cite{chen2018incorporating}  & relazioni societarie & GCN & prezzo \\
+Feng et al.\ \cite{feng2019temporal}       & settore, fornitura   & GNN relazionale & ranking \\
+Matsunaga et al.\ \cite{matsunaga2019exploring} & fornitura       & GCN + LSTM & prezzo \\
+Kim et al.\ \cite{kim2019hats}             & relazioni eterogenee & attenzione gerarchica & direzione \\
+Yu et al.\ \cite{yu2018stgcn}              & rete stradale        & GCN + conv.\ temporale & traffico \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La \Cref{tab:gnn-finance-works} riassume i lavori citati, includendo STGCN \cite{yu2018stgcn} come termine di paragone esterno alla finanza: la sua presenza serve a ricordare che le architetture spazio-temporali usate in questo campo nascono in domini dove il grafo è fisicamente dato, e vengono trasferite alla finanza con un cambio di ipotesi che la \cref{sec:dynamic-graphs-temporal-question} ha già segnalato.
+
+Il quadro complessivo, per come lo restituisce anche la rassegna generale di \textcite{wu2021survey}, è che i guadagni riportati rispetto a modelli univariati esistono ma sono di entità moderata, e che la variabilità tra lavori si spiega più con il grafo e con il protocollo di valutazione — su cui la \cref{sec:evaluation-metrics-methodological-pitfalls} sarà severa — che con la sofisticazione dell'architettura. È una conclusione utile a dimensionare la risposta alla prima questione di ricerca: la struttura relazionale aiuta, ma non trasforma un problema difficile in uno facile.
+
+\section{Applicazioni specifiche alle criptovalute}
+\label{sec:applications-cryptocurrencies}
+
+Sul mercato delle criptovalute la letteratura si divide nettamente in due: quella che ne studia la struttura di dipendenza, ampia e matura, e quella che vi applica reti neurali su grafi, ancora esigua. Vale la pena esaminarle separatamente, perché è nello scarto tra le due che si colloca l'interesse del tema.
+
+\subsection*{Quello che si sa sulla struttura del mercato}
+
+Il primo filone è quello richiamato nella \cref{sec:crypto-market-interconnected}. \Textcite{corbet2019cryptocurrencies} sistematizzano l'analisi delle criptovalute come classe di attività, documentandone il grado di integrazione con i mercati tradizionali. \Textcite{ji2019dynamic} studiano la connettività dinamica interna al mercato cripto con il framework di misurazione degli \emph{spillover} di \textcite{dieboldyilmaz2012spillover}, mostrando che le relazioni tra criptovalute sono intense e variabili nel tempo. I due episodi di crisi già usati come esempi nel \Cref{ch:introduction} — il collasso di Terra/Luna \cite{briola2023anatomy} e quello di FTX \cite{akyildirim2023understanding} — sono stati analizzati esattamente con questi strumenti.
+
+Il punto rilevante è metodologico: questa letteratura descrive relazioni, spesso con notevole raffinatezza, ma raramente le usa per prevedere. Gli strumenti impiegati sono modelli econometrici di connettività o statistiche di rete calcolate a posteriori, non modelli previsivi addestrati. È il limite già osservato nella \cref{sec:why-graph-intuition}, e coincide con lo spazio che un approccio GNN potrebbe occupare.
+
+\subsection*{Quello che si è provato a prevedere}
+
+Le applicazioni di reti su grafi al cripto sono, allo stato, poche. Un esempio rappresentativo è il lavoro di \textcite{yin2024forecasting}, che combina convoluzione su grafo e LSTM — la stessa impostazione della \cref{sec:dynamic-graphs-temporal-question} — per prevedere il prezzo di quattro criptovalute insieme a Tether e a un indice di stress finanziario, riportando prestazioni superiori sia a una LSTM univariata sia a una LSTM multivariata su tutti gli orizzonti previsivi considerati. È un risultato coerente con la prima questione di ricerca, ma va preso per quello che è: un singolo lavoro, su pochi asset, con un protocollo di valutazione che la \cref{sec:evaluation-metrics-methodological-pitfalls} inviterebbe a esaminare con attenzione prima di generalizzare.
+
+La scarsità di questa letteratura non va gonfiata in un merito. Significa che il campo è meno battuto di quello azionario, il che rende il tema interessante, ma significa anche che mancano i confronti sistematici — stesse criptovalute, stesso periodo, stesso protocollo — che permetterebbero di dire quanto il grafo aiuti davvero. Su questo punto la risposta onesta alla prima questione di ricerca è che l'evidenza disponibile è favorevole ma sottile.
+
+\subsection*{Un grafo completamente diverso: le transazioni on-chain}
+
+Esiste una terza possibilità, concettualmente distante da tutto quanto discusso finora e che merita di essere nominata perché evita alla radice il problema più fastidioso di questa tesi. Sulle blockchain pubbliche ogni transazione è osservabile, e se ne può costruire un grafo in cui i nodi sono indirizzi o transazioni e gli archi sono i flussi di valore tra essi. Il lavoro di riferimento è quello di \textcite{weber2019antimoney}, che applica reti convoluzionali su grafo a un insieme di oltre 200\,000 transazioni Bitcoin etichettate — il dataset Elliptic — per distinguere transazioni lecite da illecite.
+
+Qui il grafo è \emph{osservato}, non stimato: nessuna finestra da scegliere, nessun coefficiente di correlazione da giustificare, nessuna circolarità tra struttura e dati da prevedere. Il prezzo di questa solidità è che il grafo risponde a domande diverse. Un grafo di indirizzi dice chi ha pagato chi, non come si muoveranno insieme i prezzi di due asset: è lo strumento adatto ad analisi forensi e antiriciclaggio, non alla previsione multi-asset. Le due rappresentazioni non sono in competizione, vivono su livelli di aggregazione differenti — l'una sui singoli partecipanti, l'altra sugli asset — e questa tesi si colloca deliberatamente sul secondo, che è il livello a cui le due questioni di ricerca sono formulate.
+
+\section{Struttura di rete in regimi di crisi}
+\label{sec:network-structure-crisis-regimes}
+
+La seconda questione di ricerca riguarda come la topologia del grafo cambi nel passaggio da un mercato stabile a uno in crisi. È la questione su cui la letteratura offre le risposte più solide, per una ragione semplice: si tratta di misurare una struttura osservata, non di prevedere qualcosa.
+
+\subsection*{Il fenomeno}
+
+Il risultato ricorrente, documentato su mercati e periodi diversi, è che nelle fasi di crisi la correlazione media tra attività aumenta e la struttura del mercato si \enquote{compatta}. \Textcite{onnela2003dynamics} lo mostrano seguendo nel tempo l'albero ricoprente minimo costruito con la distanza di Mantegna della \cref{sec:correlation-matrix-to-graph}: durante i crolli l'albero si contrae topologicamente, con i titoli che si dispongono più vicini al nodo centrale invece di distribuirsi su rami lunghi. Sul versante spettrale, l'analisi delle matrici di correlazione empiriche di \textcite{laloux1999noise} — già usata nella \cref{sec:correlation-dependence-pitfalls} per separare segnale e rumore — individua un autovalore dominante, nettamente fuori dal supporto di Marchenko--Pastur dell'equazione~\eqref{eq:marchenko-pastur}, interpretabile come modo di mercato: quando quel modo assorbe una quota crescente della varianza totale, tutte le attività si muovono di fatto insieme.
+
+Le due osservazioni sono la stessa cosa vista da due angolazioni, ed entrambe si traducono nella medesima conseguenza per il grafo: aumenta il peso medio degli archi, aumenta la densità dopo qualunque filtraggio a soglia fissa, e si riduce la separabilità del grafo in gruppi distinti.
+
+\subsection*{Le metriche, e cosa ciascuna coglie}
+
+Il \Cref{ch:mathematical-foundations} fornisce gli strumenti per rendere quantitative queste affermazioni. Le grandezze usate in letteratura, ordinate da quella più grossolana a quella più informativa, sono le seguenti.
+
+\begin{description}
+    \item[Correlazione media.] La media delle $\rho_{ij}$ sulle coppie. Immediata da calcolare e da interpretare, ma cieca alla struttura: due mercati con la stessa correlazione media possono avere uno un blocco fortemente coeso e il resto scollegato, l'altro una coesione uniforme.
+    \item[Densità del grafo.] La frazione di archi che superano il filtraggio, nel senso della \cref{sec:weighted-graphs-notation}. Coglie il compattamento, ma dipende interamente dalla soglia scelta, e una soglia fissa rende la metrica non confrontabile tra periodi.
+    \item[Lunghezza normalizzata dell'MST.] La somma delle distanze degli archi dell'albero, divisa per il numero di archi. È la metrica di \textcite{onnela2003dynamics}, robusta perché l'MST ha sempre $N-1$ archi e quindi non dipende da alcuna soglia: cala quando il mercato si compatta.
+    \item[Connettività algebrica $\lambda_2$.] L'autovalore di Fiedler introdotto nella \cref{sec:spectral-analysis}. È la metrica concettualmente più adatta al fenomeno: $\lambda_2$ misura quanto sia difficile separare il grafo in due parti tagliando archi di peso ridotto, quindi cresce esattamente quando il mercato smette di articolarsi in gruppi distinti e si muove in blocco. A differenza della correlazione media tiene conto di come i pesi sono distribuiti sulla struttura, e a differenza della densità non richiede una soglia arbitraria.
+    \item[Entropia spettrale.] Calcolata sulla distribuzione degli autovalori normalizzati, misura quanto la varianza sia concentrata su pochi modi: cala quando il modo di mercato domina.
+\end{description}
+
+Nessuna di queste metriche risponde da sola alla domanda, ma insieme la rendono verificabile. Questo salda la promessa fatta nella \cref{sec:spectral-analysis}, dove $\lambda_2$ era stato introdotto come strumento di analisi spettrale e il suo uso come indicatore di crisi rimandato a questo capitolo.
+
+\subsection*{Il caso cripto}
+
+Sul mercato delle criptovalute la letteratura è più recente ma converge. \Textcite{briola2023anatomy} analizzano il collasso di Terra/Luna documentando una riorganizzazione della rete di dipendenza tra 61 criptovalute nel periodo del crollo. \Textcite{akyildirim2023understanding} studiano il collasso di FTX con un'analisi di connettività dinamica basata su un VAR a parametri variabili nel tempo, identificando nei token emessi dalla stessa piattaforma le principali sorgenti di trasmissione degli effetti al resto del mercato. Il quadro è coerente con quello dei mercati tradizionali, con un'intensità maggiore: le criptovalute erano già fortemente correlate in condizioni normali, e nelle crisi lo diventano quasi completamente.
+
+C'è però una tensione che questa tesi ha incontrato più volte e che qui si chiude. Il regime di crisi è il momento in cui la struttura è più interessante da studiare, ed è anche quello in cui il grafo è più denso — cioè quello in cui una GNN funziona peggio, per l'over-smoothing della \cref{sec:known-limitations-gnn}, e in cui una soglia calibrata su un periodo calmo lascia passare quasi ogni arco (\cref{sec:correlation-matrix-to-graph}). Le due questioni di ricerca non sono quindi indipendenti: il regime che rende la seconda interessante è lo stesso che rende la prima difficile. Riconoscerlo è probabilmente la conclusione più utile che questa rassegna produca.
+
+\section{Come si valuta un modello previsivo, e come lo si valuta male}
+\label{sec:evaluation-metrics-methodological-pitfalls}
+
+Le sezioni precedenti hanno ripetutamente rimandato a questa: i risultati riportati in letteratura valgono quanto vale il protocollo con cui sono stati ottenuti, e in finanza quel protocollo è particolarmente facile da sbagliare. La sezione è breve ma non accessoria, perché stabilisce con quale grado di fiducia si possano leggere i numeri delle \cref{sec:gnn-financial-markets,sec:applications-cryptocurrencies}.
+
+\subsection*{Quale metrica}
+
+L'errore quadratico medio (RMSE) e l'errore assoluto medio (MAE) sono le metriche di default per la regressione, e sono quasi inutili su rendimenti finanziari. Il motivo discende direttamente dai fatti stilizzati della \cref{sec:financial-time-series-returns}: i rendimenti hanno media prossima a zero e nessuna autocorrelazione lineare, quindi il predittore costante $\hat r_t = 0$ ottiene già un RMSE vicino a quello ottimo. Un modello può migliorare l'RMSE di una frazione di punto percentuale rispetto a quel riferimento banale, e il miglioramento risulta indistinguibile dal rumore; peggio, un RMSE eccellente è perfettamente compatibile con un modello che sbaglia sistematicamente il segno.
+
+La \emph{directional accuracy} — la frazione di volte in cui il segno previsto è corretto — misura ciò che serve per operare, ma ha un difetto speculare: tratta allo stesso modo un movimento dello $0{,}1\%$ e uno del $20\%$, per cui un modello può azzeccare il segno nel $60\%$ dei casi e perdere denaro, se sbaglia proprio nelle giornate che contano.
+
+Le metriche economiche — rendimento cumulato di una strategia costruita sulle previsioni, Sharpe ratio, massimo drawdown — sono le uniche che rispondono alla domanda che interessa davvero, ma dipendono da ipotesi che spesso restano implicite: costi di transazione, slippage, capienza del mercato agli ordini simulati. Un backtest senza costi di transazione dichiarati non è confrontabile con nulla. La conclusione ragionevole, adottata dai lavori più solidi, è di riportare più metriche insieme e di dichiarare le ipotesi di costo.
+
+\subsection*{Tre modi di ingannarsi}
+
+\paragraph{Look-ahead bias.} Consiste nell'usare, per prevedere l'istante $t$, informazione non disponibile prima di $t$. La \Cref{sec:dynamic-graphs-temporal-question} aveva annunciato la forma che assume in questa tesi: la finestra su cui si stima il grafo deve chiudersi \emph{prima} dell'istante da prevedere, altrimenti la struttura relazionale contiene già il futuro. La variante più insidiosa è però un'altra, perché non ha nulla a che vedere con il grafo: standardizzare le serie usando media e deviazione standard calcolate sull'intero campione, addestramento e test insieme. È un'operazione che sembra innocua e di routine, e che inietta nel modello informazione sulla distribuzione futura dei dati.
+
+\paragraph{Data snooping.} Se si provano cento configurazioni sullo stesso insieme di test e si riporta la migliore, il risultato riportato è quello del massimo di cento variabili casuali, non quello di un modello. Il problema è formalizzato da \textcite{white2000reality}, che propone una procedura per verificare se le prestazioni del modello migliore superino quanto atteso per puro effetto della ricerca su molte alternative. In un campo dove i modelli sono rapidi da addestrare e i dati sono pochi, il rischio è sistemico, e raramente i lavori dichiarano quante configurazioni abbiano provato.
+
+\paragraph{Validazione errata.} La $k$-fold cross-validation, procedura standard nel machine learning, suddivide i dati in blocchi e addestra su tutti tranne uno: applicata a una serie temporale, addestra sul futuro per validare sul passato. \Textcite{bergmeir2012use} discutono in dettaglio in quali condizioni la validazione incrociata resti utilizzabile su serie temporali e in quali no. La procedura corretta nel caso previsivo è la \emph{walk-forward validation}: si addestra su una finestra iniziale, si valuta sul periodo immediatamente successivo, si sposta la finestra in avanti e si ripete — è la stessa impostazione a finestra mobile usata da \textcite{matsunaga2019exploring}, e ha il pregio di riprodurre le condizioni in cui il modello opererebbe davvero.
+
+\subsection*{Cosa manca alla letteratura}
+
+Chiudendo il capitolo, le lacune che emergono dalla rassegna sono tre, e sono lacune constatate, non congetturate.
+
+La prima è quantitativa: le applicazioni di reti su grafi al mercato delle criptovalute sono poche (\cref{sec:applications-cryptocurrencies}), e mancano confronti condotti sugli stessi asset, negli stessi periodi e con lo stesso protocollo. Senza di essi, la risposta alla prima questione di ricerca resta favorevole ma sottile.
+
+La seconda è metodologica: una parte consistente della letteratura applicata riporta miglioramenti rispetto a baseline univariate senza dichiarare costi di transazione, numero di configurazioni provate o schema di validazione. I risultati non sono necessariamente sbagliati, ma non sono verificabili, e questo suggerisce di leggere con prudenza anche i lavori favorevoli all'approccio proposto qui.
+
+La terza è concettuale, ed è quella che questa tesi ha affrontato più direttamente. Nella maggior parte dei lavori il grafo di correlazione è assunto come dato: si sceglie una soglia, si costruisce la matrice e si passa all'architettura, senza discutere il segno dei pesi, la fragilità della stima o l'effetto della densità sul modello. I \Cref{ch:from-cnn-to-gnn,ch:financial-series-and-graph-construction} hanno mostrato che nessuna di queste scelte è neutra — l'attenzione appresa come alternativa ai pesi imposti (\cref{sec:message-passing-paradigm}), la trasformazione di Mantegna per il problema del segno e il filtraggio come condizione di funzionamento (\cref{sec:correlation-matrix-to-graph}) — ed è su questo terreno, più che sull'architettura, che una discussione più attenta avrebbe il maggiore margine di miglioramento.

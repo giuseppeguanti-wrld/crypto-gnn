@@ -1,0 +1,137 @@
+\chapter{Fondamenti matematici: teoria dei grafi e Laplaciano}
+\label{ch:mathematical-foundations}
+
+\section{Grafi pesati: definizioni e notazione}
+\label{sec:weighted-graphs-notation}
+
+\begin{definition}[Grafo pesato]
+\label{def:weighted-graph}
+Un grafo pesato è una tripla $G = (V, E, W)$, dove $V = \{v_1, \dots, v_N\}$ è l'insieme dei nodi, $E \subseteq V \times V$ è l'insieme degli archi e $W \in \mathbb{R}^{N \times N}$ è la matrice dei pesi: $W_{ij} \neq 0$ se e solo se $(v_i, v_j) \in E$. Il grafo si assume non orientato e privo di cappi: $W$ è simmetrica ($W_{ij} = W_{ji}$) e a diagonale nulla ($W_{ii} = 0$).
+\end{definition}
+
+Quando $W_{ij} \in \{0,1\}$, $W$ coincide con la matrice di adiacenza del grafo non pesato sottostante; nel caso generale $W_{ij}$ misura l'intensità della relazione tra $v_i$ e $v_j$ — nella tesi, a partire dal \Cref{ch:financial-series-and-graph-construction}, la correlazione tra i rendimenti dei due asset. A ciascun nodo si associa un grado\footnote{In letteratura network-science il termine \emph{grado} è spesso riservato al caso non pesato (numero di vicini); per un grafo pesato la quantità $D_{ii} = \sum_j W_{ij}$ è più propriamente detta \emph{forza} (\emph{strength}) del nodo, ma nel seguito si userà comunque \enquote{grado} per continuità con la notazione $D$.}, raccolto nella matrice diagonale $D \in \mathbb{R}^{N\times N}$, $D_{ii} = \sum_{j} W_{ij}$.
+
+Un cammino tra $v_i$ e $v_j$ è una sequenza di nodi adiacenti che li collega; $G$ è connesso se esiste un cammino tra ogni coppia di nodi, e si dice componente connessa un sottoinsieme massimale di nodi mutuamente raggiungibili — nozioni standard di teoria dei grafi, richiamate qui solo per fissare il vocabolario. La densità del grafo, cioè il rapporto tra il numero di archi effettivamente presenti e il numero massimo possibile $\binom{N}{2}$, sarà il parametro chiave nel confronto di costo con il VAR discusso nella \cref{sec:limits-univariate-models}: un grafo sparso ha densità bassa, e la \cref{sec:why-graph-intuition} ha già osservato come questa densità non sia costante nel tempo.
+
+\begin{remark}[Pesi negativi: un problema aperto]
+\label{rem:negative-weights}
+La \Cref{def:weighted-graph} non impone alcun vincolo di segno su $W$. Questo è rilevante perché il peso che la tesi userà a partire dal \Cref{ch:financial-series-and-graph-construction} — la correlazione di Pearson tra rendimenti — è per costruzione compreso in $[-1,1]$ e può quindi essere negativo. Buona parte dei risultati spettrali sviluppati in questo capitolo, a cominciare dalla semidefinita positività del Laplaciano (\cref{prop:psd}), vale solo sotto l'ipotesi $W_{ij}\geq 0$: si tratta di un problema aperto, che si preferisce segnalare subito piuttosto che lasciare implicito, e che verrà ripreso nel \Cref{ch:financial-series-and-graph-construction}.
+\end{remark}
+
+\section{Il Laplaciano del grafo}
+\label{sec:graph-laplacian}
+
+\begin{definition}[Laplaciano del grafo]
+\label{def:laplacian}
+Il Laplaciano combinatorio di $G$ è la matrice $L = D - W \in \mathbb{R}^{N \times N}$. Si definiscono inoltre il Laplaciano normalizzato simmetrico
+$$L_{\mathrm{sym}} = I - D^{-1/2}WD^{-1/2} = D^{-1/2}LD^{-1/2}$$
+e il Laplaciano random-walk $L_{\mathrm{rw}} = I - D^{-1}W = D^{-1}L$.
+\end{definition}
+
+La normalizzazione non è un dettaglio tecnico: se i nodi hanno un grado molto eterogeneo — come accade quando, per riprendere la \cref{sec:crypto-market-interconnected}, Bitcoin è connesso con peso elevato a decine di altcoin mentre un token minore ne tocca solo pochi — il Laplaciano combinatorio $L$ assegna implicitamente più peso ai nodi ad alto grado, distorcendo il confronto tra i loro autovalori. $L_{\mathrm{sym}}$ e $L_{\mathrm{rw}}$ correggono questa eterogeneità dividendo per il grado; nel seguito del capitolo si lavora, salvo diversa indicazione, con il Laplaciano combinatorio $L$, le cui proprietà si dimostrano più direttamente e si trasferiscono, a meno dell'intervallo esatto degli autovalori, a $L_{\mathrm{sym}}$ e $L_{\mathrm{rw}}$.
+
+\begin{proposition}[Forma quadratica del Laplaciano]
+\label{prop:quadratic-form}
+Per ogni $x \in \mathbb{R}^N$,
+$$x^\top L x = \frac{1}{2}\sum_{i,j} W_{ij}(x_i - x_j)^2.$$
+\end{proposition}
+
+\begin{proof}
+Espandendo il quadrato,
+$$\frac12\sum_{i,j}W_{ij}(x_i-x_j)^2 = \frac12\sum_{i,j}W_{ij}x_i^2 - \sum_{i,j}W_{ij}x_ix_j + \frac12\sum_{i,j}W_{ij}x_j^2.$$
+Per la simmetria di $W$, $\sum_{i,j}W_{ij}x_i^2 = \sum_i x_i^2 \sum_j W_{ij} = \sum_i D_{ii}x_i^2$, e allo stesso modo, scambiando gli indici di somma, $\sum_{i,j}W_{ij}x_j^2 = \sum_i D_{ii}x_i^2$. I due termini quadratici coincidono dunque entrambi con $x^\top Dx$, e la somma si riduce a
+\begin{equation*}
+x^\top Dx - x^\top Wx = x^\top(D-W)x = x^\top Lx. \qedhere
+\end{equation*}
+\end{proof}
+
+L'identità vale per qualunque matrice dei pesi simmetrica, indipendentemente dal segno delle singole $W_{ij}$: è un fatto puramente algebrico. Ciò che dipende dal segno dei pesi è la conclusione che se ne può trarre.
+
+\begin{proposition}[Semidefinita positività]
+\label{prop:psd}
+Se $W_{ij}\geq 0$ per ogni arco, allora $L \succeq 0$, cioè tutti gli autovalori di $L$ sono non negativi.
+\end{proposition}
+
+\begin{proof}
+Ogni addendo $W_{ij}(x_i-x_j)^2$ nella \cref{prop:quadratic-form} è non negativo, quindi $x^\top Lx \geq 0$ per ogni $x$. \qedhere
+\end{proof}
+
+Sotto l'ipotesi opposta — pesi negativi, il caso segnalato nella \cref{rem:negative-weights} — la somma può contenere addendi negativi e $x^\top Lx$ non è più garantito non negativo: $L$ può avere autovalori negativi, e l'intera interpretazione spettrale sviluppata nel resto del capitolo perde fondamento. È il motivo per cui il problema va risolto a monte, nella costruzione del grafo di correlazione del \Cref{ch:financial-series-and-graph-construction}, e non nell'apparato spettrale in sé.
+
+\begin{proposition}[Molteplicità dell'autovalore nullo]
+\label{prop:zero-multiplicity}
+Assumendo $W_{ij}\geq 0$, la molteplicità dell'autovalore $0$ di $L$ è pari al numero di componenti connesse di $G$.
+\end{proposition}
+
+\begin{proof}
+Siano $C_1,\dots,C_m$ le componenti connesse di $G$ e $\mathbf{1}_{C_k}\in\mathbb{R}^N$ il vettore indicatore di $C_k$. Per $i \in C_k$, tutti i vicini di $i$ appartengono a $C_k$ (non essendoci archi tra componenti diverse), quindi $(L\mathbf{1}_{C_k})_i = D_{ii} - \sum_{j} W_{ij}(\mathbf{1}_{C_k})_j = D_{ii} - D_{ii} = 0$; per $i \notin C_k$, sia $(\mathbf{1}_{C_k})_i$ sia ogni $W_{ij}$ con $j \in C_k$ sono nulli. Dunque $L\mathbf{1}_{C_k}=0$ per ogni $k$, e i vettori $\mathbf{1}_{C_1},\dots,\mathbf{1}_{C_m}$, avendo supporti disgiunti, sono linearmente indipendenti: la molteplicità di $0$ è almeno $m$.
+
+Viceversa, sia $x\in\ker(L)$, cioè $Lx=0$: allora $x^\top Lx = x^\top(Lx) = 0$, e la \cref{prop:quadratic-form} impone $W_{ij}(x_i-x_j)^2=0$ per ogni coppia $(i,j)$: dato che i pesi sono non negativi, ciò forza $x_i=x_j$ per ogni arco di peso non nullo, quindi $x$ è costante su ciascuna componente connessa, cioè $x\in\mathrm{span}\{\mathbf{1}_{C_1},\dots,\mathbf{1}_{C_m}\}$. Il nucleo di $L$ è allora esattamente questo spazio, di dimensione $m$ \cite{chung1997spectral}. \qedhere
+\end{proof}
+
+La \cref{prop:quadratic-form} è la chiave di lettura di tutto ciò che segue: $x^\top Lx$ misura quanto un segnale $x$ definito sui nodi del grafo sia \enquote{irregolare}, nel senso di assumere valori molto diversi tra nodi fortemente connessi. Un segnale costante su ogni componente ha forma quadratica nulla; un segnale che oscilla bruscamente tra nodi vicini ha forma quadratica grande. È questa nozione di irregolarità, applicata agli autovettori di $L$ invece che a un segnale generico, a dare significato all'idea di \enquote{frequenza} introdotta nella sezione seguente.
+
+\section{Analisi spettrale: autovalori e autovettori}
+\label{sec:spectral-analysis}
+
+\begin{theorem}[Decomposizione spettrale del Laplaciano]
+\label{thm:spectral-decomposition}
+Essendo $L$ simmetrica e reale, esiste una decomposizione
+$$L = U\Lambda U^\top,$$
+con $U \in \mathbb{R}^{N\times N}$ ortogonale ($U^\top U = I$) le cui colonne $u_1,\dots,u_N$ sono autovettori di $L$ a norma unitaria, e $\Lambda = \mathrm{diag}(\lambda_1,\dots,\lambda_N)$ la matrice diagonale dei corrispondenti autovalori, ordinati $0 = \lambda_1 \leq \lambda_2 \leq \dots \leq \lambda_N$ (l'ordinamento a partire da $\lambda_1=0$ segue dalla \cref{prop:psd} e dalla \cref{prop:zero-multiplicity}).
+\end{theorem}
+
+Si tratta di un'istanza del teorema spettrale per matrici simmetriche, che non si ridimostra qui; l'aspetto rilevante ai fini pratici — come ottenere $U$ e $\Lambda$ in concreto, e a quale costo — è discusso nella \cref{sec:computational-aspects-sparse-eigensolvers} \cite{golub2013matrix}.
+
+Chiamando $\lambda_1,\dots,\lambda_N$ lo spettro di $L$, si estende ora l'interpretazione della \cref{prop:quadratic-form} da un segnale generico $x$ a un singolo autovettore $u_k$. Poiché $u_k$ ha norma unitaria,
+$$\lambda_k = u_k^\top L u_k = \frac12\sum_{i,j}W_{ij}\big(u_k(i)-u_k(j)\big)^2,$$
+dove $u_k(i)$ denota la $i$-esima componente di $u_k$. L'autovalore $\lambda_k$ non è dunque un'etichetta astratta: è esattamente la misura di irregolarità del proprio autovettore, nel senso fissato nella \cref{sec:graph-laplacian}. Autovettori a basso indice, con $\lambda_k$ piccolo, variano poco tra nodi fortemente connessi — si dicono \emph{modi lisci}; autovettori ad alto indice oscillano bruscamente — \emph{modi oscillanti}. È questa catena di implicazioni, e non un'analogia stipulata a priori, a giustificare il linguaggio di \enquote{frequenze} che la \cref{sec:graph-signal-processing-fourier} userà in modo sistematico.
+
+Un caso particolare è $\lambda_2$, detto \emph{connettività algebrica}\footnote{Il termine \emph{connettività algebrica} riflette il fatto che $\lambda_2>0$ se e solo se il grafo è connesso: più $\lambda_2$ è grande, più il grafo è \enquote{difficile da disconnettere} rimuovendo pochi archi a basso peso.}, e il corrispondente autovettore $u_2$, detto \emph{vettore di Fiedler}. Poiché $u_2$ è il modo liscio non banale a più bassa irregolarità (il modo a irregolarità nulla, $u_1$, è costante su ogni componente per la \cref{prop:zero-multiplicity} e non porta informazione strutturale), il segno delle sue componenti tende a separare il grafo in due gruppi di nodi fortemente connessi al loro interno e debolmente connessi tra loro — la base degli algoritmi di \emph{spectral clustering} \cite{vonluxburg2007tutorial}.
+
+Questo strumento non è solo descrittivo: seguendo la stessa logica, un aumento generalizzato di $\lambda_2$ — connessioni più forti e più diffuse — è un modo naturale per quantificare il compattamento del grafo di correlazione osservato nella \cref{sec:crypto-market-interconnected} nei periodi di crisi, un'applicazione ripresa nella rassegna della letteratura del \Cref{ch:literature-review}.
+
+\section{Graph Signal Processing: l'analogia con Fourier}
+\label{sec:graph-signal-processing-fourier}
+
+\begin{definition}[Segnale su grafo e Graph Fourier Transform]
+\label{def:gft}
+Un segnale sul grafo $G$ è un vettore $x \in \mathbb{R}^N$ che associa un valore reale a ciascun nodo. Data la decomposizione spettrale $L=U\Lambda U^\top$ (\cref{thm:spectral-decomposition}), la \emph{Graph Fourier Transform} (GFT) di $x$ è
+$$\hat x = U^\top x,$$
+con trasformata inversa $x = U\hat x$ (segue da $U^\top U = UU^\top = I$).
+\end{definition}
+
+Il nome non è casuale: $\hat x_k = u_k^\top x$ misura quanto il segnale $x$ si sovrappone al modo $u_k$, esattamente come un coefficiente di Fourier classico misura la componente di una funzione a una data frequenza. L'esempio seguente rende preciso il parallelo nel caso più semplice possibile.
+
+\begin{example}[Il grafo a linea e la Discrete Cosine Transform]
+\label{ex:path-graph}
+Si consideri il grafo a linea non pesato con $N$ nodi, $v_1-v_2-\dots-v_N$ ($W_{ij}=1$ se $|i-j|=1$, $0$ altrimenti). Nei nodi interni ($2\leq n\leq N-1$) il Laplaciano combinatorio agisce come
+$$(Lx)_n = 2x_n - x_{n-1} - x_{n+1},$$
+mentre nei nodi di bordo $(Lx)_1 = x_1-x_2$ e $(Lx)_N = x_N - x_{N-1}$.
+
+Si verifica che i vettori
+$$u_k(n) = \cos\!\left(\frac{\pi k}{N}\Big(n-\frac12\Big)\right), \qquad k=0,\dots,N-1,$$
+sono autovettori di $L$, con autovalore $\lambda_k = 2\big(1-\cos(\pi k/N)\big)$ (qui si indicizza da $k=0$, come è convenzione nella letteratura della DCT, anziché da $k=1$ come nel resto del capitolo). Ponendo $\theta = \pi k/N$, per l'identità di prostaferesi
+$$\cos\big(\theta(n-\tfrac32)\big) + \cos\big(\theta(n+\tfrac12)\big) = 2\cos\big(\theta(n-\tfrac12)\big)\cos\theta,$$
+si ottiene nei nodi interni
+\begin{align*}
+2u_k(n) - u_k(n-1) - u_k(n+1) &= 2\cos\big(\theta(n-\tfrac12)\big) - 2\cos\big(\theta(n-\tfrac12)\big)\cos\theta \\
+&= 2(1-\cos\theta)\,u_k(n) = \lambda_k u_k(n),
+\end{align*}
+che è esattamente $(Lu_k)_n = \lambda_k u_k(n)$. Una verifica analoga, che sfrutta la simmetria $\cos(\theta/2)=\cos(-\theta/2)$, mostra che l'equazione agli autovalori vale anche nei due nodi di bordo.
+
+Gli autovettori del Laplaciano sul grafo a linea sono dunque sinusoidi discrete\footnote{Questa base coincide, a meno di una normalizzazione, con quella della \emph{Discrete Cosine Transform} (DCT), la trasformata alla base della compressione JPEG: la DCT è, in questo senso, un caso particolare di trasformata di Fourier su grafo, applicata al grafo a linea.} — la GFT sul grafo a linea è, a meno di normalizzazione, la trasformata coseno discreta classica. La GFT generalizza questa costruzione a un grafo qualunque, sostituendo le sinusoidi con gli autovettori — in generale privi di forma chiusa — del Laplaciano corrispondente.
+\end{example}
+
+Questa corrispondenza permette di trasferire sul grafo l'intera macchina dell'elaborazione dei segnali. Un \emph{filtro spettrale} è una funzione $g:\mathbb{R}\to\mathbb{R}$ applicata allo spettro, $g(\Lambda) = \mathrm{diag}(g(\lambda_1),\dots,g(\lambda_N))$; la \emph{convoluzione su grafo} tra un filtro $g$ e un segnale $x$ si definisce allora come
+$$g \ast_G x = U g(\Lambda) U^\top x = U g(\Lambda) \hat x,$$
+cioè: si trasforma $x$ nel dominio spettrale, si moltiplica punto per punto per $g(\Lambda)$, si torna nel dominio dei nodi. È la trasposizione diretta, sul grafo, del teorema di convoluzione classico — convoluzione nel dominio del segnale equivale a prodotto nel dominio delle frequenze \cite{shuman2013emerging}. Senza questa identità, la rete convoluzionale su grafo introdotta nel \Cref{ch:from-cnn-to-gnn} sarebbe una formula calata dall'alto; con questa identità, è la naturale generalizzazione di un filtro convoluzionale classico al caso in cui il dominio del segnale non è una griglia regolare ma un grafo.
+
+\section{Aspetti computazionali: matrici sparse ed eigensolver}
+\label{sec:computational-aspects-sparse-eigensolvers}
+
+Calcolare la decomposizione spettrale completa $L=U\Lambda U^\top$ con metodi diretti (ad esempio la riduzione a forma tridiagonale seguita da un algoritmo QR) costa $O(N^3)$ operazioni — un costo trascurabile per le decine di criptovalute che compongono il grafo di questa tesi, ma proibitivo per i grafi con centinaia di migliaia o milioni di nodi tipici della letteratura GNN generale (reti sociali, grafi di citazioni, molecole).
+
+In quei contesti, e più in generale ogni volta che serve solo un sottoinsieme ridotto di autovalori/autovettori (i $k\ll N$ modi a più bassa frequenza, o il solo vettore di Fiedler), si preferiscono metodi iterativi come l'algoritmo di Lanczos o la power iteration\footnote{L'algoritmo di Lanczos costruisce una base ortonormale di un sottospazio di Krylov (lo spazio generato da $x, Lx, L^2x,\dots$) per approssimare gli autovalori estremi di $L$ senza calcolarne l'intera decomposizione spettrale — utile quando, come nel \Cref{ch:from-cnn-to-gnn}, servono solo i primi $k\ll N$ autovettori \cite{golub2013matrix}.}, il cui costo per iterazione dipende dal numero di archi non nulli in $L$ invece che da $N^2$. Questo è possibile solo se $L$ è rappresentato in formato sparso — ad esempio Compressed Sparse Row (CSR), che memorizza solo le entrate non nulle invece dell'intera matrice $N\times N$ — così che il prodotto matrice-vettore $Lx$, l'operazione elementare su cui si basano questi metodi, costi $O(|E|)$ invece di $O(N^2)$.
+
+Per il grafo di correlazione tra criptovalute di questa tesi, con $N$ dell'ordine delle decine, nessuno di questi accorgimenti è in pratica necessario: la decomposizione spettrale completa è immediata anche con metodi diretti. Il tema resta comunque rilevante perché la stessa tensione tra costo esatto e approssimazione efficiente motiva, nel \Cref{ch:from-cnn-to-gnn}, il passaggio dai filtri spettrali esatti della \cref{sec:graph-signal-processing-fourier} alle approssimazioni polinomiali (ChebNet) su cui si basa la Graph Convolutional Network.

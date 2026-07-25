@@ -1,0 +1,75 @@
+% ============================================================
+% Capitolo 6 — [MODULARE] Studio di caso: implementazione e risultati
+%
+% ------------------------------------------------------------
+% ALTERNATIVE DI PROGETTO
+%
+% Opzione A — Analisi topologica descrittiva (rischio basso,
+% consigliata).
+%   Si implementa solo la costruzione del grafo dinamico e le sue
+%   metriche (6.1, 6.2, 6.6), SENZA alcun modello predittivo. Si mostra
+%   come densità, correlazione media e λ₂ evolvono attorno a eventi di
+%   crisi noti.
+%   Integrazione: il capitolo si riduce a ~7 pagine e cambia titolo in
+%   "Analisi empirica della struttura di correlazione". Il Cap. 3 (GNN)
+%   resta interamente teorico e diventa "background per sviluppi
+%   futuri", da segnalare esplicitamente in 1.4. Vantaggio: non può
+%   fallire — il grafo esiste e le sue metriche cambiano, punto. È un
+%   risultato garantito.
+%
+% Opzione B — Confronto predittivo GCN vs. VAR vs. naive (rischio
+% medio).
+%   Il capitolo completo come descritto sotto (6.1-6.6).
+%   Integrazione: richiede che il Cap. 4.5 (VAR) sia sviluppato con
+%   cura e che il Cap. 5.4 (metriche) sia rigoroso, perché è lì che si
+%   gioca la credibilità. Avvertenza forte: la probabilità che la GCN
+%   batta un random walk sui rendimenti giornalieri cripto è bassa.
+%   Bisogna quindi impostare la tesi fin dall'introduzione (1.4) come
+%   "verifica di un'ipotesi", non come "dimostrazione di un vantaggio".
+%   Un risultato negativo, ben documentato, è una tesi valida; un
+%   risultato negativo presentato come fallimento è una tesi debole.
+%
+% ------------------------------------------------------------
+% ============================================================
+\chapter{Studio di caso: implementazione e risultati}
+\label{ch:case-study}
+
+\section{Dati e preprocessing}
+\label{sec:data-preprocessing}
+% (~2 pp.)
+% Fonte (es. Binance/CoinGecko API), universo di asset (10-20 tra le
+% principali cripto per capitalizzazione), granularità (giornaliera),
+% periodo (deve includere almeno un evento di crisi), pulizia, calcolo
+% dei log-rendimenti.
+
+\section{Costruzione del grafo dinamico}
+\label{sec:dynamic-graph-construction}
+% (~2 pp.)
+% Finestra rolling di 30/60 giorni, correlazione di Pearson,
+% thresholding, giustificazione dei parametri.
+
+\section{Architettura implementata}
+\label{sec:implemented-architecture}
+% (~2 pp.)
+% GCN a 2 layer (PyTorch Geometric), task di previsione (regressione
+% del rendimento a t+1 o classificazione binaria del segno), split
+% walk-forward.
+
+\section{Baseline di confronto}
+\label{sec:comparison-baselines}
+% (~1,5 pp.)
+% VAR, e almeno un naive (random walk) — perché il naive è il vero
+% avversario in finanza.
+
+\section{Risultati predittivi}
+\label{sec:predictive-results}
+% (~2 pp.)
+% Tabelle comparative, con onestà sui risultati: è del tutto legittimo
+% (e apprezzato) concludere che il vantaggio è marginale o assente.
+
+\section{Analisi dell'evoluzione topologica}
+\label{sec:topological-evolution-analysis}
+% (~2,5 pp.)
+% La parte più promettente: serie temporale di densità del grafo,
+% correlazione media, λ₂, e loro comportamento in prossimità di eventi
+% noti. Questa analisi funziona anche se la previsione fallisce.

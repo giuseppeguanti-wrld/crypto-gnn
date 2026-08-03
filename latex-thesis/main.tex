@@ -4,24 +4,35 @@
 % Compilazione (da dentro latex-thesis/):
 %   latexmk -pdf -bibtex main.tex
 % ============================================================
-\documentclass[a4paper,12pt]{report}
+\documentclass[a4paper,twoside,openright,12pt]{report}
 
 \input{preamble}
 
-\title{Graph Neural Networks per la modellazione delle relazioni tra
-    criptovalute: fondamenti teorici e prospettive applicative}
+\title{Graph Neural Network per la previsione multi-asset di
+    criptovalute}
 \author{}
 \date{}
 
 \begin{document}
 
 \input{frontmatter/titlepage}
+\cleardoublepage
+
+\pagenumbering{roman}
+
+\input{frontmatter/dedication}
+
+\input{frontmatter/disclaimer}
 
 \input{frontmatter/abstract}
 
 \tableofcontents
 
 \input{frontmatter/acronyms}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 \input{chapters/01-introduction}
 \input{chapters/02-mathematical-foundations}
@@ -38,5 +49,7 @@
 \input{chapters/07-conclusions}
 
 \printbibliography
+
+\input{frontmatter/acknowledgements}
 
 \end{document}

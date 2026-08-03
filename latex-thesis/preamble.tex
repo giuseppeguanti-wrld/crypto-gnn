@@ -12,7 +12,28 @@
 \usepackage[a4paper,margin=3cm]{geometry}
 \usepackage{setspace}
 \onehalfspacing
+\raggedbottom % evita che flushbottom (default per twoside) stiri gli spazi elastici tra paragrafi/voci di lista per riempire ogni pagina alla stessa altezza
 \interfootnotelinepenalty=10000 % vieta lo spezzamento di una nota a piè di pagina tra due pagine
+
+% Layout a due facciate (documentclass in main.tex ha le opzioni
+% twoside,openright): i capitoli si aprono su pagina dispari; se serve
+% inserire una pagina bianca per arrivarci, la si vuole senza intestazione
+% né numero. \cleardoublepage esiste già nel kernel di LaTeX ma non
+% sopprime lo stile pagina sulla pagina bianca iniettata: qui si
+% ridefinisce per farlo, così una pagina bianca resta visivamente vuota.
+\makeatletter
+\renewcommand{\cleardoublepage}{%
+  \clearpage
+  \if@twoside
+    \ifodd\c@page\else
+      \hbox{}
+      \vspace*{\fill}
+      \thispagestyle{empty}
+      \newpage
+    \fi
+  \fi
+}
+\makeatother
 
 % --- Matematica ---
 \usepackage{amsmath}
@@ -22,9 +43,11 @@
 
 % --- Figure e tabelle ---
 \usepackage{graphicx}
+\usepackage{float} % [H] per la Tabella 3.1, per evitare che il float si separi dal paragrafo che la introduce
 \usepackage{booktabs}
 \usepackage{siunitx}
 \usepackage{caption}
+\captionsetup{font=footnotesize}
 \usepackage{subcaption}
 \usepackage{tikz}
 \usetikzlibrary{positioning}
@@ -54,9 +77,7 @@
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
-    linkcolor=black,
-    citecolor=black,
-    urlcolor=blue,
+    allcolors=black,
     bookmarksnumbered=true
 }
 \usepackage[capitalize,noabbrev]{cleveref}
@@ -72,6 +93,15 @@
 \Crefname{table}{Tabella}{Tabelle}
 \crefname{equation}{Equazione}{Equazioni}
 \Crefname{equation}{Equazione}{Equazioni}
+% cleveref non localizza le congiunzioni tra riferimenti multipli (\cref{a,b});
+% i comandi non esistono finché cleveref stesso non li definisce a inizio documento,
+% quindi la ridefinizione va accodata con \AtBeginDocument per essere eseguita dopo.
+\AtBeginDocument{%
+  \renewcommand{\crefpairconjunction}{ e }%
+  \renewcommand{\crefmiddleconjunction}{, }%
+  \renewcommand{\creflastconjunction}{ e }%
+  \renewcommand{\crefrangeconjunction}{--}%
+}
 
 % --- Ambienti per definizioni/teoremi/proposizioni (utili nei Cap. 2-3) ---
 % Gli ambienti condividono la numerazione della sezione "definition"; senza

@@ -73,3 +73,202 @@
 % La parte più promettente: serie temporale di densità del grafo,
 % correlazione media, λ₂, e loro comportamento in prossimità di eventi
 % noti. Questa analisi funziona anche se la previsione fallisce.
+
+% ============================================================
+% Sezioni da rivedere se questo capitolo viene attivato
+% (verificato 2026-08-02)
+% ============================================================
+%
+% # 1.4 (sec:objectives-research-questions, 01-introduction.tex)
+%   - Par. 2 ("Il contributo di questa tesi è di natura teorica: ..."):
+%     l'apertura dichiara il contributo come "di natura teorica" e
+%     descrive la prima questione di ricerca come affrontata solo
+%     costruendo l'apparato matematico + rassegna della letteratura.
+%     Da correggere per includere la verifica empirica del Cap. 6
+%     (opzione A o B a seconda di quale sia stata scelta) come terzo
+%     tassello della risposta alla prima questione, non solo teorico.
+%   - Par. 3 (mappa dei capitoli, "La tesi è organizzata come segue..."):
+%     elenca Cap. 2-5 e Cap. 7, senza il Cap. 6. Da aggiungere una frase
+%     sul Cap. 6 tra il Cap. 5 e il Cap. 7 (posizione coerente con
+%     l'ordine dei capitoli nel documento).
+%
+% # 2.3 (sec:spectral-analysis, 02-mathematical-foundations.tex)
+%   - Ultimo paragrafo ("Seguendo la stessa logica, un aumento
+%     generalizzato di lambda_2..."): il rimando in chiusura cita solo
+%     "\Cref{ch:literature-review}" come luogo in cui l'uso di lambda_2
+%     per il compattamento in crisi viene ripreso. Da estendere per
+%     citare anche \Cref{ch:case-study} (sec. 6.6,
+%     sec:topological-evolution-analysis), dove lambda_2 viene
+%     calcolato empiricamente sulla serie storica del grafo — non solo
+%     ripreso in letteratura ma applicato direttamente.
+%
+% # 3.5 (sec:known-limitations-gnn, 03-from-cnn-to-gnn.tex)
+%   - Par. "Grafi densi" ("...Va inoltre ricordato quanto osservato
+%     nella \cref{sec:crypto-market-interconnected}: il grafo di
+%     correlazione tra criptovalute si compatta proprio nelle fasi di
+%     crisi..."): l'affermazione resta puramente teorica (rischio di
+%     over-smoothing previsto ma non misurato). Da aggiungere un
+%     rimando a \Cref{ch:case-study} (sec. 6.6,
+%     sec:topological-evolution-analysis) come luogo in cui la densità
+%     del grafo viene effettivamente misurata nel tempo, e se
+%     rilevante segnalare se l'aumento di densità in crisi coincide
+%     empiricamente con un peggioramento delle previsioni riportato in
+%     sec:predictive-results.
+%   - Ultimo paragrafo ("Da qui la pratica corrente e la scelta
+%     operativa che questa tesi assume: le architetture GNN efficaci
+%     sui compiti reali usano tipicamente due o tre strati..."): la
+%     scelta di "due o tre strati" è presentata come assunzione
+%     progettuale astratta. Il \Cref{ch:case-study} (sec. 6.3,
+%     sec:implemented-architecture) la rende concreta ("GCN a 2
+%     layer"): da aggiungere un rimando esplicito che indichi come
+%     questa scelta implementativa istanzi proprio il compromesso
+%     discusso qui, invece di lasciare le due sezioni scollegate.
+%
+% # 4.2 (sec:correlation-dependence-pitfalls, 04-financial-series-and-graph-construction.tex)
+%   - Par. "Finestra mobile e rumore di stima" ("...con $N=50$ asset e
+%     una finestra di $60$ giorni, si tratta di $1225$ parametri da
+%     $3000$ dati...") e il paragrafo successivo sul bordo di
+%     Marchenko-Pastur ("$q=50/60\approx0{,}83$, il bordo superiore
+%     vale circa $3{,}7$"): l'esempio numerico usa $N=50$, mentre
+%     sec:data-preprocessing (Cap. 6.1) dichiara un universo di
+%     10-20 asset. Da riconciliare: se il Cap. 6 usa $N=10$-$20$, il
+%     bordo di Marchenko-Pastur e il rapporto $q$ effettivi saranno
+%     diversi da quelli qui calcolati come esempio - va deciso se
+%     rifare l'esempio con l'$N$ reale o dichiarare esplicitamente che
+%     l'esempio è illustrativo e non anticipa i parametri del caso di
+%     studio.
+%
+% # 4.3 (sec:correlation-matrix-to-graph, 04-financial-series-and-graph-construction.tex)
+%   - Par. "Quali archi tenere" e la lista di strategie (thresholding,
+%     k-NN, MST, PMFG): la sezione lascia deliberatamente aperta la
+%     scelta ("Nessuna è dominante..."). sec:dynamic-graph-construction
+%     (Cap. 6.2) sceglie però concretamente il thresholding. Da
+%     aggiungere un rimando esplicito che confermi questa scelta e
+%     colleghi la "giustificazione dei parametri" richiesta in Cap. 6.2
+%     al criterio non arbitrario già stabilito qui (soglia calibrata
+%     sul bordo di Marchenko-Pastur, eq. eq:marchenko-pastur), invece
+%     di lasciare Cap. 6 a motivare $\tau$ da zero.
+%
+% # 4.4 (sec:dynamic-graphs-temporal-question, 04-financial-series-and-graph-construction.tex)
+%   - I tre paragrafi "Snapshot indipendenti" / "GNN più modulo
+%     ricorrente" / "Architetture spazio-temporali integrate": la
+%     sezione presenta tre approcci senza sceglierne uno per la tesi.
+%     sec:implemented-architecture (Cap. 6.3) descrive solo "GCN a 2
+%     layer... split walk-forward", senza componente ricorrente:
+%     implica quindi la scelta di "Snapshot indipendenti" (l'opzione
+%     più semplice, per costruzione la meno costosa). Da aggiungere un
+%     rimando esplicito in chiusura di 4.4 che dichiari questa scelta
+%     e ne riconosca il limite già discusso nel paragrafo stesso (la
+%     continuità temporale della struttura non è sfruttata).
+%
+% # 4.5 (sec:var-baseline, 04-financial-series-and-graph-construction.tex)
+%   - Par. "Il limite è nel conteggio dei parametri..." ("Con $N=50$
+%     asset e $p=5$ ritardi si tratta di $12\,550$ parametri..."):
+%     stesso disallineamento numerico di sec. 4.2 rispetto a Cap. 6.1
+%     ($N=10$-$20$); da riconciliare allo stesso modo.
+%   - Ultimo paragrafo ("Il confronto tra VAR e GCN è quindi
+%     informativo su una questione precisa: se il grafo di
+%     correlazione... sia un'ipotesi a priori abbastanza buona da
+%     giustificare il vincolo che impone."): la domanda è posta qui
+%     solo in astratto (bias/varianza). sec:comparison-baselines e
+%     sec:predictive-results (Cap. 6.4-6.5) sono il luogo in cui questa
+%     domanda riceve una risposta empirica. Da aggiungere un rimando
+%     esplicito invece di lasciare la domanda retorica senza seguito
+%     nel resto della tesi attuale (che la richiude solo sul Cap. 5,
+%     in termini di rassegna della letteratura).
+%
+% Sezioni del Cap. 5 da rivedere se questo capitolo viene attivato
+% (verificato 2026-08-02, confronto con 05-literature-review.tex).
+% Nota: la chiusura del Cap. 5 è stata scritta deliberatamente SENZA
+% anticipare il Cap. 6 (decisione registrata in latex-thesis/CLAUDE.md,
+% sessione 2026-07-25 terza parte) - le tre sezioni sotto sono i punti
+% precisi dove quella scelta andrebbe rivista, non l'intero capitolo.
+%
+% # 5.2 (sec:applications-cryptocurrencies, 05-literature-review.tex)
+%   - Ultima frase della sottosezione "Quello che si è provato a
+%     prevedere" ("La prima questione di ricerca trova dunque una
+%     risposta cauta: l'evidenza disponibile è favorevole, ma non
+%     ancora conclusiva."): la risposta si basa solo sull'evidenza
+%     esterna di letteratura (un solo lavoro, yin2024forecasting).
+%     Se il Cap. 6 viene attivato, questa tesi aggiunge la propria
+%     evidenza empirica diretta (Cap. 6.5, sec:predictive-results) allo
+%     stesso quesito. Da aggiungere un rimando esplicito, con l'onestà
+%     già raccomandata nei commenti guida del Cap. 6 (un risultato
+%     marginale o negativo va riportato come tale, non nascosto dietro
+%     "evidenza disponibile" riferita solo alla letteratura esterna).
+%
+% # 5.3 (sec:network-structure-crisis-regimes, 05-literature-review.tex)
+%   - Ultimo paragrafo ("Il regime di crisi merita un'ultima
+%     osservazione... Le due questioni di ricerca non sono quindi
+%     indipendenti: il regime che rende la seconda interessante è lo
+%     stesso che rende la prima difficile."): l'osservazione è motivata
+%     solo teoricamente (letteratura + \cref{sec:known-limitations-gnn}).
+%     Cap. 6.6 (sec:topological-evolution-analysis) e Cap. 6.5
+%     (sec:predictive-results) permettono di verificare direttamente
+%     questa tensione sui dati del caso di studio (densità in aumento
+%     in crisi correlata a un peggioramento delle previsioni). Da
+%     aggiungere un rimando esplicito - collegato al punto già
+%     segnalato per Cap. 3.5 sopra.
+%
+% # 5.4 (sec:evaluation-metrics-methodological-pitfalls, 05-literature-review.tex)
+%   - Sottosezione "Cosa manca alla letteratura", primo paragrafo
+%     (la lacuna "quantitativa": "mancano confronti condotti sugli
+%     stessi asset, negli stessi periodi e con lo stesso protocollo"):
+%     è esattamente il confronto che Cap. 6.4-6.5 (baseline VAR/naive +
+%     risultati predittivi) offre, sia pure come singolo studio e non
+%     come rassegna sistematica. Da aggiungere un rimando che dichiari
+%     esplicitamente il contributo del Cap. 6 a questa lacuna, con la
+%     cautela che un solo studio non la colma da solo (va evitato che
+%     la revisione suoni come "lacuna risolta" invece che "lacuna
+%     attenuata da un tentativo").
+%
+% Sezioni del Cap. 7 da rivedere se questo capitolo viene attivato
+% (verificato 2026-08-02, confronto con 07-conclusions.tex).
+% Questo è il capitolo più esposto: contiene affermazioni esplicite
+% sulla natura della tesi che l'attivazione del Cap. 6 rende false, non
+% solo da arricchire (a differenza delle sezioni segnalate nei Cap.
+% 1-5, dove si trattava per lo più di aggiungere un rimando).
+%
+% # 7.1 (sec:summary-research-questions, 07-conclusions.tex)
+%   - Par. "Sul piano empirico la risposta è più cauta, ed è la
+%     rassegna del \Cref{ch:literature-review} a imporre la cautela..."
+%     (sottosez. "Prima questione: il vantaggio della struttura"): la
+%     cautela si fonda oggi solo sulla letteratura esterna recensita
+%     nel Cap. 5. Da aggiungere il proprio risultato empirico (Cap.
+%     6.5, sec:predictive-results), qualunque esso sia - positivo,
+%     marginale o negativo -, mantenendo lo stesso registro di onestà
+%     già usato per il resto della sezione.
+%   - Par. "Il punto in cui le due questioni si incontrano" (l'intero
+%     paragrafo, in particolare "un grafo denso annulla il vantaggio
+%     computazionale... e anticipa l'over-smoothing... mentre una
+%     soglia di filtraggio calibrata su un periodo tranquillo lascia
+%     passare quasi ogni arco"): l'osservazione centrale della tesi è
+%     qui ancora presentata come deduzione teorica. Se il Cap. 6 la
+%     verifica sui dati (sec:topological-evolution-analysis +
+%     sec:predictive-results), va detto esplicitamente se i dati
+%     confermano o no questa tensione - è il punto più qualificante di
+%     un'eventuale attivazione del capitolo, non un dettaglio.
+%
+% # 7.2 (sec:limitations, 07-conclusions.tex)
+%   - Voce "Natura compilativa" ("Il lavoro non contiene misure
+%     originali: le conclusioni sulla prima questione di ricerca
+%     riflettono la qualità metodologica, spesso disomogenea, della
+%     letteratura recensita."): questa frase diventa FALSA se il Cap.
+%     6 è attivo - il lavoro conterrebbe misure originali. Da
+%     rimuovere o riformulare per intero, non solo integrare. Possibile
+%     sostituto onesto: un limite sulla scala ridotta della verifica
+%     empirica stessa (10-20 asset, un solo periodo/universo, nessuna
+%     rassegna sistematica) - coerente con la lacuna "quantitativa"
+%     già segnalata per Cap. 5.4 sopra, che un singolo studio attenua
+%     ma non risolve.
+%
+% # 7.3 (sec:future-directions, 07-conclusions.tex)
+%   - Ultima voce, "Validazione empirica" ("Un confronto diretto tra
+%     GCN, VAR e baseline univariata, sugli stessi asset e nello
+%     stesso periodo, con protocollo a finestra mobile e metriche
+%     multiple, colmerebbe la lacuna più concreta della
+%     \cref{sec:evaluation-metrics-methodological-pitfalls}..."):
+%     descrive esattamente il contenuto del Cap. 6. Se il Cap. 6 viene
+%     attivato, questa non è più una "direzione futura" ma lavoro
+%     già svolto nella tesi: la voce va rimossa da questo elenco (il
+%     suo contenuto migra, con i risultati effettivi, in sec. 7.1).

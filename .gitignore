@@ -251,3 +251,7 @@ __marimo__/
 latexmk.log
 main.pdf
 
+# Project
+# Ignore project-specific files and directories that are not meant to be shared or versioned.
+project-thesis/data/
+project-thesis/results/figures/*.png

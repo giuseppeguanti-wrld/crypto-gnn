@@ -1,0 +1,48 @@
+data:
+  source: binance
+  quote: USDT
+  interval: 1d
+  start: 2021-01-01
+  end: 2026-06-30
+  symbols: [BTC, ETH, BNB, XRP, ADA, SOL, DOGE, DOT, AVAX,
+            LINK, LTC, BCH, XLM, TRX, ETC]
+
+graph:
+  window: 60
+  weight: mantegna
+  self_loops: true
+  threshold:
+    method: permutation
+    alpha: 0.05
+    n_permutations: 500
+    n_calibration_windows: 24
+    statistic: pooled
+
+features:
+  lags: 5
+  vol_windows: [5, 20]
+  use_volume: true
+
+walkforward:
+  train: 365
+  val: 63
+  test: 63
+  step: 63
+  mode: rolling
+
+model:
+  gcn:
+    hidden: [16, 32]
+    dropout: [0.2, 0.5]
+    lr: 0.005
+    weight_decay: 5.0e-4
+    epochs: 300
+    patience: 30
+    seeds: [0, 1, 2, 3, 4]
+  var: {max_lag: 5, ic: bic}
+  ar:  {max_lag: 5, ic: bic}
+
+backtest:
+  cost_bps: 10
+
+seed: 42

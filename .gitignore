@@ -254,4 +254,5 @@ main.pdf
 # Project
 # Ignore project-specific files and directories that are not meant to be shared or versioned.
 project-thesis/data/
+project-thesis/docs/
 project-thesis/results/figures/*.png

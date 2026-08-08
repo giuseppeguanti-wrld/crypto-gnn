@@ -10,7 +10,7 @@ Exports:
   - check_stylized_facts(): asserts the expected stylized facts hold, raises otherwise
   - compute_ljung_box(): formal portmanteau test for autocorrelation in r_t and |r_t|
 
-Integration: called by scripts/01_download_data.py (after returns are built) as a
+Integration: called by scripts/02_build_graphs.py (after returns are built) as a
   quality-assurance step; output saved to results/metrics/descriptive.parquet.
 Why it exists: stylized facts are cheap to compute and serve two purposes: detect
   bad data early (zero variance, unexpected kurtosis < 3 for cryptos), and provide
@@ -84,6 +84,7 @@ def check_stylized_facts(
     *,
     acf1_return_threshold: float = 0.1,
     acf1_abs_return_threshold: float = 0.05,
+    acf1_return_exceptions: dict[str, float] | None = None,
 ) -> None:
     """Assert the three stylized facts expected of daily crypto returns, raising
     a ValueError naming the offending asset(s) on the first violation -- if these
@@ -94,8 +95,12 @@ def check_stylized_facts(
 
       1. Excess kurtosis > 0 for every asset (i.e. raw kurtosis > 3): fat tails
          are a near-universal property of daily crypto returns.
-      2. |ACF(r_t)| at lag 1 below `acf1_return_threshold` for every asset:
+      2. |ACF(r_t)| at lag 1 below `acf1_return_threshold` for every asset, unless
+         overridden per-asset via `acf1_return_exceptions` (e.g. {"TRX": 0.2}):
          returns should not be strongly autocorrelated with their own previous day.
+         `acf1_return_exceptions` exists for assets where a higher threshold was
+         deliberately accepted after investigation (documented at the call site),
+         not as a blanket escape hatch -- each entry should point to that rationale.
       3. ACF(|r_t|) at lag 1 above `acf1_abs_return_threshold` for every asset:
          volatility clustering should be clearly, not just marginally, positive.
     """
@@ -105,10 +110,14 @@ def check_stylized_facts(
             f"Excess kurtosis <= 0 (no fat tails) for: {list(flat_kurtosis.index)} -- data is suspect"
         )
 
-    strong_acf1 = acf_returns.columns[acf_returns.loc[1].abs() >= acf1_return_threshold]
+    exceptions = acf1_return_exceptions or {}
+    acf1_return_limits = pd.Series(acf1_return_threshold, index=acf_returns.columns)
+    acf1_return_limits.update(pd.Series(exceptions))
+    strong_acf1 = acf_returns.columns[acf_returns.loc[1].abs() >= acf1_return_limits]
     if len(strong_acf1) > 0:
         raise ValueError(
-            f"|ACF(r_t)| at lag 1 >= {acf1_return_threshold} for: {list(strong_acf1)} -- "
+            f"|ACF(r_t)| at lag 1 >= threshold (default {acf1_return_threshold}, "
+            f"exceptions {exceptions}) for: {list(strong_acf1)} -- "
             "returns should be close to unpredictable from their own past"
         )
 

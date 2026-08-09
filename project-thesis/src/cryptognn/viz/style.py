@@ -19,7 +19,7 @@ Exports:
 Integration: called once at the top of scripts/06_make_figures.py, and by the
   Streamlit app of Sprint 6 so the on-screen figures match the printed ones.
 Why usetex defaults to False: MiKTeX is slow and fragile when invoked in a loop
-  (risk R6 in PLANNING), which makes it painful during development. It is turned
+  which makes it painful during development. It is turned
   on only for the final run of S5.3, where the font match must be exact.
 """
 from __future__ import annotations
@@ -31,7 +31,11 @@ FIGURE_WIDTH = 5.906
 # Golden-ratio-ish single panel, and the taller stacks used by the multi-panel
 # figures. Kept here so no script invents its own aspect ratio.
 FIGURE_HEIGHT = FIGURE_WIDTH / 1.618
-STACK_PANEL_HEIGHT = 1.35
+# One panel of a stacked, shared-axis figure. Four of them come to 7.0in, well
+# inside the 9.33in of A4 text height, so the central figure of Section 6.6 can
+# breathe on its own page instead of being split -- splitting it would break the
+# one reading it exists for, comparing all four metrics at a single date.
+STACK_PANEL_HEIGHT = 1.75
 WIDE_PANEL_HEIGHT = FIGURE_WIDTH / 2.6
 
 # Qualitative palette for series drawn on the same axes. Chosen to stay

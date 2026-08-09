@@ -4,7 +4,7 @@ Loads the artifacts, composes the figures, and saves them. This is the only
 place savefig() appears in the project: the drawing functions of cryptognn.viz
 take an `ax`, and the composition functions of cryptognn.viz.figures return a
 Figure, so the Streamlit app of Sprint 6 can produce the same pictures from the
-same code instead of a second, divergent implementation (risk R7).
+same code instead of a second, divergent implementation.
 
 Recomputes nothing: every input comes from scripts 01-03 through
 cryptognn.artifacts.
@@ -63,7 +63,7 @@ def main() -> None:
         "--usetex",
         action="store_true",
         help="Typeset text with LaTeX for an exact font match. Slow and fragile "
-        "in a loop (risk R6): use only for the final run.",
+        "in a loop: use only for the final run.",
     )
     args = parser.parse_args()
 

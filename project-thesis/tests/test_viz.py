@@ -4,8 +4,8 @@ These do not assert on how a figure looks -- that is what reading the PDF is
 for. They assert on the **contracts** that keep the thesis figures and the
 Sprint 6 Streamlit app showing the same thing: drawing functions take an `ax`,
 never create or save a figure, and derive their orderings and layouts
-deterministically. Risk R7 in PLANNING is that these two renderings drift apart;
-test_viz_modules_never_save is the mechanical check that they cannot.
+deterministically. The risk these guard against is the two renderings drifting
+apart; the AST checks below are the mechanical proof that they cannot.
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def topology_frame() -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------
-# The architectural contract (risk R7)
+# The architectural contract
 # --------------------------------------------------------------------------
 
 
@@ -93,7 +93,7 @@ def _calls_in(path, forbidden: set[str]) -> list[str]:
 def test_no_viz_module_ever_saves():
     """Nothing in viz/ may save or display a figure -- only scripts do.
 
-    This is the whole of risk R7: if a drawing or composition function wrote its
+    This is the whole of the contract: if a drawing or composition function wrote its
     own file, the Streamlit app could not reuse it and would grow a second
     implementation, after which the app and the thesis would show different
     pictures with no way to notice. Checked by parsing the source rather than

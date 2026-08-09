@@ -225,15 +225,35 @@ class TestCorrelationHeatmaps:
         assert labels[0] == labels[1] == labels[2]
         assert labels[0] == [SYMBOLS[i] for i in order]
 
-    def test_only_the_first_panel_names_the_rows(self, corr, corr_index, topology, events):
+    def test_every_panel_names_both_axes(self, corr, corr_index, topology, events):
+        """The panels of a grid sit apart from one another, so each must be
+        readable on its own: a panel whose rows are named only on its neighbour
+        cannot be interpreted without counting cells across a gap.
+        """
+        order = hierarchical_order(corr.mean(axis=0))
+        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
+
+        fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
+
+        expected = [SYMBOLS[i] for i in order]
+        for panel in [ax for ax in fig.get_axes() if ax.images]:
+            assert [t.get_text() for t in panel.get_yticklabels()] == expected
+            assert [t.get_text() for t in panel.get_xticklabels()] == expected
+
+    def test_spare_cell_holds_the_colourbar(self, corr, corr_index, topology, events):
+        """Three panels in a 2x2 grid leave one cell free; the colour bar takes
+        it, so the grid stays square instead of losing width to a bar squeezed
+        against the figure edge.
+        """
         order = hierarchical_order(corr.mean(axis=0))
         dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
 
         fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
 
         panels = [ax for ax in fig.get_axes() if ax.images]
-        assert [t.get_text() for t in panels[0].get_yticklabels()] != []
-        assert [t.get_text() for t in panels[1].get_yticklabels() if t.get_text()] == []
+        assert len(panels) == 3
+        # The spare grid cell is turned off, and a colour bar axes was added.
+        assert any(not ax.axison for ax in fig.get_axes())
 
 
 class TestGraphSnapshots:

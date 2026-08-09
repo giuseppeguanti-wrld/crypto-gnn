@@ -12,7 +12,7 @@ Non-negative weights are not a convenience: they are what guarantees the graph
 Laplacian is positive semidefinite (thesis prop:psd), which every spectral
 quantity computed downstream relies on.
 
-Which graph feeds which consumer (PLANNING.md Section 1.2):
+Which graph feeds which consumer, and why the pairing is not interchangeable:
   - W_full   -> topological metrics (lambda_2, MST, spectral entropy). No
                 threshold, so lambda_2 never collapses to 0 on a disconnected
                 graph during calm periods.

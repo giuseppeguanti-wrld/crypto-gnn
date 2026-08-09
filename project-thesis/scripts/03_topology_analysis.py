@@ -150,8 +150,8 @@ def main() -> None:
     uncited = events_without_citation(events)
     if uncited:
         # A warning, not an error: blocking the pipeline over a bibliographic
-        # debt would also block the figures. PLANNING admits only events
-        # documentable with a citation, so this must stay visible until settled.
+        # debt would also block the figures. Only events documentable with a
+        # citation belong in the study, so this must stay visible until settled.
         print(
             f"  WARNING: {len(uncited)} event(s) without a citation: "
             f"{[event.key for event in uncited]}\n"

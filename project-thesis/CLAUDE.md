@@ -10,7 +10,7 @@ Studio di caso empirico che implementa e confronta tre modelli di previsione mul
 - **VAR** (Vector AutoRegression) — baseline multivariata
 - **Naive forecaster** — baseline univariata e zero
 
-Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido. Vedi PLANNING.md per il piano completo.
+Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido.
 
 ## Convenzioni stabili
 
@@ -57,7 +57,7 @@ Tutte le figure sono generate da `scripts/06_make_figures.py` e salvate in `resu
 ### Linguaggio
 
 - **Codice, identificatori, docstring**: inglese
-- **Commit message, README, PLANNING, CLAUDE**: italiano
+- **Commit message, README, CLAUDE**: italiano
 - **Documenti rivolti a lettori della tesi** (sez. 6.1–6.6): italiano, ma sono nella tesi (`latex-thesis/`), non qui
 
 ### Anti-look-ahead rigoroso
@@ -126,4 +126,4 @@ streamlit run app/streamlit_app.py           # Sprint 6
 5. **Riproducibilità**: `run_manifest.json` deve contenere commit git, config_hash, pip freeze, timestamp, durate
 6. **Limiti espliciti**: ogni risultato dichiara i limiti (survivorship bias, singolo periodo, snapshot indipendenti, ecc.) pronti per sez. 7.3
 
-Vedi PLANNING.md per il piano completo degli sprint (sezioni 1–6) e la checklist di rischi (registro dei rischi).
+Questo file è l'unico documento di convenzioni del progetto: le motivazioni delle scelte non ovvie stanno nei docstring, accanto al codice che le applica, non in un piano separato.

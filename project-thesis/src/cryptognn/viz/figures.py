@@ -1,7 +1,7 @@
 """Composition of the study's figures: arrangement, not drawing, not saving.
 
 Three layers keep the thesis figures and the Streamlit explorer showing the same
-thing (risk R7):
+thing:
 
   - **Drawing** -- viz.topology, viz.graphs: functions take an existing `ax` and
     render one thing on it. They never create a Figure.
@@ -127,31 +127,54 @@ def figure_correlation_heatmaps(
     symbols: list[str],
     order: np.ndarray,
 ) -> plt.Figure:
-    """Correlation matrices side by side on one shared colour scale.
+    """Correlation matrices in a grid, on one shared colour scale.
+
+    Laid out two per row rather than in a single strip: three 15x15 matrices side
+    by side across \\textwidth leave each cell about 3mm, too small to read. A
+    2x2 grid gives each panel roughly 7cm instead of 4.3cm -- half again as wide,
+    two and a half times the area -- while keeping all three on one page, which a
+    comparison figure needs: the reader cannot hold a field of red squares in
+    memory across a page turn.
 
     `order` is computed once on the period-average matrix and passed in, so the
     same cell means the same pair in every panel; the scale is pinned to [-1, 1]
     inside draw_heatmap for the same reason. Recomputing either per date would
     make the panels incomparable while still looking fine.
     """
-    fig, axes = plt.subplots(1, len(dates), figsize=(FIGURE_WIDTH, FIGURE_WIDTH / 2.7))
+    n_columns = 2
+    n_rows = int(np.ceil(len(dates) / n_columns))
+    fig, axes = plt.subplots(
+        n_rows,
+        n_columns,
+        figsize=(FIGURE_WIDTH, FIGURE_WIDTH * n_rows / n_columns * 1.06),
+    )
+    flat = axes.ravel()
 
     image = None
-    for panel, (ax, (label, date)) in enumerate(zip(axes, dates.items())):
+    for panel, (label, date) in enumerate(dates.items()):
         position = corr_index.get_indexer([date], method="nearest")[0]
         image = draw_heatmap(
-            ax,
+            flat[panel],
             corr[position],
             order,
             labels=symbols,
-            title=f"{label}\n{corr_index[position].date()}",
-            # The ordering is shared, so naming the rows once is enough.
-            show_ylabels=panel == 0,
+            title=f"{label} — {corr_index[position].date()}",
+            label_size=7.0,
         )
 
-    colorbar = fig.colorbar(image, ax=axes, fraction=0.02, pad=0.02)
+    # The colour bar takes the cell the panels leave empty, so the grid stays
+    # square and no space is spent on a bar squeezed against the figure edge.
+    for spare in flat[len(dates) :]:
+        spare.set_axis_off()
+    if len(dates) < len(flat):
+        cax = flat[len(dates)].inset_axes([0.15, 0.45, 0.7, 0.05])
+        colorbar = fig.colorbar(image, cax=cax, orientation="horizontal")
+    else:
+        colorbar = fig.colorbar(image, ax=axes, fraction=0.02, pad=0.02)
     colorbar.set_label(r"$\rho$")
-    colorbar.ax.tick_params(labelsize=6)
+    colorbar.ax.tick_params(labelsize=7)
+
+    fig.tight_layout()
     return fig
 
 
@@ -177,7 +200,12 @@ def figure_graph_snapshots(
     """
     layout = fixed_layout(w_full.mean(axis=0), seed=seed, labels=symbols)
 
-    fig, axes = plt.subplots(1, len(dates), figsize=(FIGURE_WIDTH, WIDE_PANEL_HEIGHT * 1.3))
+    # Two panels across \textwidth make each one about 2.95in wide, and a
+    # force-directed layout fills a roughly square box, so the height is set to
+    # match rather than to a fixed ratio: any extra would be white space, any
+    # less would compress the graph into a band.
+    panel_width = FIGURE_WIDTH / len(dates)
+    fig, axes = plt.subplots(1, len(dates), figsize=(FIGURE_WIDTH, panel_width * 1.16))
     for ax, (label, date) in zip(axes, dates.items()):
         position = corr_index.get_indexer([date], method="nearest")[0]
         draw_snapshot(
@@ -186,6 +214,7 @@ def figure_graph_snapshots(
             layout,
             labels=symbols,
             title=f"{label} — {corr_index[position].date()}",
+            label_size=6.5,
         )
     fig.tight_layout()
     return fig

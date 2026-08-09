@@ -10,8 +10,8 @@ Exports (built incrementally):
   - download_universe(): iterates fetch_klines() over every symbol in config.data.symbols
 
 Integration: Called by scripts/01_download_data.py; output feeds cryptognn.data.returns.
-Why it exists: Binance klines are the sole price source for the study (see PLANNING.md
-  S1.3); isolating the HTTP concern here keeps returns.py free of network code.
+Why it exists: Binance klines are the sole price source for the study; isolating
+  the HTTP concern here keeps returns.py free of network code.
 """
 from __future__ import annotations
 

@@ -9,7 +9,7 @@ Exports (built incrementally):
   - validate_panel(): raises on gaps, NaNs, non-positive prices/volumes, misaligned start/end
   - log_returns(): r_t = log P_t - log P_{t-1}, first row dropped
 
-Integration: called by scripts/02_build_graphs.py (per PLANNING.md M1 DoD); its output
+Integration: called by scripts/02_build_graphs.py; its output
   (prices.parquet, returns.parquet) feeds cryptognn.graph.correlation and cryptognn.features.
 Why it exists: keeps "raw klines -> clean aligned panel" logic in one place, so every
   downstream module can assume a validated, gap-free (T, N) matrix and never touch

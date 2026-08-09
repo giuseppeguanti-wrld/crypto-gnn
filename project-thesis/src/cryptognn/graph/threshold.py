@@ -15,7 +15,7 @@ the observed values sidesteps it instead of working around it.
 Note this calibrates the *edge* threshold only. Marchenko-Pastur, which the
 thesis invokes for the noise floor, governs the *spectrum* of the matrix
 (collective structure), not any individual rho_ij; it is used separately in
-graph.metrics.eigs_outside_mp() for Section 6.6. See PLANNING.md Section 1.1.
+graph.metrics.eigs_outside_mp() for Section 6.6.
 
 Exports:
   - permutation_null(): null distribution of pairwise correlations for one window
@@ -239,9 +239,9 @@ def check_tau_plausible(
 
     Under the null with T_w = 60 the sampling standard deviation of rho is about
     1/sqrt(T_w - 1) ~ 0.13, putting the 95th percentile near 1.645 * 0.13 ~ 0.21;
-    heavy tails widen it somewhat, so roughly 0.20-0.28 is expected (PLANNING.md
-    S2.1). The default bounds are deliberately loose around that range: they
-    catch the failure modes, not a merely surprising value.
+    heavy tails widen it somewhat, so roughly 0.20-0.28 is expected. The default
+    bounds are deliberately loose around that range: they catch the failure
+    modes, not a merely surprising value.
 
       - tau at or above `upper_bound` is the signature of a permutation that
         failed to break the dependence (e.g. one shared permutation applied to

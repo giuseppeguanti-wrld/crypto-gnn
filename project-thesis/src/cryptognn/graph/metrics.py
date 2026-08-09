@@ -5,7 +5,7 @@ against time, so the question of Section 6.6 -- does the market's network
 structure compact during a crisis? -- becomes a series to read rather than 1947
 matrices to inspect.
 
-Which graph feeds which metric is not interchangeable (PLANNING.md Section 1.2):
+Which graph feeds which metric is not interchangeable:
 
   - Spectral metrics (lambda_2, spectral entropy, market mode share, eigenvalues
     outside the Marchenko-Pastur bulk) are computed on the **complete** graph or
@@ -60,8 +60,8 @@ def graph_density(weights: np.ndarray) -> np.ndarray | float:
     Delegates to graph.build.edge_density(), which is the single implementation
     of this count in the study: the diagnostics written into
     tau_calibration.json and the series plotted in Section 6.6 must never be
-    able to disagree. Exists under this name because PLANNING.md and the thesis
-    refer to it as graph density among the topological metrics.
+    able to disagree. Exists under this name because the thesis refers to it as
+    graph density among the topological metrics.
     """
     return edge_density(weights)
 

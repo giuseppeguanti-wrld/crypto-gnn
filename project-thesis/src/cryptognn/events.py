@@ -31,9 +31,9 @@ Integration: called by scripts/03_topology_analysis.py after topology.parquet is
   written; produces results/metrics/event_study.parquet, which feeds the event
   markers of the Section 6.6 figures (S2.5) and the Streamlit explorer.
 Why events live in a config file: the dates are study parameters like any other,
-  and PLANNING requires each to be documentable with a citation -- keeping them
-  in YAML with a citation field makes an undocumented event visible instead of
-  letting it hide as a literal in plotting code.
+  and each must be documentable with a citation -- keeping them in YAML with a
+  citation field makes an undocumented event visible instead of letting it hide
+  as a literal in plotting code.
 """
 from __future__ import annotations
 
@@ -115,9 +115,9 @@ def load_events(path: str | Path) -> list[Event]:
 def events_without_citation(events: list[Event]) -> list[Event]:
     """The events still lacking a bibliographic source.
 
-    PLANNING admits only events documentable with a citation. This surfaces the
-    outstanding ones so the pipeline can report them on every run, keeping the
-    debt visible until Section 6.6 is written.
+    Only events documentable with a citation belong in the study. This surfaces
+    the outstanding ones so the pipeline can report them on every run, keeping
+    the debt visible until Section 6.6 is written.
     """
     return [event for event in events if not event.citation]
 
@@ -142,7 +142,7 @@ def event_study(
                        (-60 -> +60), between non-overlapping windows; the
                        headline figure, repeated on every row of the group
       pct_change_local percentage change across the inner offsets (-30 -> +30),
-                       the narrower horizon of PLANNING, kept for comparability
+                       a narrower horizon kept for comparability
 
     An offset outside the sample yields NaN rather than the nearest available
     date: silently substituting a reading from months away would be worse than

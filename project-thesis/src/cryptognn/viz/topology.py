@@ -5,7 +5,7 @@ a figure, and none of them calls savefig(): composing and saving is the job of
 scripts/06_make_figures.py. That separation is what lets the Streamlit app of
 Sprint 6 render the *same* pictures as the thesis by calling the *same*
 functions -- the alternative is two drawing code paths that drift apart until
-neither can be trusted (risk R7 in PLANNING).
+neither can be trusted.
 
 Exports:
   - draw_metric_series(): a topological metric over time, with event markers
@@ -116,7 +116,7 @@ def draw_heatmap(
     order: np.ndarray,
     labels: list[str] | None = None,
     title: str | None = None,
-    show_ylabels: bool = True,
+    label_size: float = 5.5,
 ) -> matplotlib.image.AxesImage:
     """Correlation matrix as a heatmap, reordered and on a fixed [-1, 1] scale.
 
@@ -125,8 +125,9 @@ def draw_heatmap(
     give a calm market and a crisis the same saturated colors. Returns the image
     so the caller can attach a shared colorbar.
 
-    `show_ylabels` exists for side-by-side panels: the ordering is shared, so
-    repeating the asset names on every panel only crowds them.
+    Both axes are always named. The panels of a comparison figure sit apart from
+    one another, so each has to be readable on its own: a panel whose rows are
+    labelled only on its neighbour cannot be interpreted without counting cells.
     """
     corr = np.asarray(corr, dtype=np.float64)
     order = np.asarray(order)
@@ -138,8 +139,8 @@ def draw_heatmap(
         ordered_labels = [labels[i] for i in order]
         ax.set_xticks(range(len(ordered_labels)))
         ax.set_yticks(range(len(ordered_labels)))
-        ax.set_xticklabels(ordered_labels, rotation=90, fontsize=5.5)
-        ax.set_yticklabels(ordered_labels if show_ylabels else [], fontsize=5.5)
+        ax.set_xticklabels(ordered_labels, rotation=90, fontsize=label_size)
+        ax.set_yticklabels(ordered_labels, fontsize=label_size)
     else:
         ax.set_xticks([])
         ax.set_yticks([])

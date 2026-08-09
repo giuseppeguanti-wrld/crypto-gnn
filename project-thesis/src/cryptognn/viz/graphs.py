@@ -2,7 +2,7 @@
 
 Like cryptognn.viz.topology, every function takes an existing `ax` and never
 calls savefig(): the scripts compose and save, so the Streamlit app of Sprint 6
-draws the identical picture by calling the identical function (risk R7).
+draws the identical picture by calling the identical function.
 
 Exports:
   - fixed_layout(): node positions computed once on the period-average graph
@@ -53,8 +53,9 @@ def draw_snapshot(
     labels: list[str] | None = None,
     title: str | None = None,
     max_edge_width: float = 2.2,
-    max_node_size: float = 220.0,
-    min_node_size: float = 70.0,
+    max_node_size: float = 320.0,
+    min_node_size: float = 110.0,
+    label_size: float = 5.5,
 ) -> matplotlib.axes.Axes:
     """One node-link diagram of a thresholded weight matrix at fixed positions.
 
@@ -99,7 +100,7 @@ def draw_snapshot(
         node_color=COLORS[0],
         linewidths=0.0,
     )
-    texts = nx.draw_networkx_labels(graph, pos, ax=ax, font_size=5.5, font_color="white")
+    texts = nx.draw_networkx_labels(graph, pos, ax=ax, font_size=label_size, font_color="white")
     # A weakly connected node is drawn small, so its label overflows the disc
     # and the characters landing on the white background vanish -- "DOGE" reads
     # as "OG" on a calm date, which looks like a bug and hides exactly the node

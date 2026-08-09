@@ -41,6 +41,7 @@ class ThresholdConfig:
     n_permutations: int
     n_calibration_windows: int
     statistic: str
+    tau_fixed: float
 
 
 @dataclass(frozen=True)

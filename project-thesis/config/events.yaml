@@ -1,0 +1,41 @@
+# Crisis events used by the event study of thesis Section 6.6.
+#
+# Only events documentable with a citation belong here: no event is added to
+# round out the picture visually. `citation` holds a BibTeX key from
+# latex-thesis/bibliography/references.bib, and an empty value is a debt to
+# settle before the chapter is written, not a permission to omit the source --
+# scripts/03_topology_analysis.py reports every uncited event on each run.
+#
+# `date` is the date the shock became public, not the date the topology metrics
+# react: each metric at date t is computed on the returns window [t-59, t], so
+# the event is fully reflected only 60 days later. The event study reads the
+# metrics at offsets -60/-30/0/+30/+60 for exactly this reason.
+
+events:
+  - key: china_crackdown
+    date: 2021-05-19
+    label: "Stretta cinese"
+    description: >-
+      Crollo generalizzato del mercato cripto seguito all'inasprimento delle
+      restrizioni cinesi su scambi e mining, con perdite intraday superiori al
+      30% sui principali asset.
+    # DA AGGIUNGERE: nessun riferimento in references.bib copre ancora questo
+    # evento (briola2023anatomy e akyildirim2023understanding riguardano
+    # Terra/Luna e FTX). Va inserita una fonte prima della stesura della sez. 6.6.
+    citation: ""
+
+  - key: terra_luna
+    date: 2022-05-09
+    label: "Terra/Luna"
+    description: >-
+      Perdita dell'ancoraggio della stablecoin algoritmica UST e conseguente
+      collasso di LUNA, con propagazione all'intero comparto.
+    citation: briola2023anatomy
+
+  - key: ftx
+    date: 2022-11-08
+    label: "FTX"
+    description: >-
+      Crisi di liquidita e sospensione dei prelievi su FTX, allora fra le
+      maggiori piattaforme di scambio centralizzate, seguita dal fallimento.
+    citation: akyildirim2023understanding

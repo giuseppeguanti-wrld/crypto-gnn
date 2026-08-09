@@ -27,6 +27,16 @@ from cryptognn.graph.metrics import algebraic_connectivity
 
 **Mai** import da `src.cryptognn` o relativi da root.
 
+Questo funziona perché il pacchetto è **installato in modalità editable**, non per manipolazione di `sys.path`. È un prerequisito una tantum su un clone nuovo o dopo aver ricreato il venv:
+
+```powershell
+uv pip install -e . --no-deps      # il venv di questo progetto è gestito da uv
+```
+
+`--no-deps` è deliberato: `torch` è installato dall'index CPU dedicato e una nuova risoluzione da PyPI tirerebbe la build CUDA (~2,5 GB invece di ~200 MB). Le dipendenze si installano prima, da `requirements.txt`.
+
+**Mai** aggiungere `sys.path.insert(...)` in cima a uno script: se un import fallisce, manca l'installazione editable, non il path.
+
 ### Configurazione come unica fonte di verità
 
 **Ogni parametro dello studio** — universo, periodo, finestra, soglia, iperparametri — vive in `config/default.yaml`. Nel codice **nessun numero magico**:
@@ -95,6 +105,7 @@ project-thesis/
 ## Esecuzione della pipeline
 
 ```bash
+uv pip install -e . --no-deps                # una tantum, vedi "Importi e modulo"
 pytest tests/ -v                             # verifica anti-look-ahead
 python scripts/01_download_data.py           # ~2'
 python scripts/02_build_graphs.py            # ~1'

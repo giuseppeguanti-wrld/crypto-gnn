@@ -17,6 +17,7 @@ graph:
     n_permutations: 500
     n_calibration_windows: 24
     statistic: pooled
+    tau_fixed: 0.30
 
 features:
   lags: 5

@@ -5,6 +5,7 @@ Pearson correlation matrices -- the raw material every downstream graph step
 (Mantegna weighting, thresholding, topological metrics) is built from.
 
 Exports (built incrementally):
+  - correlation_from_windows(): batched correlation kernel over stacked windows
   - rolling_correlation(): vectorized rolling correlation via sliding_window_view
   - validate_correlation(): asserts diagonal/symmetry/range invariants, raises otherwise
   - (more to be added: on-disk save)
@@ -20,6 +21,26 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
+
+
+def correlation_from_windows(windows: np.ndarray) -> np.ndarray:
+    """Pearson correlation matrix of every window in a stack, in one batched pass.
+
+    `windows` is (K, N, W): K windows of W observations for each of N assets.
+    Returns (K, N, N) in float64, where result[k] is the correlation matrix of
+    windows[k].
+
+    Factored out of rolling_correlation() because the permutation null of
+    cryptognn.graph.threshold needs exactly the same kernel over a different
+    stack of windows (B shuffled replicas of one window, rather than T-window+1
+    consecutive windows of the panel).
+    """
+    centered = windows - windows.mean(axis=2, keepdims=True)
+    cov = np.einsum("knw,kmw->knm", centered, centered)
+    variance = np.einsum("knw,knw->kn", centered, centered)
+    std = np.sqrt(variance)
+
+    return cov / (std[:, :, None] * std[:, None, :])
 
 
 def rolling_correlation(returns: pd.DataFrame, window: int) -> tuple[np.ndarray, pd.DatetimeIndex]:
@@ -40,12 +61,7 @@ def rolling_correlation(returns: pd.DataFrame, window: int) -> tuple[np.ndarray,
     values = returns.to_numpy(dtype=np.float64)  # (T, N)
     windows = sliding_window_view(values, window, axis=0)  # (T-window+1, N, window)
 
-    centered = windows - windows.mean(axis=2, keepdims=True)
-    cov = np.einsum("knw,kmw->knm", centered, centered)
-    variance = np.einsum("knw,knw->kn", centered, centered)
-    std = np.sqrt(variance)
-
-    corr = cov / (std[:, :, None] * std[:, None, :])
+    corr = correlation_from_windows(windows)
     corr_index = returns.index[window - 1 :]
 
     return corr.astype(np.float32), corr_index

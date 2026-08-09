@@ -18,25 +18,14 @@ Usage:
 """
 from __future__ import annotations
 
-import argparse
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from cryptognn.config import load_config  # noqa: E402
-from cryptognn.data.download import download_universe  # noqa: E402
-from cryptognn.paths import ensure_dirs  # noqa: E402
+from cryptognn.cli import build_parser, run
+from cryptognn.config import load_config
+from cryptognn.data.download import download_universe
+from cryptognn.paths import ensure_dirs
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Download the crypto-gnn asset universe from Binance.")
-    parser.add_argument(
-        "--config",
-        type=Path,
-        default=Path("config/default.yaml"),
-        help="Path to the study config YAML (default: config/default.yaml).",
-    )
+    parser = build_parser("Download the crypto-gnn asset universe from Binance.")
     parser.add_argument(
         "--force",
         action="store_true",
@@ -54,4 +43,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    run(main)

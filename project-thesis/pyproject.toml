@@ -1,3 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cryptognn"
+version = "0.2.0"
+description = "Graph neural networks on dynamic correlation graphs for multi-asset cryptocurrency forecasting"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+authors = [{ name = "Giuseppe Guanti" }]
+
+# Direct dependencies only, with the lower bounds of PLANNING section 3.
+# requirements.txt stays as the fully pinned lockfile of a working environment:
+# this list says what the study depends on, that one says what it was run with.
+dependencies = [
+    "matplotlib>=3.9",
+    "networkx>=3.4",
+    "numpy>=2.1",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "pyyaml>=6.0",
+    "requests>=2.32",
+    "scipy>=1.14",
+    "statsmodels>=0.14",
+    "torch>=2.6",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.6"]
+app = ["streamlit>=1.39"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"

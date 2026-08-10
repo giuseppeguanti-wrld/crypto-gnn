@@ -23,7 +23,8 @@ Exports:
   - MissingArtifactError: carries the missing path and the command that makes it
   - path constants and corr_path(window)
   - load_/save_ pairs for prices, returns, volumes, correlations, graphs, tau,
-    topology, the event study, and the walk-forward predictions
+    topology, the event study, and the walk-forward predictions, diagnostics,
+    accuracy summary and Diebold-Mariano matrix
 
 Integration: used by scripts/02, 03 and 06, and by app/streamlit_app.py.
 Why the QA tables are absent: descriptive.parquet, acf_*.parquet and
@@ -284,6 +285,34 @@ def load_run_diagnostics(name: str = "baselines") -> pd.DataFrame:
     lag order and parameter count among it, which Section 6.4 reports directly.
     """
     return pd.read_parquet(_require(_metrics(f"diagnostics_{name}.parquet"), COMMAND_BASELINES))
+
+
+def save_summary(summary: pd.DataFrame, name: str = "baselines") -> Path:
+    """One accuracy row per model: the body of the comparison table."""
+    path = _metrics(f"summary_{name}.parquet")
+    summary.to_parquet(path)
+    return path
+
+
+def load_summary(name: str = "baselines") -> pd.DataFrame:
+    return pd.read_parquet(_require(_metrics(f"summary_{name}.parquet"), COMMAND_BASELINES))
+
+
+def save_dm_matrix(matrix: pd.DataFrame, name: str = "baselines") -> Path:
+    path = _metrics(f"dm_{name}.parquet")
+    matrix.to_parquet(path)
+    return path
+
+
+def load_dm_matrix(name: str = "baselines") -> pd.DataFrame:
+    """Diebold-Mariano statistic and p-value for every ordered pair of models.
+
+    Here rather than written straight from the script, unlike the QA tables of
+    scripts/02, because these two are *read* again: Sprint 4 merges them with
+    the GCN's own results, and Sprint 5 turns them into the LaTeX tables. An
+    artifact with a second reader is exactly what this module is for.
+    """
+    return pd.read_parquet(_require(_metrics(f"dm_{name}.parquet"), COMMAND_BASELINES))
 
 
 def save_event_study(study: pd.DataFrame) -> Path:

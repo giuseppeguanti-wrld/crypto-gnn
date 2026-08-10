@@ -19,10 +19,10 @@ import pytest
 from statsmodels.tsa.api import VAR
 
 from cryptognn.config import load_config
+from cryptognn.evaluation.protocols import Forecaster, SupportsDiagnostics
 from cryptognn.evaluation.walkforward import WalkforwardData, make_folds, run_walkforward
 from cryptognn.models import baseline_factories
 from cryptognn.models.ar import PerAssetARForecaster
-from cryptognn.models.base import Forecaster, SupportsDiagnostics
 from cryptognn.models.naive import HistoricalMeanForecaster, ZeroForecaster
 from cryptognn.models.var import VARForecaster
 from cryptognn.paths import DEFAULT_CONFIG

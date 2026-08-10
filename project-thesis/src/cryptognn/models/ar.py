@@ -13,7 +13,7 @@ below exist so it can be reported with numbers.
 Exports:
   - PerAssetARForecaster: N independent AutoReg fits, BIC order selection
 
-Integration: implements cryptognn.models.base.Forecaster and
+Integration: implements cryptognn.evaluation.protocols.Forecaster and
   SupportsDiagnostics; run by cryptognn.evaluation.walkforward.run_walkforward.
 Why the forecast does not call statsmodels: predicting through the library would
   mean handing it a series and trusting where it reads from. Applying the fitted

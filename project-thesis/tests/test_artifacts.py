@@ -206,6 +206,45 @@ def test_topology_and_event_study_round_trip():
     pd.testing.assert_frame_equal(artifacts.load_event_study(), study)
 
 
+def test_walkforward_outputs_round_trip():
+    """The four tables scripts/04 produces, each read again by Sprint 4 or 5."""
+    predictions = pd.DataFrame(
+        {
+            "fold": [0, 0],
+            "date": pd.date_range("2022-05-05", periods=2, freq="D", tz="UTC"),
+            "asset": ["BTC", "ETH"],
+            "y_true": [0.01, -0.02],
+            "y_pred": [0.0, 0.0],
+            "model": ["zero", "zero"],
+        }
+    )
+    diagnostics = pd.DataFrame({"fold": [0], "model": ["zero"], "n_train": [365]})
+    summary = pd.DataFrame({"model": ["zero"], "rmse": [0.041453]})
+    dm = pd.DataFrame({"model_a": ["mean"], "model_b": ["zero"], "statistic": [2.7782]})
+
+    artifacts.save_predictions(predictions)
+    artifacts.save_run_diagnostics(diagnostics)
+    artifacts.save_summary(summary)
+    artifacts.save_dm_matrix(dm)
+
+    pd.testing.assert_frame_equal(artifacts.load_predictions(), predictions)
+    pd.testing.assert_frame_equal(artifacts.load_run_diagnostics(), diagnostics)
+    pd.testing.assert_frame_equal(artifacts.load_summary(), summary)
+    pd.testing.assert_frame_equal(artifacts.load_dm_matrix(), dm)
+
+
+def test_walkforward_outputs_are_named_per_run_group():
+    """The GCN of Sprint 4 writes the same schema under its own name, so the two
+    run groups coexist instead of overwriting each other.
+    """
+    summary = pd.DataFrame({"model": ["gcn"], "rmse": [0.042]})
+
+    artifacts.save_summary(summary, name="gcn")
+
+    assert (paths.RESULTS_METRICS / "summary_gcn.parquet").exists()
+    pd.testing.assert_frame_equal(artifacts.load_summary(name="gcn"), summary)
+
+
 # --------------------------------------------------------------------------
 # Missing artifacts
 # --------------------------------------------------------------------------
@@ -225,6 +264,10 @@ def test_topology_and_event_study_round_trip():
         (lambda: artifacts.load_tau(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_topology(), artifacts.COMMAND_TOPOLOGY),
         (lambda: artifacts.load_event_study(), artifacts.COMMAND_TOPOLOGY),
+        (lambda: artifacts.load_predictions(), artifacts.COMMAND_BASELINES),
+        (lambda: artifacts.load_run_diagnostics(), artifacts.COMMAND_BASELINES),
+        (lambda: artifacts.load_summary(), artifacts.COMMAND_BASELINES),
+        (lambda: artifacts.load_dm_matrix(), artifacts.COMMAND_BASELINES),
     ],
 )
 def test_missing_artifact_names_the_command_that_makes_it(loader, command):

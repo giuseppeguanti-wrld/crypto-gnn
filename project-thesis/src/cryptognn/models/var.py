@@ -22,7 +22,7 @@ Two configurations, both run:
 Exports:
   - VARForecaster: OLS VAR with either BIC-selected or fixed lag order
 
-Integration: implements cryptognn.models.base.Forecaster and SupportsDiagnostics.
+Integration: implements cryptognn.evaluation.protocols.Forecaster and SupportsDiagnostics.
 Why the forecast is computed here rather than by results.forecast(): the same
   reason as in models/ar.py -- the input stays what the harness certifies as
   past -- plus one this model makes concrete, in that the whole test block

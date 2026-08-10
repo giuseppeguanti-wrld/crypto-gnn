@@ -25,14 +25,14 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from cryptognn.artifacts import save_predictions, save_run_diagnostics
+from cryptognn.artifacts import save_dm_matrix, save_predictions, save_run_diagnostics, save_summary
 from cryptognn.cli import build_parser, run
 from cryptognn.config import load_config
 from cryptognn.evaluation.metrics import diebold_mariano_matrix, summarize_predictions
 from cryptognn.evaluation.walkforward import make_folds_from_config, run_walkforward
 from cryptognn.features import build_study_data
 from cryptognn.models import baseline_factories
-from cryptognn.paths import RESULTS_METRICS, ensure_dirs
+from cryptognn.paths import ensure_dirs
 
 BASELINE = "zero"
 
@@ -118,8 +118,8 @@ def main() -> None:
 
     save_predictions(predictions)
     save_run_diagnostics(diagnostics)
-    summary.to_parquet(RESULTS_METRICS / "summary_baselines.parquet")
-    dm.to_parquet(RESULTS_METRICS / "dm_baselines.parquet")
+    save_summary(summary)
+    save_dm_matrix(dm)
     print(
         f"\n  saved predictions_baselines.parquet ({len(predictions)} rows), "
         "diagnostics_baselines.parquet, summary_baselines.parquet, dm_baselines.parquet"

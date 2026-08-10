@@ -25,7 +25,7 @@ Exports:
 
 Integration: consumed by scripts/04_run_baselines.py and 05_run_gcn.py through
   the models of cryptognn.models, which implement the Forecaster protocol of
-  cryptognn.models.base.
+  cryptognn.evaluation.protocols.
 Why it exists: an error in this file invalidates every result downstream and is
   discovered late (risk R2 of the plan). Concentrating fold geometry and data
   slicing in one module makes that risk testable in one test module -- which is
@@ -40,13 +40,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from numpy.lib.stride_tricks import sliding_window_view
 
-from cryptognn.models.base import SupportsDiagnostics
+from cryptognn.evaluation.protocols import Forecaster, SupportsDiagnostics
+from cryptognn.windows import causal_windows
 
 if TYPE_CHECKING:
     from cryptognn.config import Config
-    from cryptognn.models.base import Forecaster
 
 MODES = ("rolling", "expanding")
 
@@ -320,18 +319,15 @@ class WalkforwardData:
     def n_assets(self) -> int:
         return self.returns.shape[1]
 
-    def folds(self, config: Config) -> list[Fold]:
-        """The fold layout for this panel, straight from the config."""
-        return make_folds_from_config(config, self.n_obs)
-
     def segment(self, positions: np.ndarray) -> Segment:
         """The view of one split: rows at `positions`, plus their lag history.
 
-        The lag windows are cut from a copy of the panel padded on top with
-        `lookback - 1` NaN rows, so position t always maps to the window
-        [t - lookback + 1, t] and early positions -- which have no full history --
-        carry NaN instead of silently borrowing rows from the wrong end. The
-        study's own offset of 59 keeps every fold well clear of that boundary.
+        The lag history comes from causal_windows(), the study's single
+        implementation of "the rows up to and including t": position t always
+        maps to the window [t - lookback + 1, t], and early positions -- which
+        have no full history -- carry NaN instead of silently borrowing rows from
+        the wrong end. The study's own offset of 59 keeps every fold well clear
+        of that boundary.
         """
         positions = np.asarray(positions, dtype=int)
         if positions.size == 0:
@@ -342,17 +338,13 @@ class WalkforwardData:
                 f"at horizon {self.horizon}"
             )
 
-        pad = np.full((self.lookback - 1, self.n_assets), np.nan)
-        padded = np.vstack([pad, self.returns])
-        windows = sliding_window_view(padded, self.lookback, axis=0)  # (T, N, L)
-
         return Segment(
             positions=positions,
             dates=self.dates[positions],
             target_dates=self.dates[positions + self.horizon],
             assets=self.assets,
             returns=self.returns[positions],
-            lags=windows[positions].transpose(0, 2, 1),  # (n, L, N), oldest first
+            lags=causal_windows(self.returns, self.lookback)[positions],  # (n, L, N), oldest first
             y=self.returns[positions + self.horizon],
             features=None if self.features is None else self.features[positions],
             a_hat=None if self.a_hat is None else self.a_hat[positions],

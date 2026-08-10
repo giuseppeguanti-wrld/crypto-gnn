@@ -11,7 +11,7 @@ Exports:
   - ZeroForecaster: r_hat = 0, the reference of the skill score
   - HistoricalMeanForecaster: the train block's mean, per asset
 
-Integration: implement cryptognn.models.base.Forecaster, run through
+Integration: implement cryptognn.evaluation.protocols.Forecaster, run through
   cryptognn.evaluation.walkforward.run_walkforward like every other model.
 """
 from __future__ import annotations
@@ -21,9 +21,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:
-    # Annotation-only, and deliberately so: the harness imports models.base to
-    # detect the diagnostics hook, so a model importing the harness back at
-    # runtime would close a cycle through cryptognn.models.__init__.
+    # Under TYPE_CHECKING because it is only an annotation: `from __future__
+    # import annotations` defers evaluation, so importing it at runtime would
+    # cost an import and buy nothing.
     from cryptognn.evaluation.walkforward import Segment
 
 

@@ -73,6 +73,12 @@ Tutti e quattro esistono e passano dalla fine di S3.3, quindi **prima di qualunq
 
 Un test anti-look-ahead che non fallisce quando la fuga c'è non protegge nulla: ognuno di questi è stato provato **contro una mutazione iniettata** (feature con finestra non causale, grafo allineato una posizione avanti, `transform()` che rifitta per blocco), verificando che fallisca. Ripetere l'esercizio quando se ne aggiunge uno.
 
+**Una sola primitiva causale.** «Le righe fino a *t* incluso» si ottiene da `windows.py::causal_windows()`, e da nient'altro: feature e ritardi dei segmenti passano entrambi di lì. Riscrivere il padding NaN più `sliding_window_view` in un terzo posto significa che una correzione futura raggiungerà solo due implementazioni su tre — ed è esattamente la garanzia che i test qui sopra proteggono. (`rolling_correlation()` è l'eccezione dichiarata: scarta le finestre incomplete invece di riempirle, quindi ha un contratto diverso.)
+
+### Verso delle dipendenze
+
+`models → evaluation`, mai il contrario. I `Protocol` (`Forecaster`, `SupportsDiagnostics`) vivono in `evaluation/protocols.py` perché è l'harness a dichiarare di che cosa ha bisogno. Se l'harness importasse da `models`, importare il protocollo di valutazione caricherebbe statsmodels e torch — anche per l'app Streamlit, che non ne ha bisogno.
+
 ### Commit e branching
 
 - Un commit per milestone completata, non micro-commit per file singoli

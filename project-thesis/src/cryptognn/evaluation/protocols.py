@@ -9,6 +9,14 @@ models free of an inheritance requirement -- a wrapper around statsmodels and an
 nn.Module subclass can both satisfy it without sharing an ancestor -- while a
 type checker still verifies the signatures at every call site.
 
+**It lives beside the harness, not beside the models, and that is the point.**
+The requirement originates here: the loop in walkforward.py is what needs to fit
+and predict, and the implementations conform to it. Housing the protocol in
+cryptognn.models instead made the harness import the model package, which meant
+importing the evaluation protocol pulled in statsmodels -- and would have pulled
+in torch as soon as Sprint 4 added the GCN, including for the Streamlit app,
+which needs neither. Dependencies now run one way: models -> evaluation.
+
 Exports:
   - Forecaster: fit(train, val) / predict(segment), plus a `name` used in results
   - SupportsDiagnostics: the optional per-fold reporting hook

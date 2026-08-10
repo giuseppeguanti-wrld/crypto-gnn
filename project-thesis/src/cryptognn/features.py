@@ -31,11 +31,11 @@ from dataclasses import replace
 
 import numpy as np
 import pandas as pd
-from numpy.lib.stride_tricks import sliding_window_view
 
 from cryptognn.artifacts import load_a_hat, load_corr_index, load_returns, load_volumes
 from cryptognn.config import Config
 from cryptognn.evaluation.walkforward import Segment, WalkforwardData, align_graph
+from cryptognn.windows import causal_windows
 
 # A spread below this fraction of a channel's own level counts as no spread.
 # `sd > 0` is not enough: the standard deviation of a constant array comes out at
@@ -54,18 +54,6 @@ def _safe_scale(spread: np.ndarray, level: np.ndarray) -> np.ndarray:
     comes out at ~0 -- the right reading for a quantity that has not moved.
     """
     return np.where(spread > _SCALE_FLOOR * np.maximum(np.abs(level), 1.0), spread, 1.0)
-
-
-def _causal_windows(values: np.ndarray, window: int) -> np.ndarray:
-    """(T, window, N): for each row t, the `window` rows ending at t inclusive.
-
-    The array is padded on top with `window - 1` NaN rows, so early positions
-    carry NaN instead of a window silently borrowed from further along. Same
-    construction as Segment.lags in the harness, for the same reason.
-    """
-    pad = np.full((window - 1, values.shape[1]), np.nan)
-    padded = np.vstack([pad, values])
-    return sliding_window_view(padded, window, axis=0).transpose(0, 2, 1)
 
 
 def feature_names(config: Config) -> list[str]:
@@ -107,10 +95,10 @@ def build_node_features(
     lags = config.features.lags
     vol_windows = list(config.features.vol_windows)
 
-    lag_windows = _causal_windows(values, lags)
+    lag_windows = causal_windows(values, lags)
     # Column -1 of a causal window is r_t, column -1-k is r_{t-k}.
     channels = [lag_windows[:, -1 - k, :] for k in range(lags)]
-    channels += [np.sqrt(np.mean(_causal_windows(values, window) ** 2, axis=1)) for window in vol_windows]
+    channels += [np.sqrt(np.mean(causal_windows(values, window) ** 2, axis=1)) for window in vol_windows]
 
     if config.features.use_volume:
         if volumes is None:
@@ -124,7 +112,7 @@ def build_node_features(
             raise ValueError("Volume panel contains non-positive values; log volume is undefined there")
 
         log_volume = np.log(aligned)
-        history = _causal_windows(log_volume, max(vol_windows))
+        history = causal_windows(log_volume, max(vol_windows))
         mean = history.mean(axis=1)
         channels.append((log_volume - mean) / _safe_scale(history.std(axis=1), mean))
 

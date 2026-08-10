@@ -2,6 +2,9 @@
 
 Exports:
   - baseline_factories(): name -> zero-argument factory, one entry per baseline
+  - Forecaster, SupportsDiagnostics: re-exported from cryptognn.evaluation.protocols,
+    where the contract lives, so `from cryptognn.models import Forecaster` keeps
+    working for callers that think of it as part of the model layer
 
 Integration: scripts/04_run_baselines.py iterates this mapping and hands each
   factory to run_walkforward, so adding or removing a baseline is a change here
@@ -14,8 +17,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from cryptognn.config import Config
+from cryptognn.evaluation.protocols import Forecaster, SupportsDiagnostics
 from cryptognn.models.ar import PerAssetARForecaster
-from cryptognn.models.base import Forecaster, SupportsDiagnostics
 from cryptognn.models.naive import HistoricalMeanForecaster, ZeroForecaster
 from cryptognn.models.var import VARForecaster
 

@@ -25,6 +25,7 @@ Two conventions worth stating, because both are visible in the thesis:
 Exports:
   - rmse(), mae(), directional_accuracy(), skill_score()
   - diebold_mariano(): HLN-corrected DM statistic, p-value and degrees of freedom
+  - holm_adjusted(): family-wise correction over a set of p-values
   - panel_loss_differential(): long predictions -> one daily series per model pair
   - summarize_predictions(), diebold_mariano_matrix(): the tables of Section 6.4
 
@@ -34,6 +35,7 @@ Integration: consumed by scripts/04_run_baselines.py and, from Sprint 4, by
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -183,39 +185,93 @@ def panel_loss_differential(predictions: pd.DataFrame, model_a: str, model_b: st
     return np.sqrt(aligned[model_a].to_numpy()), np.sqrt(aligned[model_b].to_numpy())
 
 
-def summarize_predictions(predictions: pd.DataFrame, baseline: str = "zero") -> pd.DataFrame:
+def _accuracy_row(indexed: pd.DataFrame, baseline_pred: pd.Series) -> dict[str, float | int]:
+    """Every accuracy measure of one model over one block of predictions.
+
+    Extracted so the overall table and the per-asset and per-fold breakdowns are
+    literally the same computation. A second implementation for the grouped case
+    is how a table ends up disagreeing with its own subtotals.
+    """
+    accuracy, coverage = directional_accuracy(indexed["y_true"], indexed["y_pred"])
+    return {
+        "rmse": rmse(indexed["y_true"], indexed["y_pred"]),
+        "mae": mae(indexed["y_true"], indexed["y_pred"]),
+        "directional_accuracy": accuracy,
+        "coverage": coverage,
+        "skill_score": skill_score(indexed["y_true"], indexed["y_pred"], baseline_pred),
+        "n_predictions": len(indexed),
+    }
+
+
+def summarize_predictions(
+    predictions: pd.DataFrame,
+    baseline: str = "zero",
+    by: str | Sequence[str] | None = None,
+) -> pd.DataFrame:
     """One row per model: RMSE, MAE, directional accuracy, coverage, skill score.
 
     The single aggregation point for every accuracy table in the study, so the
     baseline comparison of Sprint 3 and the full comparison of Sprint 4 cannot be
     computed two subtly different ways.
+
+    `by` breaks the table down further -- "asset" for the per-asset view of
+    Section 6.5, "fold" for the per-fold one that the skill-by-fold figure of
+    Sprint 5 is drawn from. The skill score is then computed **inside each
+    group**, against the baseline's predictions for that same group: the skill of
+    a model on BTC means its improvement over forecasting zero on BTC, not its
+    improvement over the whole panel's zero forecast, and the two differ whenever
+    volatility varies across the grouping -- which on this data it does.
+
+    Left at None the output is exactly what Sprint 3 produced, columns and order
+    included, because four scripts and a test already depend on it.
     """
     if baseline not in set(predictions["model"]):
         raise ValueError(f"Baseline model {baseline!r} absent from the predictions table")
 
+    keys = [by] if isinstance(by, str) else list(by or [])
+    missing = [key for key in keys if key not in predictions.columns]
+    if missing:
+        raise ValueError(f"Cannot group by {missing}: absent from the predictions table")
+
     reference = predictions[predictions["model"] == baseline].set_index(["date", "asset"])["y_pred"]
 
     rows = []
-    for model, group in predictions.groupby("model", sort=False):
+    for values, group in predictions.groupby(["model", *keys], sort=False):
+        labels = dict(zip(["model", *keys], values if isinstance(values, tuple) else (values,), strict=True))
         indexed = group.set_index(["date", "asset"])
         baseline_pred = reference.reindex(indexed.index)
         if baseline_pred.isna().any():
-            raise ValueError(f"Model {model!r} covers dates or assets the baseline {baseline!r} does not")
+            raise ValueError(f"Model {labels['model']!r} covers dates or assets the baseline {baseline!r} does not")
 
-        accuracy, coverage = directional_accuracy(indexed["y_true"], indexed["y_pred"])
-        rows.append(
-            {
-                "model": model,
-                "rmse": rmse(indexed["y_true"], indexed["y_pred"]),
-                "mae": mae(indexed["y_true"], indexed["y_pred"]),
-                "directional_accuracy": accuracy,
-                "coverage": coverage,
-                "skill_score": skill_score(indexed["y_true"], indexed["y_pred"], baseline_pred),
-                "n_predictions": len(indexed),
-            }
-        )
+        rows.append(labels | _accuracy_row(indexed, baseline_pred))
 
-    return pd.DataFrame(rows).sort_values("rmse", ignore_index=True)
+    return pd.DataFrame(rows).sort_values([*keys, "rmse"], ignore_index=True)
+
+
+def holm_adjusted(p_values: np.ndarray) -> np.ndarray:
+    """Holm-Bonferroni adjusted p-values, in the input's order.
+
+    Sort ascending, multiply the k-th smallest of m by (m - k), then enforce
+    monotonicity so an adjusted value never falls below one that came before it,
+    and clip at 1. Comparing the result to alpha controls the family-wise error
+    rate exactly as the sequential procedure does, with the advantage that the
+    number can be printed in a table.
+
+    Holm rather than Bonferroni because it is uniformly more powerful and rests
+    on no additional assumption: there is no reason to prefer the weaker of two
+    tests that control the same thing.
+    """
+    p_values = np.asarray(p_values, dtype=float)
+    if p_values.ndim != 1:
+        raise ValueError(f"Expected a one-dimensional array of p-values, got {p_values.ndim} dimensions")
+    if p_values.size == 0:
+        return p_values
+
+    order = np.argsort(p_values)
+    ranked = p_values[order] * (len(p_values) - np.arange(len(p_values)))
+    adjusted = np.empty_like(ranked)
+    adjusted[order] = np.minimum(np.maximum.accumulate(ranked), 1.0)
+    return adjusted
 
 
 def diebold_mariano_matrix(predictions: pd.DataFrame, h: int = 1) -> pd.DataFrame:
@@ -224,6 +280,21 @@ def diebold_mariano_matrix(predictions: pd.DataFrame, h: int = 1) -> pd.DataFram
     Ordered, not just the upper triangle: the statistic is antisymmetric and the
     p-value symmetric, so the full matrix reads the same in both directions while
     letting a table be sliced by either model without transposing anything.
+
+    `p_value_holm` controls the family-wise error rate over the comparison as a
+    whole. Seven models make 21 distinct tests, and at 5% roughly one of them is
+    expected to come out significant on noise alone -- the data-snooping concern
+    the thesis raises with `white2000reality`, arriving here in its most literal
+    form. Reporting both columns lets Section 6.4 state a result as significant
+    after accounting for how many tests were run, rather than leaving the reader
+    to make the adjustment mentally.
+
+    The correction is applied over the **unordered** pairs, then written onto
+    both directions of each: the 42 rows contain 21 tests, and correcting over 42
+    would count every test twice and inflate the adjustment. The family is every
+    pair rather than only the comparisons against `zero`, which is the more
+    conservative choice and spares the thesis an argument about which subfamily
+    is the one that counts.
     """
     models = list(dict.fromkeys(predictions["model"]))
 
@@ -238,6 +309,7 @@ def diebold_mariano_matrix(predictions: pd.DataFrame, h: int = 1) -> pd.DataFram
                 {
                     "model_a": model_a,
                     "model_b": model_b,
+                    "pair": frozenset((model_a, model_b)),
                     "statistic": result.statistic,
                     "p_value": result.p_value,
                     "df": result.df,
@@ -245,4 +317,11 @@ def diebold_mariano_matrix(predictions: pd.DataFrame, h: int = 1) -> pd.DataFram
                 }
             )
 
-    return pd.DataFrame(rows)
+    matrix = pd.DataFrame(rows)
+    if matrix.empty:
+        return matrix.drop(columns="pair")
+
+    distinct = matrix.drop_duplicates("pair").set_index("pair")["p_value"]
+    adjusted = pd.Series(holm_adjusted(distinct.to_numpy()), index=distinct.index)
+    matrix["p_value_holm"] = matrix["pair"].map(adjusted)
+    return matrix.drop(columns="pair")

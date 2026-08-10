@@ -268,6 +268,15 @@ def test_walkforward_outputs_are_named_per_run_group():
         (lambda: artifacts.load_run_diagnostics(), artifacts.COMMAND_BASELINES),
         (lambda: artifacts.load_summary(), artifacts.COMMAND_BASELINES),
         (lambda: artifacts.load_dm_matrix(), artifacts.COMMAND_BASELINES),
+        # The walk-forward artifacts are parametrized by run group but the script
+        # that makes them is not: everything other than the baselines comes from
+        # script 05, and pointing a user at 04 would have them run a command that
+        # succeeds and leaves the file still missing.
+        (lambda: artifacts.load_predictions(name="gcn"), artifacts.COMMAND_GCN),
+        (lambda: artifacts.load_run_diagnostics(name="gcn"), artifacts.COMMAND_GCN),
+        (lambda: artifacts.load_summary(name="all"), artifacts.COMMAND_GCN),
+        (lambda: artifacts.load_summary(name="all_by_fold"), artifacts.COMMAND_GCN),
+        (lambda: artifacts.load_dm_matrix(name="all"), artifacts.COMMAND_GCN),
     ],
 )
 def test_missing_artifact_names_the_command_that_makes_it(loader, command):

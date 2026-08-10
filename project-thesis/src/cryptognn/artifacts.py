@@ -49,6 +49,18 @@ COMMAND_DOWNLOAD = "python scripts/01_download_data.py"
 COMMAND_BUILD = "python scripts/02_build_graphs.py"
 COMMAND_TOPOLOGY = "python scripts/03_topology_analysis.py"
 COMMAND_BASELINES = "python scripts/04_run_baselines.py"
+COMMAND_GCN = "python scripts/05_run_gcn.py"
+
+
+def _predictions_command(name: str) -> str:
+    """Which script produces the prediction artifacts of one run group.
+
+    The walk-forward artifacts are parametrized by group name, but the command
+    that makes them is not: a missing predictions_gcn.parquet has to point at
+    script 05, not at 04, or MissingArtifactError hands the user a command that
+    completes successfully and leaves the file still missing.
+    """
+    return COMMAND_BASELINES if name == "baselines" else COMMAND_GCN
 
 
 class MissingArtifactError(FileNotFoundError):
@@ -271,7 +283,7 @@ def save_predictions(predictions: pd.DataFrame, name: str = "baselines") -> Path
 
 
 def load_predictions(name: str = "baselines") -> pd.DataFrame:
-    return pd.read_parquet(_require(_metrics(f"predictions_{name}.parquet"), COMMAND_BASELINES))
+    return pd.read_parquet(_require(_metrics(f"predictions_{name}.parquet"), _predictions_command(name)))
 
 
 def save_run_diagnostics(diagnostics: pd.DataFrame, name: str = "baselines") -> Path:
@@ -284,7 +296,7 @@ def load_run_diagnostics(name: str = "baselines") -> pd.DataFrame:
     """Per-fold, per-model record of what each fit decided -- the VAR's selected
     lag order and parameter count among it, which Section 6.4 reports directly.
     """
-    return pd.read_parquet(_require(_metrics(f"diagnostics_{name}.parquet"), COMMAND_BASELINES))
+    return pd.read_parquet(_require(_metrics(f"diagnostics_{name}.parquet"), _predictions_command(name)))
 
 
 def save_summary(summary: pd.DataFrame, name: str = "baselines") -> Path:
@@ -295,7 +307,7 @@ def save_summary(summary: pd.DataFrame, name: str = "baselines") -> Path:
 
 
 def load_summary(name: str = "baselines") -> pd.DataFrame:
-    return pd.read_parquet(_require(_metrics(f"summary_{name}.parquet"), COMMAND_BASELINES))
+    return pd.read_parquet(_require(_metrics(f"summary_{name}.parquet"), _predictions_command(name)))
 
 
 def save_dm_matrix(matrix: pd.DataFrame, name: str = "baselines") -> Path:
@@ -312,7 +324,7 @@ def load_dm_matrix(name: str = "baselines") -> pd.DataFrame:
     the GCN's own results, and Sprint 5 turns them into the LaTeX tables. An
     artifact with a second reader is exactly what this module is for.
     """
-    return pd.read_parquet(_require(_metrics(f"dm_{name}.parquet"), COMMAND_BASELINES))
+    return pd.read_parquet(_require(_metrics(f"dm_{name}.parquet"), _predictions_command(name)))
 
 
 def save_event_study(study: pd.DataFrame) -> Path:

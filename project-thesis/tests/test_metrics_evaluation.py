@@ -20,6 +20,7 @@ from cryptognn.evaluation.metrics import (
     diebold_mariano,
     diebold_mariano_matrix,
     directional_accuracy,
+    holm_adjusted,
     mae,
     panel_loss_differential,
     rmse,
@@ -27,16 +28,22 @@ from cryptognn.evaluation.metrics import (
     summarize_predictions,
 )
 
+ASSETS = ["A", "B", "C"]
+N_FOLDS = 2
+
 
 def long_predictions(n_dates: int = 40, seed: int = 3) -> pd.DataFrame:
     """A long predictions frame in the harness's own schema, with three models:
     a perfect one, a zero one, and a noisy one, so every aggregate has a known
     ordering before it is computed.
+
+    The dates are split into N_FOLDS contiguous blocks, exactly as the walk-forward
+    lays them out, so the per-fold breakdown has something to break down.
     """
     rng = np.random.default_rng(seed)
     dates = pd.date_range("2022-01-01", periods=n_dates, freq="D", tz="UTC")
-    assets = ["A", "B", "C"]
-    y = rng.standard_normal((n_dates, len(assets))) * 0.03
+    y = rng.standard_normal((n_dates, len(ASSETS))) * 0.03
+    fold = np.repeat(np.arange(N_FOLDS), n_dates // N_FOLDS)[:n_dates]
 
     frames = []
     for model, predicted in (
@@ -47,9 +54,9 @@ def long_predictions(n_dates: int = 40, seed: int = 3) -> pd.DataFrame:
         frames.append(
             pd.DataFrame(
                 {
-                    "fold": 0,
-                    "date": dates.repeat(len(assets)),
-                    "asset": np.tile(assets, n_dates),
+                    "fold": np.repeat(fold, len(ASSETS)),
+                    "date": dates.repeat(len(ASSETS)),
+                    "asset": np.tile(ASSETS, n_dates),
                     "y_true": y.ravel(),
                     "y_pred": predicted.ravel(),
                     "model": model,
@@ -248,3 +255,133 @@ class TestPanelAggregation:
         forward = matrix[(matrix["model_a"] == "noisy") & (matrix["model_b"] == "zero")].iloc[0]
         backward = matrix[(matrix["model_a"] == "zero") & (matrix["model_b"] == "noisy")].iloc[0]
         assert forward["statistic"] == pytest.approx(-backward["statistic"])
+
+
+class TestGroupedSummary:
+    """The per-asset and per-fold breakdowns of Section 6.5."""
+
+    def test_ungrouped_output_is_unchanged(self):
+        """The default must stay byte-for-byte what Sprint 3 produced.
+
+        Four scripts and the LaTeX tables of Sprint 5 read this frame; adding a
+        grouping option is not licence to reshape the ungrouped one.
+        """
+        summary = summarize_predictions(long_predictions(), baseline="zero")
+
+        assert list(summary.columns) == [
+            "model",
+            "rmse",
+            "mae",
+            "directional_accuracy",
+            "coverage",
+            "skill_score",
+            "n_predictions",
+        ]
+        assert summary["model"].iloc[0] == "perfect"
+
+    @pytest.mark.parametrize(("by", "expected"), [("asset", len(ASSETS)), ("fold", N_FOLDS)])
+    def test_one_row_per_model_and_group(self, by, expected):
+        predictions = long_predictions()
+
+        summary = summarize_predictions(predictions, baseline="zero", by=by)
+
+        assert len(summary) == 3 * expected
+        assert summary.columns[:2].tolist() == ["model", by]
+        assert set(summary[by]) == set(predictions[by])
+        assert summary["n_predictions"].sum() == len(predictions)
+
+    def test_grouped_metrics_match_the_subset_computed_by_hand(self):
+        predictions = long_predictions()
+        chosen = "B"
+
+        summary = summarize_predictions(predictions, baseline="zero", by="asset")
+        row = summary[(summary["model"] == "noisy") & (summary["asset"] == chosen)].iloc[0]
+
+        subset = predictions[(predictions["model"] == "noisy") & (predictions["asset"] == chosen)]
+        assert row["rmse"] == pytest.approx(rmse(subset["y_true"], subset["y_pred"]))
+        assert row["mae"] == pytest.approx(mae(subset["y_true"], subset["y_pred"]))
+        assert row["n_predictions"] == len(subset)
+
+    def test_skill_score_is_computed_within_the_group(self):
+        """A model that beats zero in one fold and loses in the other reports
+        skill of opposite signs, which only happens if the reference is the
+        baseline's error *inside each group*. Against the panel-wide zero MSE the
+        two folds would be judged on a scale neither of them lives on.
+        """
+        predictions = long_predictions()
+        # A model perfect in fold 0 and doubly wrong in fold 1.
+        mixed = predictions[predictions["model"] == "zero"].copy()
+        mixed["model"] = "mixed"
+        first = mixed["fold"] == 0
+        mixed.loc[first, "y_pred"] = mixed.loc[first, "y_true"]
+        mixed.loc[~first, "y_pred"] = -2.0 * mixed.loc[~first, "y_true"]
+        predictions = pd.concat([predictions, mixed], ignore_index=True)
+
+        by_fold = summarize_predictions(predictions, baseline="zero", by="fold")
+        skill = by_fold[by_fold["model"] == "mixed"].set_index("fold")["skill_score"]
+
+        assert skill.loc[0] == pytest.approx(1.0)
+        assert skill.loc[1] == pytest.approx(-8.0)  # three times the error, nine times the MSE
+
+    def test_rejects_a_column_the_table_does_not_have(self):
+        with pytest.raises(ValueError, match="Cannot group by"):
+            summarize_predictions(long_predictions(), by="regime")
+
+
+class TestHolmCorrection:
+    """Family-wise control over the 21 distinct tests of the 7-model comparison."""
+
+    def test_worked_example(self):
+        # m = 4: sorted p times (4, 3, 2, 1), then made monotone.
+        adjusted = holm_adjusted(np.array([0.01, 0.02, 0.03, 0.04]))
+        np.testing.assert_allclose(adjusted, [0.04, 0.06, 0.06, 0.06])
+
+    def test_never_lowers_a_p_value_and_never_exceeds_one(self):
+        rng = np.random.default_rng(17)
+        p_values = rng.uniform(size=30)
+
+        adjusted = holm_adjusted(p_values)
+
+        assert (adjusted >= p_values - 1e-12).all()
+        assert (adjusted <= 1.0).all()
+
+    def test_preserves_the_ordering_weakly(self):
+        """A smaller raw p-value never becomes the larger adjusted one.
+
+        Only weakly: the monotonicity step clamps values up to the running
+        maximum, so neighbouring tests routinely end up tied. Demanding a strict
+        order here would be demanding that Holm not be Holm.
+        """
+        rng = np.random.default_rng(19)
+        p_values = rng.uniform(size=25)
+
+        adjusted = holm_adjusted(p_values)
+        order = np.argsort(p_values)
+
+        assert (np.diff(adjusted[order]) >= -1e-12).all()
+
+    def test_matrix_corrects_over_distinct_pairs_not_over_rows(self):
+        """Three models make six rows but only three tests.
+
+        Correcting over the six would count each test twice and multiply the
+        smallest p-value by 6 instead of 3 -- an adjustment twice as harsh as the
+        procedure calls for, and invisible in any output that does not do the
+        arithmetic.
+        """
+        matrix = diebold_mariano_matrix(long_predictions())
+
+        distinct = matrix.drop_duplicates(subset="p_value")
+        assert len(matrix) == 6
+        assert len(distinct) == 3
+
+        smallest = distinct["p_value"].min()
+        row = matrix[matrix["p_value"] == smallest].iloc[0]
+        assert row["p_value_holm"] == pytest.approx(min(smallest * 3, 1.0))
+
+    def test_both_directions_of_a_pair_carry_the_same_adjusted_value(self):
+        matrix = diebold_mariano_matrix(long_predictions())
+
+        forward = matrix[(matrix["model_a"] == "noisy") & (matrix["model_b"] == "zero")].iloc[0]
+        backward = matrix[(matrix["model_a"] == "zero") & (matrix["model_b"] == "noisy")].iloc[0]
+
+        assert forward["p_value_holm"] == pytest.approx(backward["p_value_holm"])

@@ -38,11 +38,8 @@ from cryptognn.config import load_config
 from cryptognn.evaluation.metrics import diebold_mariano_matrix, summarize_predictions
 from cryptognn.evaluation.walkforward import make_folds_from_config, run_walkforward
 from cryptognn.features import build_study_data
-from cryptognn.models.gcn import GCNGridForecaster
+from cryptognn.models.gcn import gcn_factories
 from cryptognn.paths import ensure_dirs
-
-# The two arms of the ablation, in the order they are reported.
-ARMS = {"gcn": True, "gcn-nograph": False}
 
 # The reference of the skill score, the same one Sprint 3 fixed.
 BASELINE = "zero"
@@ -60,6 +57,7 @@ def main() -> None:
     folds = make_folds_from_config(config, data.n_obs)
     expected_rows = len(folds) * len(folds[0].test) * data.n_assets
 
+    arms = gcn_factories(config)
     grid = config.model.gcn
     fits_per_fold = len(grid.hidden) * len(grid.dropout) * len(grid.seeds)
     print(
@@ -68,17 +66,12 @@ def main() -> None:
     )
     print(
         f"frozen grid: hidden {grid.hidden} x dropout {grid.dropout} x {len(grid.seeds)} seeds "
-        f"= {fits_per_fold} fits per fold, {fits_per_fold * len(folds) * len(ARMS)} in total"
+        f"= {fits_per_fold} fits per fold, {fits_per_fold * len(folds) * len(arms)} in total"
     )
 
     predictions, diagnostics = [], []
-    for name, use_graph in ARMS.items():
-        result = run_walkforward(
-            lambda: GCNGridForecaster(config, use_graph=use_graph),  # noqa: B023
-            data,
-            folds,
-            verbose=False,
-        )
+    for name, factory in arms.items():
+        result = run_walkforward(factory, data, folds, verbose=False)
 
         if len(result.predictions) != expected_rows:
             raise ValueError(f"{name}: {len(result.predictions)} predictions, expected {expected_rows}")

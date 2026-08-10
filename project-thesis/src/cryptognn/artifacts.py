@@ -23,14 +23,10 @@ Exports:
   - MissingArtifactError: carries the missing path and the command that makes it
   - path constants and corr_path(window)
   - load_/save_ pairs for prices, returns, volumes, correlations, graphs, tau,
-    topology, the event study, and the walk-forward predictions, diagnostics,
-    accuracy summary and Diebold-Mariano matrix
+    the stylized-fact tables, topology, the event study, and the walk-forward
+    predictions, diagnostics, accuracy summary and Diebold-Mariano matrix
 
-Integration: used by scripts/02, 03 and 06, and by app/streamlit_app.py.
-Why the QA tables are absent: descriptive.parquet, acf_*.parquet and
-  ljung_box_*.parquet are written in one place and read nowhere yet, so they
-  carry no drift risk. They join this module when the thesis tables start
-  reading them.
+Integration: used by scripts/02, 03, 05 and 06, and by app/streamlit_app.py.
 """
 from __future__ import annotations
 
@@ -246,7 +242,7 @@ def load_tau() -> TauCalibration:
     """The calibration as a typed record, not a dict: callers write
     `calibration.tau`, which a type checker can verify.
     """
-    with open(_require(_metrics("tau_calibration.json"), COMMAND_BUILD)) as f:
+    with _require(_metrics("tau_calibration.json"), COMMAND_BUILD).open() as f:
         return TauCalibration.from_dict(json.load(f))
 
 
@@ -325,6 +321,71 @@ def load_dm_matrix(name: str = "baselines") -> pd.DataFrame:
     artifact with a second reader is exactly what this module is for.
     """
     return pd.read_parquet(_require(_metrics(f"dm_{name}.parquet"), _predictions_command(name)))
+
+
+# --------------------------------------------------------------------------
+# Stylized facts (scripts/02)
+# --------------------------------------------------------------------------
+
+# Written by scripts/02 as quality assurance, read by Sprint 5 for the universe
+# table of Section 6.1. They arrived here late: Sprint 3 left them writing
+# themselves with a bare to_parquet on the grounds that nothing read them back,
+# which was true then and stops being true the moment tab_universe.tex exists.
+_QA_TABLES = {
+    "descriptive": "descriptive.parquet",
+    "acf_returns": "acf_returns.parquet",
+    "acf_abs_returns": "acf_abs_returns.parquet",
+    "ljung_box_returns": "ljung_box_returns.parquet",
+    "ljung_box_abs_returns": "ljung_box_abs_returns.parquet",
+}
+
+
+def save_stylized_facts(
+    descriptive: pd.DataFrame,
+    acf_returns: pd.DataFrame,
+    acf_abs_returns: pd.DataFrame,
+    ljung_box_returns: pd.DataFrame,
+    ljung_box_abs_returns: pd.DataFrame,
+) -> list[Path]:
+    """Store the five quality-assurance tables in one call, so none is forgotten.
+
+    Grouped like save_graphs() rather than split into five functions: they are
+    produced together by one step of scripts/02 and describe one thing -- the
+    return panel's univariate behaviour. A caller that saved four of them would
+    leave the fifth silently stale.
+    """
+    tables = (descriptive, acf_returns, acf_abs_returns, ljung_box_returns, ljung_box_abs_returns)
+    written = []
+    for filename, table in zip(_QA_TABLES.values(), tables, strict=True):
+        path = _metrics(filename)
+        table.to_parquet(path)
+        written.append(path)
+    return written
+
+
+def load_descriptive() -> pd.DataFrame:
+    """Per-asset mean, annualized volatility, skewness and excess kurtosis.
+
+    The body of tab_universe.tex in Section 6.1, which is why this pair exists.
+    """
+    return pd.read_parquet(_require(_metrics(_QA_TABLES["descriptive"]), COMMAND_BUILD))
+
+
+def load_acf(absolute: bool = False) -> pd.DataFrame:
+    """Autocorrelation of r_t up to 30 lags, or of |r_t| with `absolute=True`.
+
+    One function with a flag rather than two: the two tables have an identical
+    schema and are always read as a pair, since the finding is the contrast
+    between them -- ACF(r) near zero, ACF(|r|) positive and slow to decay.
+    """
+    key = "acf_abs_returns" if absolute else "acf_returns"
+    return pd.read_parquet(_require(_metrics(_QA_TABLES[key]), COMMAND_BUILD))
+
+
+def load_ljung_box(absolute: bool = False) -> pd.DataFrame:
+    """Ljung-Box statistic and p-value at 30 lags, for r_t or for |r_t|."""
+    key = "ljung_box_abs_returns" if absolute else "ljung_box_returns"
+    return pd.read_parquet(_require(_metrics(_QA_TABLES[key]), COMMAND_BUILD))
 
 
 def save_event_study(study: pd.DataFrame) -> Path:

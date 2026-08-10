@@ -104,7 +104,7 @@ def figure_topology_timeseries(topology: pd.DataFrame, events: list) -> plt.Figu
         figsize=(FIGURE_WIDTH, STACK_PANEL_HEIGHT * len(panels)),
         sharex=True,
     )
-    for ax, (metrics, labels, ylabel) in zip(axes, panels):
+    for ax, (metrics, labels, ylabel) in zip(axes, panels, strict=True):
         draw_metric_series(
             ax,
             topology,
@@ -206,7 +206,7 @@ def figure_graph_snapshots(
     # less would compress the graph into a band.
     panel_width = FIGURE_WIDTH / len(dates)
     fig, axes = plt.subplots(1, len(dates), figsize=(FIGURE_WIDTH, panel_width * 1.16))
-    for ax, (label, date) in zip(axes, dates.items()):
+    for ax, (label, date) in zip(axes, dates.items(), strict=True):
         position = corr_index.get_indexer([date], method="nearest")[0]
         draw_snapshot(
             ax,

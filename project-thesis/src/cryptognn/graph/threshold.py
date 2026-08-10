@@ -98,7 +98,7 @@ class TauCalibration:
 
     def to_json(self, path: str | Path) -> None:
         """Write the calibration record to `path` as indented JSON."""
-        with open(path, "w") as f:
+        with Path(path).open("w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
 

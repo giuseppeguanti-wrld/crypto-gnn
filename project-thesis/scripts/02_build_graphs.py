@@ -31,6 +31,7 @@ from cryptognn.artifacts import (
     save_graphs,
     save_prices,
     save_returns,
+    save_stylized_facts,
     save_tau,
     save_volumes,
 )
@@ -53,7 +54,7 @@ from cryptognn.graph.build import (
 )
 from cryptognn.graph.correlation import rolling_correlation, validate_correlation
 from cryptognn.graph.threshold import calibrate_tau, check_tau_plausible
-from cryptognn.paths import DATA_RAW, RESULTS_METRICS, ensure_dirs
+from cryptognn.paths import DATA_RAW, ensure_dirs
 
 
 def _density_summary(weights: np.ndarray) -> dict[str, float]:
@@ -82,18 +83,15 @@ def main() -> None:
     config = load_config(args.config)
     ensure_dirs()
 
-    print("Building price panel...")
+    print("Building price and volume panels...")
     prices = build_price_panel(DATA_RAW, config.data.symbols)
-    validate_panel(prices, DATA_RAW, config.data.start, config.data.end)
+    volumes = build_volume_panel(DATA_RAW, config.data.symbols)
+    validate_panel(prices, volumes, config.data.start, config.data.end)
     print(f"  {prices.shape[0]} days x {prices.shape[1]} assets, validated.")
 
     print("Computing log returns...")
     returns = log_returns(prices)
     print(f"  {returns.shape[0]} days x {returns.shape[1]} assets.")
-
-    volumes = build_volume_panel(DATA_RAW, config.data.symbols)
-    if not volumes.index.equals(prices.index):
-        raise ValueError("Volume panel index does not match the price panel it was built alongside")
 
     save_prices(prices)
     save_returns(returns)
@@ -116,15 +114,10 @@ def main() -> None:
         f"{descriptive['excess_kurtosis'].max():.2f}], stylized facts checked."
     )
 
-    descriptive.to_parquet(RESULTS_METRICS / "descriptive.parquet")
-    acf_returns.to_parquet(RESULTS_METRICS / "acf_returns.parquet")
-    acf_abs_returns.to_parquet(RESULTS_METRICS / "acf_abs_returns.parquet")
-    ljung_box_returns.to_parquet(RESULTS_METRICS / "ljung_box_returns.parquet")
-    ljung_box_abs_returns.to_parquet(RESULTS_METRICS / "ljung_box_abs_returns.parquet")
-    print(
-        "  saved descriptive.parquet, acf_returns.parquet, acf_abs_returns.parquet, "
-        "ljung_box_returns.parquet, ljung_box_abs_returns.parquet"
+    written = save_stylized_facts(
+        descriptive, acf_returns, acf_abs_returns, ljung_box_returns, ljung_box_abs_returns
     )
+    print(f"  saved {', '.join(path.name for path in written)}")
 
     window = config.graph.window
     print(f"Computing rolling correlation (window={window})...")

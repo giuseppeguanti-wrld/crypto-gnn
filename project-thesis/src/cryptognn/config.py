@@ -116,7 +116,7 @@ class Config:
 
 
 def load_config(path: str | Path) -> Config:
-    with open(path) as f:
+    with Path(path).open() as f:
         raw = yaml.safe_load(f)
 
     return Config(
@@ -145,7 +145,7 @@ def config_hash(path: str | Path) -> str:
     independently of load_config() so it can be used on its own when
     writing run_manifest.json.
     """
-    with open(path) as f:
+    with Path(path).open() as f:
         raw = yaml.safe_load(f)
 
     normalized = json.dumps(raw, sort_keys=True, default=str)

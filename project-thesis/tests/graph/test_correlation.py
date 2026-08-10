@@ -8,7 +8,7 @@ optimization, never a different definition of correlation.
 from __future__ import annotations
 
 import numpy as np
-from conftest import N_ASSETS
+from synthetic import N_ASSETS
 
 from cryptognn.graph.correlation import correlation_from_windows, rolling_correlation
 

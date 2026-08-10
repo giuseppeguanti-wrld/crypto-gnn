@@ -13,7 +13,7 @@ import json
 
 import numpy as np
 import pytest
-from conftest import N_ASSETS, N_PAIRS
+from synthetic import N_ASSETS, N_PAIRS
 
 from cryptognn.config import Config, GraphConfig, ThresholdConfig
 from cryptognn.graph.threshold import calibrate_tau, check_tau_plausible, permutation_null

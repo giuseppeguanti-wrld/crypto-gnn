@@ -26,7 +26,7 @@ from dataclasses import replace
 import numpy as np
 import pandas as pd
 import pytest
-from conftest import TAU, WF_GRAPH_OFFSET, WF_LOOKBACK, WF_N_ASSETS, WF_N_FEATURES, WF_N_OBS
+from synthetic import TAU, WF_GRAPH_OFFSET, WF_LOOKBACK, WF_N_ASSETS, WF_N_FEATURES, WF_N_OBS
 
 from cryptognn.config import load_config
 from cryptognn.evaluation.walkforward import (

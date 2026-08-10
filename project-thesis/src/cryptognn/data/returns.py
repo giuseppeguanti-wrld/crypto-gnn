@@ -4,7 +4,7 @@ Turns the per-symbol cached klines in data/raw/ (written by cryptognn.data.downl
 into the two artifacts every downstream step depends on: a wide price panel and a
 log-return panel, both indexed by UTC date with one column per asset.
 
-Exports (built incrementally):
+Exports:
   - build_price_panel(): joins each symbol's cached close price into one wide DataFrame
   - build_volume_panel(): the same, for traded volume
   - validate_panel(): raises on gaps, NaNs, non-positive prices/volumes, misaligned start/end
@@ -62,63 +62,85 @@ def build_volume_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
 
 
 def validate_panel(
-    df: pd.DataFrame,
-    raw_dir: Path | str,
+    prices: pd.DataFrame,
+    volumes: pd.DataFrame,
     start: date | str,
     end: date | str,
 ) -> None:
-    """Validate a price panel built by build_price_panel(), raising on the first
+    """Validate the price and volume panels together, raising on the first
     violation found rather than merely reporting it -- a bad panel must never
     silently reach the rest of the pipeline. Checks, in order:
 
-      1. Continuity: the index has no internal gaps -- it matches
-         pd.date_range(df.index.min(), df.index.max(), freq="D") exactly. Crypto
-         trades every day, so any gap is a data problem, not a holiday.
-      2. Completeness: zero NaN anywhere. A NaN means some symbol is missing a
+      1. Alignment: the two panels carry the same dates and the same symbols, in
+         the same order. They are built from the same files by
+         build_price_panel() and build_volume_panel(), so a mismatch means one of
+         the two was built from a different universe or a different cache.
+      2. Continuity: the index has no internal gaps -- it matches
+         pd.date_range(min, max, freq="D") exactly. Crypto trades every day, so
+         any gap is a data problem, not a holiday.
+      3. Completeness: zero NaN anywhere. A NaN means some symbol is missing a
          candle on a date every other symbol has; the fix is to reconsider the
          universe (drop or replace that symbol), never to interpolate.
-      3. Sanity: no price <= 0, and no zero-volume bar for any symbol (volume is
-         read from the raw per-symbol Parquet cache in raw_dir, since
-         build_price_panel() keeps only the close column).
-      4. Scope: the panel's first and last date match `start`/`end` exactly --
-         independent of check 1, since a fully continuous panel could still cover
+      4. Sanity: no price <= 0, and no zero-volume bar for any symbol.
+      5. Scope: the panel's first and last date match `start`/`end` exactly --
+         independent of check 2, since a fully continuous panel could still cover
          the wrong period.
 
-    `raw_dir` must be the same directory build_price_panel() read from.
+    Takes the volume panel rather than the directory it came from. The earlier
+    signature accepted `raw_dir` and re-read all fifteen per-symbol Parquet files
+    to reach the volume column, which meant a validation function performed I/O,
+    read the same files the caller was about to read again, and could not be
+    exercised without a filesystem. Since build_volume_panel() exists the caller
+    already holds what this needs.
     """
-    raw_dir = Path(raw_dir)
     start_ts = pd.Timestamp(start, tz="UTC").normalize()
     end_ts = pd.Timestamp(end, tz="UTC").normalize()
 
-    continuous_index = pd.date_range(df.index.min(), df.index.max(), freq="D", tz="UTC")
-    if not df.index.equals(continuous_index):
-        missing = continuous_index.difference(df.index)
-        raise ValueError(f"Panel index has gaps -- missing dates: {list(missing.date)}")
-
-    if df.isna().any().any():
-        nan_report = {
-            symbol: df.index[df[symbol].isna()].date.tolist() for symbol in df.columns if df[symbol].isna().any()
-        }
+    if not prices.index.equals(volumes.index):
         raise ValueError(
-            f"Panel contains NaN values -- reconsider the universe, never interpolate: {nan_report}"
+            f"Price and volume panels differ in dates: {len(prices)} vs {len(volumes)} rows, "
+            "so they were not built from the same cache"
+        )
+    if list(prices.columns) != list(volumes.columns):
+        raise ValueError(
+            f"Price and volume panels differ in symbols: {list(prices.columns)} vs {list(volumes.columns)}"
         )
 
-    non_positive = {symbol: df.index[df[symbol] <= 0].date.tolist() for symbol in df.columns if (df[symbol] <= 0).any()}
+    continuous_index = pd.date_range(prices.index.min(), prices.index.max(), freq="D", tz="UTC")
+    if not prices.index.equals(continuous_index):
+        missing = continuous_index.difference(prices.index)
+        raise ValueError(f"Panel index has gaps -- missing dates: {list(missing.date)}")
+
+    for name, panel in (("Price", prices), ("Volume", volumes)):
+        if panel.isna().any().any():
+            nan_report = {
+                symbol: panel.index[panel[symbol].isna()].date.tolist()
+                for symbol in panel.columns
+                if panel[symbol].isna().any()
+            }
+            raise ValueError(
+                f"{name} panel contains NaN values -- reconsider the universe, never interpolate: {nan_report}"
+            )
+
+    non_positive = {
+        symbol: prices.index[prices[symbol] <= 0].date.tolist()
+        for symbol in prices.columns
+        if (prices[symbol] <= 0).any()
+    }
     if non_positive:
         raise ValueError(f"Panel contains non-positive price(s): {non_positive}")
 
-    zero_volume: dict[str, list] = {}
-    for symbol in df.columns:
-        volume = pd.read_parquet(raw_dir / f"{symbol}USDT_1d.parquet")["volume"]
-        zero_dates = volume.index[volume == 0]
-        if len(zero_dates) > 0:
-            zero_volume[symbol] = list(zero_dates.date)
+    zero_volume = {
+        symbol: volumes.index[volumes[symbol] == 0].date.tolist()
+        for symbol in volumes.columns
+        if (volumes[symbol] == 0).any()
+    }
     if zero_volume:
         raise ValueError(f"Zero-volume bar(s) found: {zero_volume}")
 
-    if df.index.min() != start_ts or df.index.max() != end_ts:
+    if prices.index.min() != start_ts or prices.index.max() != end_ts:
         raise ValueError(
-            f"Panel range [{df.index.min().date()}, {df.index.max().date()}] does not match "
+            f"Panel range [{prices.index.min().date()}, {prices.index.max().date()}] does not match "
             f"expected [{start_ts.date()}, {end_ts.date()}]"
         )
 

@@ -91,7 +91,7 @@ def test_verify_layout_rejects_a_partial_root(tmp_path):
     """
     (tmp_path / "config").mkdir()
 
-    with pytest.raises(RuntimeError, match="pyproject.toml"):
+    with pytest.raises(RuntimeError, match=r"pyproject\.toml"):
         paths._verify_layout(tmp_path)
 
 

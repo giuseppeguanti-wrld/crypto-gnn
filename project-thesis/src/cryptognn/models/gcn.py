@@ -12,6 +12,7 @@ Exports:
   - GCN2: the two layers of the study, dropout -> layer -> ReLU -> dropout -> layer
   - GCNForecaster: one trained model, conforming to the walk-forward protocol
   - GCNGridForecaster: the frozen grid and the seed average, as one forecaster
+  - gcn_factories(): the two arms of the ablation, one factory each
   - seed_everything(): the determinism discipline, in one place
 
 Integration: both forecasters implement cryptognn.evaluation.protocols.Forecaster
@@ -35,6 +36,7 @@ from __future__ import annotations
 
 import copy
 import math
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -509,3 +511,24 @@ class GCNGridForecaster:
         for record in self.grid_:
             row[f"val_mse_h{int(record['hidden'])}_d{record['dropout']}"] = record["val_mse"]
         return row
+
+
+def gcn_factories(config: Config) -> dict[str, Callable[[], GCNGridForecaster]]:
+    """The two arms of Section 6.5, in the order they are reported.
+
+    The counterpart of models.baseline_factories(), and it lives here rather than
+    beside it for the reason stated at the top of this module: models/__init__.py
+    is imported by scripts/04_run_baselines.py, and a GCN entry there would make
+    running the baselines import torch.
+
+    `use_graph` is bound as a default argument rather than captured by the
+    closure. The difference is invisible today, because run_walkforward() calls
+    each factory within the iteration that built it -- but a caller who collected
+    these factories and ran them later would get the last arm twice, and the two
+    arms of an ablation coming out identical is the one failure this comparison
+    cannot afford to produce quietly.
+    """
+    return {
+        name: lambda use_graph=use_graph: GCNGridForecaster(config, use_graph=use_graph)
+        for name, use_graph in (("gcn", True), ("gcn-nograph", False))
+    }

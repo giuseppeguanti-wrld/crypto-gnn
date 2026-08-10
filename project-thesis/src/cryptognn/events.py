@@ -76,7 +76,7 @@ def load_events(path: str | Path) -> list[Event]:
     of Section 6.6, where a missing one is far harder to notice than a crash
     here.
     """
-    with open(path, encoding="utf-8") as f:
+    with Path(path).open(encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
     entries = (raw or {}).get("events")
@@ -95,7 +95,10 @@ def load_events(path: str | Path) -> list[Event]:
         # anything else is a formatting mistake worth naming explicitly.
         event_date = entry["date"]
         if not isinstance(event_date, date):
-            raise ValueError(
+            # ValueError, not TypeError: this is a malformed *configuration file*,
+            # not a caller passing the wrong type, and every other config error in
+            # the study raises ValueError (calibrate_tau, normalized_adjacency).
+            raise ValueError(  # noqa: TRY004
                 f"Event {key!r} has date {event_date!r}: expected an unquoted ISO date (YYYY-MM-DD)"
             )
 

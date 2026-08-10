@@ -163,7 +163,7 @@ def test_graphs_round_trip():
         artifacts.load_a_hat(),
         artifacts.load_a_hat(fwer=True),
     ]
-    for original, result in zip(tensors, loaded):
+    for original, result in zip(tensors, loaded, strict=True):
         np.testing.assert_allclose(result, original, atol=1e-6)
         assert result.dtype == np.float64
 
@@ -204,6 +204,45 @@ def test_topology_and_event_study_round_trip():
 
     pd.testing.assert_frame_equal(artifacts.load_topology(), topology, check_freq=False)
     pd.testing.assert_frame_equal(artifacts.load_event_study(), study)
+
+
+def test_stylized_facts_round_trip():
+    """The five quality-assurance tables of scripts/02.
+
+    They wrote themselves with a bare to_parquet until Sprint 5's universe table
+    gave them a second reader, which is the condition this module exists for: an
+    artifact read in one place and written in another is where a filename drifts.
+    """
+    assets = ["BTC", "ETH"]
+    descriptive = pd.DataFrame({"mean": [1e-4, 2e-4], "excess_kurtosis": [5.1, 6.2]}, index=assets)
+    lags = pd.RangeIndex(3, name="lag")
+    acf_returns = pd.DataFrame({"BTC": [1.0, 0.01, -0.02], "ETH": [1.0, 0.03, 0.0]}, index=lags)
+    acf_abs = pd.DataFrame({"BTC": [1.0, 0.31, 0.28], "ETH": [1.0, 0.29, 0.25]}, index=lags)
+    ljung_box = pd.DataFrame({"lb_stat": [12.3, 9.8], "lb_pvalue": [0.42, 0.61]}, index=assets)
+    ljung_box_abs = pd.DataFrame({"lb_stat": [980.1, 850.4], "lb_pvalue": [0.0, 0.0]}, index=assets)
+
+    written = artifacts.save_stylized_facts(descriptive, acf_returns, acf_abs, ljung_box, ljung_box_abs)
+
+    assert [path.name for path in written] == [
+        "descriptive.parquet",
+        "acf_returns.parquet",
+        "acf_abs_returns.parquet",
+        "ljung_box_returns.parquet",
+        "ljung_box_abs_returns.parquet",
+    ]
+    pd.testing.assert_frame_equal(artifacts.load_descriptive(), descriptive)
+    pd.testing.assert_frame_equal(artifacts.load_acf(), acf_returns)
+    pd.testing.assert_frame_equal(artifacts.load_acf(absolute=True), acf_abs)
+    pd.testing.assert_frame_equal(artifacts.load_ljung_box(), ljung_box)
+    pd.testing.assert_frame_equal(artifacts.load_ljung_box(absolute=True), ljung_box_abs)
+
+
+def test_stylized_facts_are_saved_or_none_are():
+    """Five tables, one call: a caller cannot save four and leave the fifth stale."""
+    frame = pd.DataFrame({"x": [1.0]})
+
+    with pytest.raises(TypeError):
+        artifacts.save_stylized_facts(frame, frame, frame, frame)  # type: ignore[call-arg]
 
 
 def test_walkforward_outputs_round_trip():
@@ -263,6 +302,11 @@ def test_walkforward_outputs_are_named_per_run_group():
         (lambda: artifacts.load_a_hat(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_tau(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_topology(), artifacts.COMMAND_TOPOLOGY),
+        (lambda: artifacts.load_descriptive(), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_acf(), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_acf(absolute=True), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_ljung_box(), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_ljung_box(absolute=True), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_event_study(), artifacts.COMMAND_TOPOLOGY),
         (lambda: artifacts.load_predictions(), artifacts.COMMAND_BASELINES),
         (lambda: artifacts.load_run_diagnostics(), artifacts.COMMAND_BASELINES),
@@ -297,7 +341,7 @@ def test_missing_artifact_is_catchable_as_an_ordinary_exception():
     """
     try:
         artifacts.load_topology()
-    except Exception as error:  # deliberately broad: that is the property tested
+    except Exception as error:  # noqa: BLE001 -- deliberately broad: that is the property tested
         assert isinstance(error, artifacts.MissingArtifactError)
         assert isinstance(error, FileNotFoundError)
     else:

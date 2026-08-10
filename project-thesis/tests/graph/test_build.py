@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from conftest import TAU
+from synthetic import TAU
 
 from cryptognn.graph.build import (
     apply_threshold,

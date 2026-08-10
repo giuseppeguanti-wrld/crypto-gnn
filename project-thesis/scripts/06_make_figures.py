@@ -42,7 +42,7 @@ from cryptognn.viz.topology import hierarchical_order
 
 matplotlib.use("Agg")  # headless rendering; must be selected before pyplot loads
 
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 
 def _save(fig: plt.Figure, outdir: Path, name: str) -> None:

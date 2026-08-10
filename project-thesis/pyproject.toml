@@ -40,9 +40,59 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "-v --tb=short"
+# importlib import mode: tests/ mirrors src/cryptognn/, so two packages that each
+# have a metrics.py each get a test_metrics.py. Under pytest's default prepend
+# mode those two collide on the module name and collection fails; importlib gives
+# each file its own module identity and needs no __init__.py scattered through
+# the test tree.
+addopts = "-v --tb=short --import-mode=importlib"
+# tests/synthetic.py holds the shape constants the shared fixtures are built
+# from, and several test modules assert against them. Declaring the directory
+# here makes that a real import instead of relying on pytest happening to put
+# tests/ on sys.path, which is what the previous `from conftest import ...` did.
+pythonpath = ["tests"]
 
 [tool.ruff]
 line-length = 120
 target-version = "py313"
 exclude = [".venv", "__pycache__", ".git"]
+
+# Pinned explicitly rather than left to the installed ruff's default. Everything
+# else in this project is pinned to the patch in requirements.txt; a lint contract
+# that changes with the linter's version is the one dependency that could start
+# failing a clean tree on an unrelated upgrade. The families below are the ones
+# the codebase already satisfies -- adding one is a decision, not an accident.
+[tool.ruff.lint]
+select = [
+    "F",      # pyflakes: undefined names, unused imports
+    "E", "W", # pycodestyle, including E402 (imports after code): matplotlib.use()
+              # must run before pyplot loads, and the three `noqa: E402` that
+              # allow it are only meaningful while this rule is on
+    "I",      # import sorting
+    "UP",     # pyupgrade: syntax superseded by the pinned Python
+    "B",      # bugbear, including B023 (loop variable captured by a closure)
+    "C4",     # comprehension rewrites
+    "SIM",    # simplifiable constructs
+    "RET",    # return-flow cleanups
+    "PTH",    # pathlib over os.path
+    "TRY",    # exception antipatterns
+    "BLE",    # blind excepts
+    "PIE", "PYI", "RSE", "RUF",
+]
+ignore = [
+    # TRY003 asks that long messages live inside custom exception classes; this
+    # project instead raises ValueError with a message naming the offending
+    # values -- which window, which asset, which fold, and what to run to fix it.
+    # That is a documented property of every validator in the codebase (see
+    # graph/build.py::validate_weights or data/returns.py::validate_panel), and
+    # 103 of the 125 findings this select produced were this rule objecting to it.
+    "TRY003",
+    # SIM300 reads `assert value == <constructed expectation>` as a Yoda
+    # condition and would rewrite the three occurrences to put the expectation
+    # first, which is the order assertions are not read in. Neither side is a
+    # literal, so the rule is misfiring rather than being disagreed with.
+    "SIM300",
+]
+# RUF100 (unused noqa) is on: a suppression that stopped being necessary must be
+# removed, not left as decoration. There is no blanket `ignore` list -- the few
+# deliberate exceptions carry an inline `noqa` with the reason beside it.

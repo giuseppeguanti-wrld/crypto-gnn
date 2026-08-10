@@ -54,7 +54,7 @@ def draw_metric_series(
     metrics = [metric] if isinstance(metric, str) else list(metric)
     names = labels if labels is not None else metrics
 
-    for position, (column, name) in enumerate(zip(metrics, names)):
+    for position, (column, name) in enumerate(zip(metrics, names, strict=True)):
         ax.plot(
             df.index,
             df[column],

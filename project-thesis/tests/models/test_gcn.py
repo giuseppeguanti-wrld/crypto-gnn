@@ -37,7 +37,14 @@ from cryptognn.config import Config, load_config
 from cryptognn.evaluation.protocols import Forecaster, SupportsDiagnostics
 from cryptognn.evaluation.walkforward import WalkforwardData, make_folds, run_walkforward
 from cryptognn.graph.build import apply_threshold, mantegna_weights, normalized_adjacency
-from cryptognn.models.gcn import GCN2, GCNForecaster, GCNGridForecaster, GCNLayer, seed_everything
+from cryptognn.models.gcn import (
+    GCN2,
+    GCNForecaster,
+    GCNGridForecaster,
+    GCNLayer,
+    gcn_factories,
+    seed_everything,
+)
 from cryptognn.paths import DEFAULT_CONFIG
 
 N_ASSETS = 6
@@ -653,13 +660,8 @@ class TestGridForecaster:
         assert not np.allclose(members[0], members[1])
 
     def test_runs_through_the_harness(self, grid_config, learnable_data, folds):
-        for use_graph, name in ((True, "gcn"), (False, "gcn-nograph")):
-            result = run_walkforward(
-                lambda: GCNGridForecaster(grid_config, use_graph=use_graph),  # noqa: B023
-                learnable_data,
-                folds,
-                verbose=False,
-            )
+        for name, factory in gcn_factories(grid_config).items():
+            result = run_walkforward(factory, learnable_data, folds, verbose=False)
 
             assert result.predictions["model"].unique().tolist() == [name]
             assert len(result.predictions) == len(folds) * BLOCKS["test"] * WF_N_ASSETS

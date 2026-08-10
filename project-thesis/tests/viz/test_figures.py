@@ -10,30 +10,20 @@ scripts/06_make_figures.py, whose name cannot be imported.
 """
 from __future__ import annotations
 
-import matplotlib
 import numpy as np
 import pandas as pd
 import pytest
 
 from cryptognn.events import Event
 from cryptognn.viz import figures
-from cryptognn.viz.style import FIGURE_WIDTH, apply_style
+from cryptognn.viz.style import FIGURE_WIDTH
 from cryptognn.viz.topology import hierarchical_order
 
-matplotlib.use("Agg")  # headless rendering; must be selected before pyplot loads
-
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt  # isort: skip -- Agg is selected in conftest
 
 N_ASSETS = 5
 N_WINDOWS = 400
 SYMBOLS = [f"A{i}" for i in range(N_ASSETS)]
-
-
-@pytest.fixture(autouse=True)
-def _style():
-    apply_style(usetex=False)
-    yield
-    plt.close("all")
 
 
 @pytest.fixture

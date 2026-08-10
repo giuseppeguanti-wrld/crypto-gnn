@@ -62,7 +62,7 @@ Tutte le figure sono generate da `scripts/06_make_figures.py` e salvate in `resu
 
 ### Anti-look-ahead rigoroso
 
-Lo sprint 3 scrive 4 test critici in `tests/test_walkforward.py`, classe `TestNoLookAhead`:
+Lo sprint 3 scrive 4 test critici in `tests/evaluation/test_walkforward.py`, classe `TestNoLookAhead`:
 
 - `test_fold_ordering` — train < val < test
 - `test_graph_precedes_target` — il grafo usato per predire $r_{t+1}$ è costruito su $[t-59, t]$, mai oltre
@@ -88,9 +88,12 @@ Un test anti-look-ahead che non fallisce quando la fuga c'è non protegge nulla:
 
 ### Testing
 
-- Ogni modulo ha test in `tests/test_*.py`
+- **`tests/` rispecchia `src/cryptognn/`**: il test di `graph/metrics.py` sta in `tests/graph/test_metrics.py`, quello di `evaluation/metrics.py` in `tests/evaluation/test_metrics.py`. Due package possono avere un modulo con lo stesso nome, e i rispettivi test pure — è la ragione di `--import-mode=importlib` in `pyproject.toml`. I moduli di radice (`artifacts`, `cli`, `config`, `events`, `features`, `paths`, `windows`) hanno il test in `tests/`.
+- Rispecchiare non vuol dire un file per file: `tests/models/test_baselines.py` copre `naive`, `ar` e `var` insieme perché la conformità al `Protocol` si verifica iterando `baseline_factories()`, e `tests/viz/test_contract.py` verifica una regola che vale per l'intero package e non per un suo modulo.
+- Le fixture condivise da più package stanno in `tests/conftest.py`; le costanti che le descrivono in `tests/synthetic.py`, **non** nel conftest — un file da cui altri moduli importano dev'essere un modulo, non un meccanismo di pytest.
 - `pytest tests/` deve passare pulitamente prima di qualunque run
-- Test anti-look-ahead in `test_walkforward.py` sono **critici** — se falliscono, niente prosegue
+- Test anti-look-ahead in `evaluation/test_walkforward.py` sono **critici** — se falliscono, niente prosegue
+- `ruff check src/ tests/ scripts/` deve essere pulito. Il set di regole è pinnato in `pyproject.toml`: le due famiglie escluse hanno la motivazione scritta accanto, e le eccezioni puntuali sono `noqa` con la ragione in linea. Mai una lista `ignore` generica.
 
 ## Struttura key
 
@@ -106,7 +109,7 @@ project-thesis/
 │   ├── evaluation/           ← walk-forward, metriche, backtest
 │   └── viz/                  ← stile, figure
 ├── scripts/01-07_*.py        ← entry point, da eseguire in ordine
-├── tests/                    ← pytest
+├── tests/                    ← pytest, con la stessa alberatura di src/cryptognn/
 └── results/                  ← output (metrics, figures, tables)
 ```
 

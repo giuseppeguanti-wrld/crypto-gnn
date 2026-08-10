@@ -156,8 +156,9 @@ class TestPerAssetAR:
         np.testing.assert_allclose(model.coef_[:, 0], PHI, atol=0.1)
 
         # The forecast is the fitted recursion applied to the segment's own lags.
+        order = int(model.orders_.max())
         expected = model.const_ + np.einsum(
-            "nka,ak->na", later.lags[:, -int(model.orders_.max()) :, :][:, ::-1, :], model.coef_[:, : int(model.orders_.max())]
+            "nka,ak->na", later.lags[:, -order:, :][:, ::-1, :], model.coef_[:, :order]
         )
         np.testing.assert_allclose(model.predict(later), expected)
 

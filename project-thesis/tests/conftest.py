@@ -1,10 +1,16 @@
-"""Fixtures shared by the graph and evaluation test modules.
+"""Fixtures shared across the test packages.
 
-test_correlation, test_threshold, test_build and test_metrics all exercise
-different stages of the same pipeline, so they work from the same two synthetic
-inputs: a return panel with a known factor structure, and a small correlation
-matrix chosen to span the cases thresholding has to separate. test_walkforward
-works from a third: a small study container whose values are readable by eye.
+The tree under tests/ mirrors src/cryptognn/, but these three fixtures do not
+belong to any one package: graph/test_correlation, graph/test_threshold,
+graph/test_build, graph/test_metrics and data/test_stylized_facts all exercise
+different stages of the same pipeline and work from the same synthetic inputs --
+a return panel with a known factor structure, and a small correlation matrix
+chosen to span the cases thresholding has to separate. evaluation/test_walkforward
+and test_features work from a third: a small study container whose values are
+readable by eye. A fixture used from four packages lives at their common root.
+
+The constants describing their shapes are in tests/synthetic.py, not here: see
+that module for why a file other modules import from should not be a conftest.
 
 Nothing here reads data/ or results/: the suite must run on a fresh clone,
 before any script has been executed.
@@ -14,23 +20,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from synthetic import (
+    N_ASSETS,
+    WF_GRAPH_OFFSET,
+    WF_LOOKBACK,
+    WF_N_ASSETS,
+    WF_N_FEATURES,
+    WF_N_OBS,
+)
 
 from cryptognn.evaluation.walkforward import WalkforwardData
-
-N_ASSETS = 6
-N_PAIRS = N_ASSETS * (N_ASSETS - 1) // 2
-
-# The threshold calibrated on the study data, used across the construction and
-# metric tests as a realistic value rather than a round invented one.
-TAU = 0.2145
-
-# Shape of the synthetic walk-forward container. Small enough to reason about,
-# large enough to hold several folds of a few observations each.
-WF_N_OBS = 120
-WF_N_ASSETS = 4
-WF_N_FEATURES = 3
-WF_GRAPH_OFFSET = 10
-WF_LOOKBACK = 3
 
 
 @pytest.fixture

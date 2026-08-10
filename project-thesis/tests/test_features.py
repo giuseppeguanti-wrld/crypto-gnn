@@ -120,7 +120,9 @@ class TestBuildNodeFeatures:
         features = build_node_features(correlated_returns, None, config_without_volume)
 
         assert features.shape == (*correlated_returns.shape, 7)
-        assert feature_names(config_without_volume) == ["r_lag0", "r_lag1", "r_lag2", "r_lag3", "r_lag4", "rv_5", "rv_20"]
+        assert feature_names(config_without_volume) == [
+            "r_lag0", "r_lag1", "r_lag2", "r_lag3", "r_lag4", "rv_5", "rv_20",
+        ]
 
     @staticmethod
     def _with_a_negative_bar(volumes):

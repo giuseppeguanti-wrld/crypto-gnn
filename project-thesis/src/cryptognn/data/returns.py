@@ -6,6 +6,7 @@ log-return panel, both indexed by UTC date with one column per asset.
 
 Exports (built incrementally):
   - build_price_panel(): joins each symbol's cached close price into one wide DataFrame
+  - build_volume_panel(): the same, for traded volume
   - validate_panel(): raises on gaps, NaNs, non-positive prices/volumes, misaligned start/end
   - log_returns(): r_t = log P_t - log P_{t-1}, first row dropped
 
@@ -37,6 +38,27 @@ def build_price_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
     raw_dir = Path(raw_dir)
     closes = {symbol: pd.read_parquet(raw_dir / f"{symbol}USDT_1d.parquet")["close"] for symbol in symbols}
     return pd.DataFrame(closes)
+
+
+def build_volume_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
+    """Join the cached traded volume of every symbol into one wide panel.
+
+    Structurally identical to build_price_panel(), on the `volume` column: the
+    base-asset volume (coins traded), not `quote_volume` (turnover in USDT).
+    Quote volume is roughly volume x price, so its log carries the price path,
+    and the twenty-day z-score of Section 6.3's eighth node feature would then
+    partly re-encode the momentum already present in the five lagged returns.
+    Base volume measures trading activity and nothing else; taking logs makes
+    the z-score scale-free, so DOGE trading in billions of units and BTC in
+    thousands are directly comparable.
+
+    Returned on the price index (T = 2007 for this study), one row longer than
+    the return panel: the alignment happens in cryptognn.features, where the
+    two are used together.
+    """
+    raw_dir = Path(raw_dir)
+    volumes = {symbol: pd.read_parquet(raw_dir / f"{symbol}USDT_1d.parquet")["volume"] for symbol in symbols}
+    return pd.DataFrame(volumes)
 
 
 def validate_panel(

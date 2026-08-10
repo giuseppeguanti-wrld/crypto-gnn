@@ -1,9 +1,10 @@
-"""Fixtures shared by the graph test modules.
+"""Fixtures shared by the graph and evaluation test modules.
 
 test_correlation, test_threshold, test_build and test_metrics all exercise
 different stages of the same pipeline, so they work from the same two synthetic
 inputs: a return panel with a known factor structure, and a small correlation
-matrix chosen to span the cases thresholding has to separate.
+matrix chosen to span the cases thresholding has to separate. test_walkforward
+works from a third: a small study container whose values are readable by eye.
 
 Nothing here reads data/ or results/: the suite must run on a fresh clone,
 before any script has been executed.
@@ -14,12 +15,22 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from cryptognn.evaluation.walkforward import WalkforwardData
+
 N_ASSETS = 6
 N_PAIRS = N_ASSETS * (N_ASSETS - 1) // 2
 
 # The threshold calibrated on the study data, used across the construction and
 # metric tests as a realistic value rather than a round invented one.
 TAU = 0.2145
+
+# Shape of the synthetic walk-forward container. Small enough to reason about,
+# large enough to hold several folds of a few observations each.
+WF_N_OBS = 120
+WF_N_ASSETS = 4
+WF_N_FEATURES = 3
+WF_GRAPH_OFFSET = 10
+WF_LOOKBACK = 3
 
 
 @pytest.fixture
@@ -38,6 +49,24 @@ def correlated_returns() -> pd.DataFrame:
 
 
 @pytest.fixture
+def synthetic_volumes(correlated_returns: pd.DataFrame) -> pd.DataFrame:
+    """A positive volume panel on the return panel's index, with assets whose
+    units differ by orders of magnitude (column i scaled by 10^i).
+
+    The spread is deliberate: the eighth node feature is the z-score of *log*
+    volume, which should be blind to an asset's unit of account. A panel where
+    every column had the same magnitude could not tell a correct implementation
+    from one that happens to work only on comparable scales.
+    """
+    rng = np.random.default_rng(321)
+    values = np.exp(rng.normal(loc=10.0, scale=1.0, size=correlated_returns.shape))
+    scales = 10.0 ** np.arange(correlated_returns.shape[1])
+    return pd.DataFrame(
+        values * scales, index=correlated_returns.index, columns=correlated_returns.columns
+    )
+
+
+@pytest.fixture
 def sample_corr() -> np.ndarray:
     """A 4x4 correlation matrix spanning the cases the threshold must separate:
     one strongly anticorrelated pair (-0.5), one weakly positive pair (0.1) that
@@ -50,4 +79,33 @@ def sample_corr() -> np.ndarray:
             [0.3, 0.6, 1.0, 0.9],
             [-0.5, 0.1, 0.9, 1.0],
         ]
+    )
+
+
+@pytest.fixture
+def synthetic_walkforward_data() -> WalkforwardData:
+    """A (120, 4) study container whose every value announces where it came from.
+
+    returns[t, j] == t + j/10, so a misalignment by one row or one asset is
+    visible in the number itself rather than hidden in a plausible float: the
+    target of position t must read t+1, and the most recent lag must read t.
+    features[t, j, f] == returns[t, j] + 100*f keeps the feature axis equally
+    identifiable, and the graph is NaN before WF_GRAPH_OFFSET exactly as
+    align_graph() leaves it on the study data.
+    """
+    dates = pd.date_range("2021-01-01", periods=WF_N_OBS, freq="D", tz="UTC")
+    returns = np.arange(WF_N_OBS)[:, None] + np.arange(WF_N_ASSETS)[None, :] / 10.0
+    features = returns[:, :, None] + 100.0 * np.arange(WF_N_FEATURES)[None, None, :]
+
+    a_hat = np.full((WF_N_OBS, WF_N_ASSETS, WF_N_ASSETS), np.nan)
+    a_hat[WF_GRAPH_OFFSET:] = np.eye(WF_N_ASSETS)
+
+    return WalkforwardData(
+        dates=dates,
+        assets=tuple(f"A{i}" for i in range(WF_N_ASSETS)),
+        returns=returns,
+        graph_offset=WF_GRAPH_OFFSET,
+        lookback=WF_LOOKBACK,
+        features=features,
+        a_hat=a_hat,
     )

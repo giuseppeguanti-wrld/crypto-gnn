@@ -83,6 +83,7 @@ class GCNConfig:
 class VARConfig:
     max_lag: int
     ic: str
+    fixed_lag: int
 
 
 @dataclass(frozen=True)

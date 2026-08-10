@@ -22,8 +22,8 @@ Three properties this centralization buys:
 Exports:
   - MissingArtifactError: carries the missing path and the command that makes it
   - path constants and corr_path(window)
-  - load_/save_ pairs for prices, returns, correlations, graphs, tau, topology,
-    and the event study
+  - load_/save_ pairs for prices, returns, volumes, correlations, graphs, tau,
+    topology, the event study, and the walk-forward predictions
 
 Integration: used by scripts/02, 03 and 06, and by app/streamlit_app.py.
 Why the QA tables are absent: descriptive.parquet, acf_*.parquet and
@@ -47,6 +47,7 @@ from cryptognn.graph.threshold import TauCalibration
 COMMAND_DOWNLOAD = "python scripts/01_download_data.py"
 COMMAND_BUILD = "python scripts/02_build_graphs.py"
 COMMAND_TOPOLOGY = "python scripts/03_topology_analysis.py"
+COMMAND_BASELINES = "python scripts/04_run_baselines.py"
 
 
 class MissingArtifactError(FileNotFoundError):
@@ -112,6 +113,23 @@ def load_returns() -> pd.DataFrame:
     return pd.read_parquet(_require(_processed("returns.parquet"), COMMAND_BUILD))
 
 
+def save_volumes(volumes: pd.DataFrame) -> Path:
+    path = _processed("volumes.parquet")
+    volumes.to_parquet(path)
+    return path
+
+
+def load_volumes() -> pd.DataFrame:
+    """Traded volume on the price index -- the input of the node feature of Section 6.3.
+
+    Kept apart from prices rather than stored as one multi-column frame: the two
+    are read by different consumers (prices by nothing downstream, volume by the
+    feature builder), and a single wide frame would make every reader carry a
+    column selection.
+    """
+    return pd.read_parquet(_require(_processed("volumes.parquet"), COMMAND_BUILD))
+
+
 # --------------------------------------------------------------------------
 # Rolling correlations (scripts/02)
 # --------------------------------------------------------------------------
@@ -131,6 +149,16 @@ def save_corr(corr: np.ndarray, index: pd.DatetimeIndex, window: int) -> Path:
     return corr_path(window)
 
 
+def load_corr_index() -> pd.DatetimeIndex:
+    """The closing date of every correlation window, as a DatetimeIndex.
+
+    Available on its own because a caller aligning the graph to the return panel
+    needs the dates and not the tensor: cryptognn.features.build_study_data()
+    would otherwise read 1.7 MB of correlations to look at their labels.
+    """
+    return pd.DatetimeIndex(np.load(_require(_processed("corr_index.npy"), COMMAND_BUILD)), name="date")
+
+
 def load_corr(window: int) -> tuple[np.ndarray, pd.DatetimeIndex]:
     """The correlation tensor as float64, with its dates as a DatetimeIndex.
 
@@ -139,8 +167,7 @@ def load_corr(window: int) -> tuple[np.ndarray, pd.DatetimeIndex]:
     pd.to_datetime() further down, the other wrapped it at load time.
     """
     corr = np.load(_require(corr_path(window), COMMAND_BUILD)).astype(np.float64)
-    index = pd.DatetimeIndex(np.load(_require(_processed("corr_index.npy"), COMMAND_BUILD)), name="date")
-    return corr, index
+    return corr, load_corr_index()
 
 
 # --------------------------------------------------------------------------
@@ -223,6 +250,40 @@ def save_topology(topology: pd.DataFrame) -> Path:
 
 def load_topology() -> pd.DataFrame:
     return pd.read_parquet(_require(_metrics("topology.parquet"), COMMAND_TOPOLOGY))
+
+
+# --------------------------------------------------------------------------
+# Walk-forward predictions (scripts/04, and 05 from Sprint 4)
+# --------------------------------------------------------------------------
+
+
+def save_predictions(predictions: pd.DataFrame, name: str = "baselines") -> Path:
+    """The long predictions table of one run group (baselines, gcn).
+
+    Parametrized by name rather than split into two functions: the baselines and
+    the GCN produce the identical schema -- (fold, date, asset, y_true, y_pred,
+    model) -- and Sprint 4 concatenates the two files to build one comparison.
+    """
+    path = _metrics(f"predictions_{name}.parquet")
+    predictions.to_parquet(path)
+    return path
+
+
+def load_predictions(name: str = "baselines") -> pd.DataFrame:
+    return pd.read_parquet(_require(_metrics(f"predictions_{name}.parquet"), COMMAND_BASELINES))
+
+
+def save_run_diagnostics(diagnostics: pd.DataFrame, name: str = "baselines") -> Path:
+    path = _metrics(f"diagnostics_{name}.parquet")
+    diagnostics.to_parquet(path)
+    return path
+
+
+def load_run_diagnostics(name: str = "baselines") -> pd.DataFrame:
+    """Per-fold, per-model record of what each fit decided -- the VAR's selected
+    lag order and parameter count among it, which Section 6.4 reports directly.
+    """
+    return pd.read_parquet(_require(_metrics(f"diagnostics_{name}.parquet"), COMMAND_BASELINES))
 
 
 def save_event_study(study: pd.DataFrame) -> Path:

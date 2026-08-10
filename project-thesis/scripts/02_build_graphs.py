@@ -10,7 +10,7 @@ renormalized adjacency that serves as the GCN substrate.
 the command named in the M1 definition of done. The full run is the default.
 
 Integration: second script in the pipeline (scripts/01-07). Consumes data/raw/
-(from 01_download_data.py) and produces data/processed/{prices,returns}.parquet,
+(from 01_download_data.py) and produces data/processed/{prices,returns,volumes}.parquet,
 corr_{window}.npy, corr_index.npy, W_full.npy, W_thresh.npy, A_hat.npy,
 A_hat_fwer.npy, plus results/metrics/*.parquet (descriptive stats, ACF,
 Ljung-Box) and results/metrics/tau_calibration.json.
@@ -32,10 +32,11 @@ from cryptognn.artifacts import (
     save_prices,
     save_returns,
     save_tau,
+    save_volumes,
 )
 from cryptognn.cli import build_parser, run
 from cryptognn.config import load_config
-from cryptognn.data.returns import build_price_panel, log_returns, validate_panel
+from cryptognn.data.returns import build_price_panel, build_volume_panel, log_returns, validate_panel
 from cryptognn.data.stylized_facts import (
     check_stylized_facts,
     compute_acf,
@@ -90,9 +91,14 @@ def main() -> None:
     returns = log_returns(prices)
     print(f"  {returns.shape[0]} days x {returns.shape[1]} assets.")
 
+    volumes = build_volume_panel(DATA_RAW, config.data.symbols)
+    if not volumes.index.equals(prices.index):
+        raise ValueError("Volume panel index does not match the price panel it was built alongside")
+
     save_prices(prices)
     save_returns(returns)
-    print("  saved prices.parquet, returns.parquet")
+    save_volumes(volumes)
+    print("  saved prices.parquet, returns.parquet, volumes.parquet")
 
     print("Computing stylized facts...")
     descriptive = compute_descriptive_stats(returns)

@@ -62,14 +62,16 @@ Tutte le figure sono generate da `scripts/06_make_figures.py` e salvate in `resu
 
 ### Anti-look-ahead rigoroso
 
-Lo sprint 3 scrive 4 test critici in `tests/test_walkforward.py`:
+Lo sprint 3 scrive 4 test critici in `tests/test_walkforward.py`, classe `TestNoLookAhead`:
 
 - `test_fold_ordering` — train < val < test
 - `test_graph_precedes_target` — il grafo usato per predire $r_{t+1}$ è costruito su $[t-59, t]$, mai oltre
 - `test_standardizer_train_only` — il fit è sul train soltanto
 - `test_no_target_leak_in_features` — nessuna feature contiene $r_{t+1}$
 
-Questi test passano **prima** di qualunque risultato. Scoprire un errore qui tardi invalida tutto.
+Tutti e quattro esistono e passano dalla fine di S3.3, quindi **prima di qualunque risultato** (i primi numeri arrivano da S3.5). Scoprire un errore qui tardi invalida tutto.
+
+Un test anti-look-ahead che non fallisce quando la fuga c'è non protegge nulla: ognuno di questi è stato provato **contro una mutazione iniettata** (feature con finestra non causale, grafo allineato una posizione avanti, `transform()` che rifitta per blocco), verificando che fallisca. Ripetere l'esercizio quando se ne aggiunge uno.
 
 ### Commit e branching
 

@@ -40,7 +40,12 @@ model:
     epochs: 300
     patience: 30
     seeds: [0, 1, 2, 3, 4]
-  var: {max_lag: 5, ic: bic}
+  # fixed_lag: pre-registered robustness variant, fixed before any test result
+  # was seen. BIC selects p=0 on all 24 folds, so the VAR would otherwise never
+  # estimate a single cross-asset coefficient; forcing p=5 gives the multivariate
+  # comparator the study needs, and the 15*(15*5+1) = 1140 coefficients from 365
+  # observations that Section 6.4 discusses.
+  var: {max_lag: 5, ic: bic, fixed_lag: 5}
   ar:  {max_lag: 5, ic: bic}
 
 backtest:

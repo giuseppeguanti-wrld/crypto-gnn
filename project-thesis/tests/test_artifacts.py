@@ -77,7 +77,7 @@ def calibration() -> TauCalibration:
 # --------------------------------------------------------------------------
 
 
-def test_prices_and_returns_round_trip():
+def test_prices_returns_and_volumes_round_trip():
     frame = pd.DataFrame(
         {"BTC": [1.0, 2.0, 3.0], "ETH": [4.0, 5.0, 6.0]},
         index=pd.date_range("2021-01-01", periods=3, freq="D", name="date"),
@@ -85,12 +85,14 @@ def test_prices_and_returns_round_trip():
 
     artifacts.save_prices(frame)
     artifacts.save_returns(frame * 0.1)
+    artifacts.save_volumes(frame * 1000.0)
 
     # check_freq=False: Parquet stores timestamps, not the inferred `freq`
     # attribute pandas attaches to a date_range. The pipeline's own indices are
     # built from arrays and carry no freq either, so nothing depends on it.
     pd.testing.assert_frame_equal(artifacts.load_prices(), frame, check_freq=False)
     pd.testing.assert_frame_equal(artifacts.load_returns(), frame * 0.1, check_freq=False)
+    pd.testing.assert_frame_equal(artifacts.load_volumes(), frame * 1000.0, check_freq=False)
 
 
 def test_corr_round_trip(corr_tensor):
@@ -214,7 +216,9 @@ def test_topology_and_event_study_round_trip():
     [
         (lambda: artifacts.load_returns(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_prices(), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_volumes(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_corr(WINDOW), artifacts.COMMAND_BUILD),
+        (lambda: artifacts.load_corr_index(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_w_full(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_w_thresh(), artifacts.COMMAND_BUILD),
         (lambda: artifacts.load_a_hat(), artifacts.COMMAND_BUILD),

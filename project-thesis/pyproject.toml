@@ -96,3 +96,15 @@ ignore = [
 # RUF100 (unused noqa) is on: a suppression that stopped being necessary must be
 # removed, not left as decoration. There is no blanket `ignore` list -- the few
 # deliberate exceptions carry an inline `noqa` with the reason beside it.
+
+# Characters RUF001 reads as confusable with ASCII, allowed because they are the
+# correct typography of the Italian strings cryptognn.summary writes into
+# results/summary.md -- text meant to be pasted into the thesis, whose prose uses
+# exactly these: an en dash between the ends of a range, a true minus sign, a
+# multiplication sign between the dimensions of the grid, and the two Greek
+# letters of the study's notation. Substituting ASCII would make the generated
+# document typographically worse than the chapter it feeds.
+#
+# A per-character allowance, not a disabled rule: a Cyrillic lookalike smuggled
+# into an identifier is still an error, which is the failure RUF001 exists for.
+allowed-confusables = ["–", "−", "×", "ρ", "α"]

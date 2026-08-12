@@ -2,7 +2,7 @@
 
 Every file the pipeline produces or consumes passes through here, so a filename,
 a serialization format, and the command that produces it are each written down
-once. The scripts of scripts/01-07 use it, and so will the Streamlit explorer,
+once. The scripts of scripts/01-08 use it, and so will the Streamlit explorer,
 which must read exactly the artifacts the thesis figures were drawn from.
 
 Three properties this centralization buys:
@@ -23,14 +23,19 @@ Exports:
   - MissingArtifactError: carries the missing path and the command that makes it
   - path constants and corr_path(window)
   - load_/save_ pairs for prices, returns, volumes, correlations, graphs, tau,
-    the stylized-fact tables, topology, the event study, and the walk-forward
-    predictions, diagnostics, accuracy summary and Diebold-Mariano matrix
+    the stylized-fact tables, topology, the event study, the walk-forward
+    predictions, diagnostics, accuracy summary and Diebold-Mariano matrix, the
+    backtest summary and equity curves, the generated LaTeX tables, the
+    write-up summary and the run manifest
+  - publish_to_thesis(): copy the finished figures and tables into ../latex-thesis/
 
-Integration: used by scripts/02, 03, 05 and 06, and by app/streamlit_app.py.
+Integration: used by scripts/02 through 08, and by app/streamlit_app.py.
 """
 from __future__ import annotations
 
 import json
+import shutil
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +51,9 @@ COMMAND_BUILD = "python scripts/02_build_graphs.py"
 COMMAND_TOPOLOGY = "python scripts/03_topology_analysis.py"
 COMMAND_BASELINES = "python scripts/04_run_baselines.py"
 COMMAND_GCN = "python scripts/05_run_gcn.py"
+COMMAND_BACKTEST = "python scripts/06_run_backtest.py"
+COMMAND_FIGURES = "python scripts/07_make_figures.py --usetex"
+COMMAND_TABLES = "python scripts/08_make_tables.py"
 
 
 def _predictions_command(name: str) -> str:
@@ -321,6 +329,125 @@ def load_dm_matrix(name: str = "baselines") -> pd.DataFrame:
     artifact with a second reader is exactly what this module is for.
     """
     return pd.read_parquet(_require(_metrics(f"dm_{name}.parquet"), _predictions_command(name)))
+
+
+# --------------------------------------------------------------------------
+# Backtest (scripts/06)
+# --------------------------------------------------------------------------
+
+# Parametrized by name like the predictions family, and for the same reason: the
+# study reports one group ("all", every model at every cost level), but a
+# sensitivity run over a second threshold or a second window would want its own
+# file rather than to overwrite this one.
+
+
+def save_backtest(summary: pd.DataFrame, name: str = "all") -> Path:
+    """One row per (model, cost level): Sharpe, drawdown, cumulative return."""
+    path = _metrics(f"backtest_{name}.parquet")
+    summary.to_parquet(path)
+    return path
+
+
+def load_backtest(name: str = "all") -> pd.DataFrame:
+    return pd.read_parquet(_require(_metrics(f"backtest_{name}.parquet"), COMMAND_BACKTEST))
+
+
+def save_backtest_curves(curves: pd.DataFrame, name: str = "all") -> Path:
+    path = _metrics(f"backtest_curves_{name}.parquet")
+    curves.to_parquet(path)
+    return path
+
+
+def load_backtest_curves(name: str = "all") -> pd.DataFrame:
+    """The daily equity series behind the summary, one block per model and cost.
+
+    Stored beside the summary rather than recomputed by whoever draws the
+    figure: fig_equity_curves.pdf has to plot the same curves the table's Sharpe
+    was computed from, and the only way to guarantee that is for both to come
+    out of the same run.
+    """
+    return pd.read_parquet(_require(_metrics(f"backtest_curves_{name}.parquet"), COMMAND_BACKTEST))
+
+
+# --------------------------------------------------------------------------
+# Tables, publication and the run manifest (scripts/08)
+# --------------------------------------------------------------------------
+
+
+def save_table(name: str, body: str) -> Path:
+    """Write one generated LaTeX table into results/tables/.
+
+    UTF-8 with newline="\\n" explicitly: the .tex files are copied into a
+    document that is compiled on whatever machine has MiKTeX, and letting
+    Windows write CRLF would make every regeneration a whole-file diff.
+    """
+    path = paths.RESULTS_TABLES / f"{name}.tex"
+    path.write_text(body, encoding="utf-8", newline="\n")
+    return path
+
+
+def load_table(name: str) -> str:
+    return _require(paths.RESULTS_TABLES / f"{name}.tex", COMMAND_TABLES).read_text(encoding="utf-8")
+
+
+def save_summary_markdown(body: str) -> Path:
+    """Write results/summary.md, the write-up's index of every number.
+
+    Named apart from save_summary(), which is the accuracy parquet: they are two
+    different artifacts and the collision would be between a table of numbers and
+    a document about them.
+
+    Same UTF-8 and newline="\\n" as save_table(), for a further reason. The file
+    is regenerated on every run of scripts/08, and it has to come out byte-identical
+    when nothing upstream changed -- otherwise `git status` reports a modification
+    that is only a line ending, and the run manifest records a dirty tree that is
+    not dirty. That is also why nothing in the document is stamped with the time
+    it was produced: provenance belongs in the manifest.
+    """
+    path = paths.RESULTS / "summary.md"
+    path.write_text(body, encoding="utf-8", newline="\n")
+    return path
+
+
+def load_summary_markdown() -> str:
+    return _require(paths.RESULTS / "summary.md", COMMAND_TABLES).read_text(encoding="utf-8")
+
+
+def publish_to_thesis(figures: Sequence[str], tables: Sequence[str]) -> list[Path]:
+    """Copy the finished figures and tables into ../latex-thesis/.
+
+    The seam between the two sub-projects, crossed in exactly one direction and
+    from exactly one place. Everything is verified present before anything is
+    copied: a thesis that compiles with seven figures out of eight is worse than
+    one that refuses to compile, because the missing one is discovered by a
+    reader rather than by the build.
+    """
+    sources = [(paths.RESULTS_FIGURES / f"{name}.pdf", paths.FIGURES) for name in figures]
+    sources += [(paths.RESULTS_TABLES / f"{name}.tex", paths.TABLES) for name in tables]
+
+    missing = [str(source) for source, _ in sources if not source.exists()]
+    if missing:
+        raise MissingArtifactError(Path(missing[0]), f"{COMMAND_FIGURES} and {COMMAND_TABLES}")
+
+    written = []
+    for source, destination in sources:
+        destination.mkdir(parents=True, exist_ok=True)
+        target = destination / source.name
+        shutil.copyfile(source, target)
+        written.append(target)
+    return written
+
+
+def save_manifest(manifest: dict) -> Path:
+    """Record of what produced the results, written last because it describes them all."""
+    path = paths.RESULTS / "run_manifest.json"
+    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+    return path
+
+
+def load_manifest() -> dict:
+    with _require(paths.RESULTS / "run_manifest.json", COMMAND_TABLES).open(encoding="utf-8") as f:
+        return json.load(f)
 
 
 # --------------------------------------------------------------------------

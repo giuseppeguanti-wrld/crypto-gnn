@@ -1,6 +1,6 @@
 """Shared command-line plumbing for the pipeline entry points.
 
-The scripts of scripts/01-07 all take the same configuration arguments and all
+The scripts of scripts/01-08 all take the same configuration arguments and all
 need to fail the same way when an artifact is missing. Keeping that here means
 the four of them cannot drift into four slightly different spellings of the
 same flag, and that the study's defaults live with the paths they come from.

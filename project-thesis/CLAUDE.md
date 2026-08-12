@@ -52,7 +52,15 @@ Gli iperparametri della griglia (hidden × dropout = 4 configurazioni per GCN) s
 
 ### Ogni figura da script
 
-Tutte le figure sono generate da `scripts/06_make_figures.py` e salvate in `results/figures/` come PDF vettoriali. **Mai figure generate manualmente o salvate ad hoc.** Le funzioni di disegno in `viz/` accettano un `ax: matplotlib.axes.Axes` e **non chiamano `savefig()` al loro interno** — è lo script a comporre e salvare. Questo vincolo architetturale protegge anche Sprint 6 (app Streamlit) da incoerenze.
+Tutte le figure sono generate da `scripts/07_make_figures.py` e salvate in `results/figures/` come PDF vettoriali. **Mai figure generate manualmente o salvate ad hoc.** Le funzioni di disegno in `viz/` accettano un `ax: matplotlib.axes.Axes` e **non chiamano `savefig()` al loro interno** — è lo script a comporre e salvare. Questo vincolo architetturale protegge anche Sprint 6 (app Streamlit) da incoerenze.
+
+### Nessun numero trascritto a mano
+
+La stessa regola vale per il testo. Le cinque tabelle `.tex` (`tables.py`) e `results/summary.md` (`summary.py`) sono **generate** da `scripts/08_make_tables.py`: un numero copiato a mano smette di essere d'accordo con la sua fonte al primo rerun, e nessuno se ne accorge finché non è un lettore a sommare una colonna. Modificare `results/summary.md` a mano non ha senso — viene sovrascritto.
+
+I due moduli sono puri: ricevono gli artefatti già caricati e restituiscono stringhe. È lo script a fare I/O, e sono i moduli a essere testabili. La politica di formattazione dei numeri (virgola italiana, trattino per un valore che non esiste, separatore delle migliaia) vive in un solo posto, `tables.py`: `plain_*` produce la forma in chiaro per il Markdown, `latex_*` la avvolge per il documento. Le due non possono arrotondare diversamente perché la seconda è la prima.
+
+`summary.md` **non contiene alcun timestamp**, deliberatamente: due rigenerazioni a monte invariato devono essere byte-identiche, altrimenti `git status` segnala una modifica che non c'è e `run_manifest.json` registra un albero sporco che è pulito. La provenienza temporale sta nel manifest, che è l'artefatto per essa.
 
 ### Linguaggio
 
@@ -107,8 +115,10 @@ project-thesis/
 │   ├── graph/                ← correlazioni, grafo, metriche topologiche
 │   ├── models/               ← GCN, VAR, naive, AR
 │   ├── evaluation/           ← walk-forward, metriche, backtest
-│   └── viz/                  ← stile, figure
-├── scripts/01-07_*.py        ← entry point, da eseguire in ordine
+│   ├── viz/                  ← stile, figure
+│   ├── tables.py             ← le 5 tabelle LaTeX del Cap. 6
+│   └── summary.py            ← results/summary.md, ogni numero per la stesura
+├── scripts/01-08_*.py        ← entry point, da eseguire in ordine
 ├── tests/                    ← pytest, con la stessa alberatura di src/cryptognn/
 └── results/                  ← output (metrics, figures, tables)
 ```
@@ -123,8 +133,9 @@ python scripts/02_build_graphs.py            # ~1'
 python scripts/03_topology_analysis.py       # ~1'
 python scripts/04_run_baselines.py           # ~3'
 python scripts/05_run_gcn.py                 # ~10'
-python scripts/06_make_figures.py --usetex   # ~3'
-python scripts/07_make_tables.py             # ~10"
+python scripts/06_run_backtest.py            # ~2"
+python scripts/07_make_figures.py --usetex   # ~3'
+python scripts/08_make_tables.py             # ~10"
 streamlit run app/streamlit_app.py           # Sprint 6
 ```
 
@@ -132,7 +143,7 @@ streamlit run app/streamlit_app.py           # Sprint 6
 
 1. **Config first**: leggi `config/default.yaml` prima di aggiungere parametri al codice
 2. **Test first**: scrivi test anti-look-ahead prima di generare risultati
-3. **Figure from script**: ogni figura generata da `scripts/06_make_figures.py`, niente manuale
+3. **Figure from script**: ogni figura generata da `scripts/07_make_figures.py`, niente manuale
 4. **Determinismo**: `torch.manual_seed()`, `np.random.default_rng()`, `torch.use_deterministic_algorithms(True)` in ogni modello
 5. **Riproducibilità**: `run_manifest.json` deve contenere commit git, config_hash, pip freeze, timestamp, durate
 6. **Limiti espliciti**: ogni risultato dichiara i limiti (survivorship bias, singolo periodo, snapshot indipendenti, ecc.) pronti per sez. 7.3

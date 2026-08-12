@@ -6,7 +6,7 @@ load-bearing and each fails silently: a snapshot pair laid out independently
 still renders a handsome picture, it just no longer shows what it claims to.
 
 None of this was reachable before the composition functions moved out of
-scripts/06_make_figures.py, whose name cannot be imported.
+scripts/07_make_figures.py, whose name cannot be imported.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from cryptognn.evaluation.walkforward import make_folds
 from cryptognn.events import Event
 from cryptognn.viz import figures
 from cryptognn.viz.style import FIGURE_WIDTH
@@ -119,7 +120,54 @@ class TestSelectReferenceDates:
 # --------------------------------------------------------------------------
 
 
-def _all_figures(corr, corr_index, weights, topology, events):
+MODELS = ["zero", "ar", "var-p5", "gcn", "gcn-nograph"]
+COSTS = (0.0, 10.0)
+
+
+@pytest.fixture
+def folds() -> list:
+    return make_folds(N_WINDOWS, train=100, val=20, test=20, step=20)
+
+
+@pytest.fixture
+def by_fold(folds) -> pd.DataFrame:
+    """One row per (model, fold), as summarize_predictions(by="fold") emits."""
+    rng = np.random.default_rng(7)
+    frame = pd.DataFrame(
+        {
+            "model": np.repeat(MODELS, len(folds)),
+            "fold": np.tile(np.arange(len(folds)), len(MODELS)),
+            "skill_score": rng.normal(0.0, 0.05, len(MODELS) * len(folds)),
+        }
+    )
+    # zero is the reference: its skill is identically 0 by construction, and one
+    # baseline runs far below the rest, as var-p5 does on the real data.
+    frame.loc[frame["model"] == "zero", "skill_score"] = 0.0
+    frame.loc[frame["model"] == "var-p5", "skill_score"] -= 1.0
+    return frame
+
+
+@pytest.fixture
+def curves(corr_index) -> pd.DataFrame:
+    rng = np.random.default_rng(8)
+    blocks = []
+    for cost in COSTS:
+        for model in [*MODELS, "buy-and-hold"]:
+            returns = np.zeros(N_WINDOWS) if model == "zero" else rng.normal(0.0, 0.01, N_WINDOWS)
+            blocks.append(
+                pd.DataFrame(
+                    {
+                        "model": model,
+                        "cost_bps": cost,
+                        "date": corr_index,
+                        "equity": np.cumprod(1.0 + returns),
+                    }
+                )
+            )
+    return pd.concat(blocks, ignore_index=True)
+
+
+def _all_figures(corr, corr_index, weights, topology, events, folds, by_fold, curves):
     order = hierarchical_order(corr.mean(axis=0))
     dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
     pair = figures.select_reference_dates(topology, events, ("china_crackdown",))
@@ -130,24 +178,32 @@ def _all_figures(corr, corr_index, weights, topology, events):
             weights, weights, corr_index, pair, SYMBOLS, seed=42
         ),
         "spectrum": figures.figure_mp_spectrum(corr, topology, q=N_ASSETS / 60),
+        "scheme": figures.figure_walkforward_scheme(folds, corr_index, events),
+        "by_fold": figures.figure_results_by_fold(by_fold),
+        "equity": figures.figure_equity_curves(curves),
+        "density": figures.figure_density_vs_error(topology, by_fold, folds, corr_index),
     }
 
 
-def test_every_composition_returns_a_figure(corr, corr_index, weights, topology, events):
-    for name, fig in _all_figures(corr, corr_index, weights, topology, events).items():
+def test_every_composition_returns_a_figure(corr, corr_index, weights, topology, events, folds, by_fold, curves):
+    produced = _all_figures(corr, corr_index, weights, topology, events, folds, by_fold, curves)
+
+    for name, fig in produced.items():
         assert isinstance(fig, plt.Figure), name
         assert fig.get_figwidth() == pytest.approx(FIGURE_WIDTH), name
 
 
-def test_compositions_write_nothing(corr, corr_index, weights, topology, events, tmp_path, monkeypatch):
+def test_compositions_write_nothing(
+    corr, corr_index, weights, topology, events, folds, by_fold, curves, tmp_path, monkeypatch
+):
     """Composition returns a Figure; saving belongs to the script. Checked by
     running every composition with the working directory inside an empty tmp_path
     and asserting it stays empty -- the behavioural counterpart to the AST guard
-    in test_viz.py.
+    in test_contract.py.
     """
     monkeypatch.chdir(tmp_path)
 
-    _all_figures(corr, corr_index, weights, topology, events)
+    _all_figures(corr, corr_index, weights, topology, events, folds, by_fold, curves)
 
     assert list(tmp_path.iterdir()) == []
 
@@ -306,3 +362,117 @@ class TestMpSpectrum:
         assert any("Calmo" in label for label in labels)
         assert any("Crisi" in label for label in labels)
         assert any("Marchenko" in label for label in labels)
+
+
+class TestWalkforwardScheme:
+    def test_draws_three_blocks_for_every_fold(self, corr_index, events, folds):
+        fig = figures.figure_walkforward_scheme(folds, corr_index, events)
+
+        assert len(fig.get_axes()[0].collections) == 3 * len(folds)
+
+    def test_height_grows_with_the_fold_count(self, corr_index, events):
+        """Twenty-four rows in a fixed height would merge into a block."""
+        few = figures.figure_walkforward_scheme(
+            make_folds(N_WINDOWS, train=100, val=20, test=20, step=60), corr_index, events
+        )
+        many = figures.figure_walkforward_scheme(
+            make_folds(N_WINDOWS, train=100, val=20, test=20, step=20), corr_index, events
+        )
+
+        assert many.get_figheight() > few.get_figheight()
+
+
+class TestResultsByFold:
+    def test_the_baseline_is_the_reference_line_not_a_series(self, by_fold):
+        """zero has skill 0 in every fold by construction; plotting a constant as
+        one of five curves would spend a palette slot on an axis.
+        """
+        fig = figures.figure_results_by_fold(by_fold)
+
+        labels = [line.get_label() for line in fig.get_axes()[0].lines]
+        assert "zero" not in labels
+
+    def test_the_scale_follows_the_emphasized_models(self, by_fold):
+        """var-p5 runs an order of magnitude below the GCN arms; a shared scale
+        would flatten the comparison the figure exists for.
+        """
+        fig = figures.figure_results_by_fold(by_fold)
+
+        bottom, top = fig.get_axes()[0].get_ylim()
+        accent = by_fold[by_fold["model"].isin(["gcn", "gcn-nograph"])]["skill_score"]
+        assert bottom < accent.min() and top > accent.max()
+        assert bottom > by_fold["skill_score"].min(), "the off-scale baseline must be off scale"
+
+    def test_says_how_far_the_off_scale_baseline_reaches(self, by_fold):
+        fig = figures.figure_results_by_fold(by_fold)
+
+        notes = [text.get_text() for text in fig.get_axes()[0].texts]
+        assert any("fuori scala" in note for note in notes)
+
+
+class TestEquityCurves:
+    def test_one_panel_per_cost_level_sharing_the_y_axis(self, curves):
+        """The pair is the argument: the same curve twice, read against one scale.
+        Independent scales would hide the cost, which is the point."""
+        fig = figures.figure_equity_curves(curves)
+
+        axes = fig.get_axes()
+        assert len(axes) == len(COSTS)
+        assert axes[1].get_shared_y_axes().joined(axes[0], axes[1])
+
+    def test_every_panel_names_its_cost(self, curves):
+        fig = figures.figure_equity_curves(curves)
+
+        titles = [ax.get_title() for ax in fig.get_axes()]
+        assert titles == [f"{cost:g} bps" for cost in COSTS]
+
+
+class TestDensityVsError:
+    def test_one_panel_per_threshold_sharing_the_y_axis(self, topology, by_fold, folds, corr_index):
+        fig = figures.figure_density_vs_error(topology, by_fold, folds, corr_index)
+
+        axes = fig.get_axes()
+        assert len(axes) == 2
+        assert axes[1].get_shared_y_axes().joined(axes[0], axes[1])
+
+    def test_each_panel_scatters_one_point_per_fold(self, topology, by_fold, folds, corr_index):
+        fig = figures.figure_density_vs_error(topology, by_fold, folds, corr_index)
+
+        for ax in fig.get_axes():
+            assert ax.collections[0].get_offsets().shape == (len(folds), 2)
+
+    def test_the_panels_read_different_threshold_columns(self, topology, by_fold, folds, corr_index):
+        """Two panels of the same column would be a duplicated figure that looks
+        like a robustness check.
+        """
+        fig = figures.figure_density_vs_error(topology, by_fold, folds, corr_index)
+
+        left, right = (ax.collections[0].get_offsets()[:, 0] for ax in fig.get_axes())
+        assert not np.allclose(left, right)
+
+    def test_an_unknown_model_names_itself(self, topology, by_fold, folds, corr_index):
+        with pytest.raises(ValueError, match="lstm"):
+            figures.figure_density_vs_error(topology, by_fold, folds, corr_index, model="lstm")
+
+
+class TestFoldTestMeans:
+    def test_averages_the_metric_over_each_test_block(self, topology, folds, corr_index):
+        means = figures.fold_test_means(topology, folds, corr_index, "graph_density")
+
+        expected = [topology["graph_density"].iloc[fold.test].mean() for fold in folds]
+        np.testing.assert_allclose(means, expected)
+
+    def test_reconciles_a_timezone_aware_index(self, topology, folds, corr_index):
+        """The return panel is UTC-aware and topology.parquet is naive; without
+        the reconciliation the reindex is silently all-NaN.
+        """
+        aware = corr_index.tz_localize("UTC")
+
+        np.testing.assert_allclose(
+            figures.fold_test_means(topology, folds, aware, "graph_density"),
+            figures.fold_test_means(topology, folds, corr_index, "graph_density"),
+        )
+
+    def test_an_unknown_column_lists_the_available_ones(self, topology, folds, corr_index):
+        with pytest.raises(ValueError, match="mst_length"):
+            figures.fold_test_means(topology, folds, corr_index, "graph_denisty")

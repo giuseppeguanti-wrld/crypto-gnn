@@ -9,7 +9,7 @@ renormalized adjacency that serves as the GCN substrate.
 --corr-only stops after the correlation tensor, which is the Sprint 1 scope and
 the command named in the M1 definition of done. The full run is the default.
 
-Integration: second script in the pipeline (scripts/01-07). Consumes data/raw/
+Integration: second script in the pipeline (scripts/01-08). Consumes data/raw/
 (from 01_download_data.py) and produces data/processed/{prices,returns,volumes}.parquet,
 corr_{window}.npy, corr_index.npy, W_full.npy, W_thresh.npy, A_hat.npy,
 A_hat_fwer.npy, plus results/metrics/*.parquet (descriptive stats, ACF,

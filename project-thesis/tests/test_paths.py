@@ -34,6 +34,7 @@ def test_root_is_the_project_directory():
         "RESULTS_FIGURES",
         "RESULTS_TABLES",
         "FIGURES",
+        "TABLES",
         "CONFIG",
         "DEFAULT_CONFIG",
         "DEFAULT_EVENTS",
@@ -56,9 +57,15 @@ def test_default_config_files_exist():
     assert paths.DEFAULT_EVENTS.parent == paths.CONFIG
 
 
-def test_figures_points_outside_the_package():
-    """The thesis figures live in the sibling LaTeX project, not under results/."""
+def test_publication_targets_point_outside_the_package():
+    """The published figures and tables live in the sibling LaTeX project, not
+    under results/: project-thesis/ owns how they are produced, latex-thesis/
+    owns how they are typeset, and the copy is the seam between the two.
+    """
     assert paths.FIGURES == paths.ROOT.parent / "latex-thesis" / "figures"
+    assert paths.TABLES == paths.ROOT.parent / "latex-thesis" / "tables"
+    for target in (paths.FIGURES, paths.TABLES):
+        assert paths.ROOT not in target.parents and target != paths.ROOT
 
 
 def test_verify_layout_accepts_a_well_formed_root(tmp_path):

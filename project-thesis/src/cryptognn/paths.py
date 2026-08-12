@@ -10,7 +10,7 @@ Exports:
   - ROOT: project-thesis/ root directory
   - DATA_RAW, DATA_PROCESSED: raw klines and processed prices/returns/correlations
   - RESULTS, RESULTS_METRICS, RESULTS_FIGURES, RESULTS_TABLES: pipeline outputs
-  - FIGURES: PDF figures destination in ../latex-thesis/figures/
+  - FIGURES, TABLES: publication destinations in ../latex-thesis/
   - CONFIG, DEFAULT_CONFIG, DEFAULT_EVENTS: configuration directory and its files
   - ensure_dirs(): idempotent creation of the output directories
 
@@ -38,7 +38,11 @@ RESULTS_METRICS = RESULTS / "metrics"
 RESULTS_FIGURES = RESULTS / "figures"
 RESULTS_TABLES = RESULTS / "tables"
 
+# Where the finished outputs are published for the thesis to include. Outside
+# this project's tree on purpose: project-thesis/ owns how they are produced,
+# latex-thesis/ owns how they are typeset, and the copy is the seam between them.
 FIGURES = ROOT.parent / "latex-thesis" / "figures"
+TABLES = ROOT.parent / "latex-thesis" / "tables"
 
 CONFIG = ROOT / "config"
 DEFAULT_CONFIG = CONFIG / "default.yaml"

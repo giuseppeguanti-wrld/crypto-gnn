@@ -11,7 +11,7 @@ count, same grid, same seeds. That is what makes the difference between their
 scores attributable to the graph rather than to anything else, and it is the
 cleanest form of the study's first research question.
 
-Integration: fifth script in the pipeline (scripts/01-07). Consumes
+Integration: fifth script in the pipeline (scripts/01-08). Consumes
 data/processed/ (from 02_build_graphs.py) through
 cryptognn.features.build_study_data(); produces
 results/metrics/predictions_gcn.parquet and diagnostics_gcn.parquet, whose schema

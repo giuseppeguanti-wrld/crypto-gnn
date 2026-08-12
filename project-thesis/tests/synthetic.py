@@ -33,3 +33,31 @@ WF_N_ASSETS = 4
 WF_N_FEATURES = 3
 WF_GRAPH_OFFSET = 10
 WF_LOOKBACK = 3
+
+# The seven models the chapter compares, in the order the results are reported,
+# plus the backtest's reference row. Shared by the table and summary fixtures
+# because both build frames keyed on them and a mismatch between the two would
+# look like a missing model rather than like a fixture disagreeing with itself.
+MODELS = ("zero", "mean", "ar", "var-bic", "var-p5", "gcn", "gcn-nograph")
+GCN_ARMS = ("gcn", "gcn-nograph")
+BACKTEST_REFERENCE = "buy-and-hold"
+
+# The study's own universe rather than a shortened list: the observations-per-
+# parameter column of the model table is a function of how many assets there are,
+# so a shorter list would make the dimensionality claim come out at a different
+# number than the one the chapter argues from.
+SYMBOLS = (
+    "BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOGE", "DOT",
+    "AVAX", "LINK", "LTC", "BCH", "XLM", "TRX", "ETC",
+)
+# Only the first three carry descriptive statistics: the table's contract is one
+# row per described asset, which a subset exercises and a full list would not.
+DESCRIBED = SYMBOLS[:3]
+
+# Panel length that yields the study's 24 folds under the config fixture's
+# walk-forward settings, so the fold-level fixtures have the real fold count.
+# The two are asserted to agree in tests/test_summary.py rather than trusted:
+# if make_folds ever laid them out differently, every per-fold fixture built
+# from N_FOLDS would silently stop matching the folds it describes.
+N_OBS = 2006
+N_FOLDS = 24

@@ -1,0 +1,168 @@
+{
+  "artifacts": {
+    "results\\figures\\fig_correlation_heatmaps.pdf": {
+      "bytes": 95780,
+      "modified": "2026-08-12T08:56:36+00:00",
+      "sha256": "b4e71d386e6946e217c1a25e482bacd07124cd683ead1955c6e01ee6aced4e77"
+    },
+    "results\\figures\\fig_density_vs_error.pdf": {
+      "bytes": 105439,
+      "modified": "2026-08-12T08:56:44+00:00",
+      "sha256": "a18aa7ce0423f0f9bec97fde791a33277e6ffec2de5cc389e54f837cad986c98"
+    },
+    "results\\figures\\fig_equity_curves.pdf": {
+      "bytes": 180502,
+      "modified": "2026-08-12T08:56:41+00:00",
+      "sha256": "b3b78758ef8f9a1b7e4045696f4bd31d149ef00946f72e1dd53d1e6f99379273"
+    },
+    "results\\figures\\fig_graph_snapshots.pdf": {
+      "bytes": 78340,
+      "modified": "2026-08-12T08:56:40+00:00",
+      "sha256": "99dbcb3ef29ba1fb70475357c2cdbf2890da60e0bf6ba6d5d117ff50ca946e2b"
+    },
+    "results\\figures\\fig_mp_spectrum.pdf": {
+      "bytes": 126793,
+      "modified": "2026-08-12T08:56:40+00:00",
+      "sha256": "95c4a25c4e6b805eac93af3e66a47d763839892d639b3ba527ceb913a36e7ec2"
+    },
+    "results\\figures\\fig_results_by_fold.pdf": {
+      "bytes": 95224,
+      "modified": "2026-08-12T08:56:41+00:00",
+      "sha256": "811d9d6a12216554759e16aabf3319392321c42288ef959a74d93e719dc6943e"
+    },
+    "results\\figures\\fig_topology_timeseries.pdf": {
+      "bytes": 163213,
+      "modified": "2026-08-12T08:56:36+00:00",
+      "sha256": "dd4e84e82822487928c062a3e2a25ececf28598fce1a857dda43fc2c8ec40853"
+    },
+    "results\\figures\\fig_walkforward_scheme.pdf": {
+      "bytes": 74409,
+      "modified": "2026-08-12T08:56:41+00:00",
+      "sha256": "2e2d8dc1d500354c785a010f94699bf9bb2d0df7266f1e7902c049b8a0ad73ad"
+    },
+    "results\\metrics\\acf_abs_returns.parquet": {
+      "bytes": 12894,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "45ef4bd5af601658f8c043797ad31655f8a501429002948ac031667540dd09d3"
+    },
+    "results\\metrics\\acf_returns.parquet": {
+      "bytes": 12894,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "2f96f8d684efedd001d65a696be6309bd998ba261b7fd68a9e4f34fa1f55f5a7"
+    },
+    "results\\metrics\\backtest_all.parquet": {
+      "bytes": 7024,
+      "modified": "2026-08-12T08:07:51+00:00",
+      "sha256": "4ef8978acec3150ff383ddb5af97949d1d83ffe4019a106761b704600f5669f6"
+    },
+    "results\\metrics\\backtest_curves_all.parquet": {
+      "bytes": 411261,
+      "modified": "2026-08-12T08:07:51+00:00",
+      "sha256": "c57369836ae2ecfee787940fe84eeca23045a7eaafc1a66d78db8e1026d5b08a"
+    },
+    "results\\metrics\\descriptive.parquet": {
+      "bytes": 4487,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "b5270aef750fe53101ffe8a6a6f3481ddc28876744d44e6e97dad978c9dad934"
+    },
+    "results\\metrics\\diagnostics_baselines.parquet": {
+      "bytes": 9820,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "990c28cd6d18f928488184b2efb7a461f7b5cdb0cc8839219c7872dfd4d82c29"
+    },
+    "results\\metrics\\diagnostics_gcn.parquet": {
+      "bytes": 14526,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "779f99d64b6b8245ec51c1977484f09e9ece5658c0e3eeb886304dd348b3bf96"
+    },
+    "results\\metrics\\dm_all.parquet": {
+      "bytes": 5913,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "6162c9a8b3fdd4b0bd6b2071fe82acbba9c141914cd73698f1f663ac3e5567a7"
+    },
+    "results\\metrics\\dm_baselines.parquet": {
+      "bytes": 5422,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "60f9e6a7163784758f6a786b7494f1cd967f6490587f2008067d1204af1cc36d"
+    },
+    "results\\metrics\\event_study.parquet": {
+      "bytes": 9721,
+      "modified": "2026-08-09T18:33:17+00:00",
+      "sha256": "70ad3e1b8ce5d9edd6e08b0dc772b2a92bf2241ce3a47cc3edfb1c0c1c34c240"
+    },
+    "results\\metrics\\ljung_box_abs_returns.parquet": {
+      "bytes": 2971,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "14fc1d9079c22b44568ee3721ee6aeaffb97cd5fbfae3f69178a5c67c33c1f8f"
+    },
+    "results\\metrics\\ljung_box_returns.parquet": {
+      "bytes": 2983,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "cc527eb2de7a4609163500df8e3fe2deef758152fb45deb6b35f38ab9dc89062"
+    },
+    "results\\metrics\\predictions_baselines.parquet": {
+      "bytes": 715932,
+      "modified": "2026-08-10T11:49:22+00:00",
+      "sha256": "71582bddb12820ae15d88615e31f2c98d50d269c54df2ff4e58648200ec057a9"
+    },
+    "results\\metrics\\predictions_gcn.parquet": {
+      "bytes": 740173,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "5c9d456c5750a710d1da1031972c4d1ed527ed2af7d3eb87035930e951401761"
+    },
+    "results\\metrics\\summary_all.parquet": {
+      "bytes": 5271,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "a9de0ac28f5b427d228a311b882eb997a576cb8d45876460f75362b08757e572"
+    },
+    "results\\metrics\\summary_all_by_asset.parquet": {
+      "bytes": 8722,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "83c72db6820d4f0196cb49bb56fcf337f0b755f35958039f382e12658a3f9596"
+    },
+    "results\\metrics\\summary_all_by_fold.parquet": {
+      "bytes": 10832,
+      "modified": "2026-08-12T07:48:14+00:00",
+      "sha256": "5580148a07855ef7c5dfcb44f53299462967b50ab9b04090a25414c35559798f"
+    },
+    "results\\metrics\\summary_baselines.parquet": {
+      "bytes": 5179,
+      "modified": "2026-08-10T11:49:22+00:00",
+      "sha256": "bba424eba6b820d6db12eaebbb1ff0365eb4434a43edb576612121e12248c0eb"
+    },
+    "results\\metrics\\tau_calibration.json": {
+      "bytes": 2482,
+      "modified": "2026-08-10T13:47:24+00:00",
+      "sha256": "ab8413fb7b99acd8f15f0b859ecf1480792a27124c5cc2d5c9801f0cf893441c"
+    },
+    "results\\metrics\\topology.parquet": {
+      "bytes": 133659,
+      "modified": "2026-08-09T18:33:17+00:00",
+      "sha256": "89ef4797e27c14aab7227988af13a9e6cb826eabbe7d355f2e396ca12a1cc82f"
+    }
+  },
+  "config": {
+    "path": "C:\\Users\\giuse\\Documents\\crypto-gnn\\project-thesis\\config\\default.yaml",
+    "sha1": "2ac1abadf9d7360164e6b5803e35d779314b6b77"
+  },
+  "environment": {
+    "packages": {
+      "matplotlib": "3.11.1",
+      "networkx": "3.6.1",
+      "numpy": "2.5.1",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.0",
+      "scipy": "1.18.0",
+      "statsmodels": "0.14.6",
+      "torch": "2.13.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.4"
+  },
+  "generated_at": "2026-08-12T13:46:08+00:00",
+  "git": {
+    "branch": "sprnt5",
+    "commit": "22c01975bdf8acf2df0171536b02579ac5d07557",
+    "dirty": true
+  }
+}

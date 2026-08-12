@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\caption[Parametri del grafo dinamico]{Parametri di costruzione del grafo di correlazione dinamico. La densità media è la frazione delle 105 coppie che sopravvive alla soglia, mediata sulle finestre dell'intero periodo, ed è definita solo per le tre soglie. $\tau$ è calibrata sul null di permutazione al livello $\alpha$ indicato, con $B$ rimescolamenti indipendenti per colonna su 24 finestre equispaziate; $\tau_{\mathrm{FWER}}$ controlla l'errore per famiglia sulle coppie e $\tau_{\mathrm{fissa}}$ è la soglia convenzionale, entrambe pre-registrate come varianti di robustezza. Il bordo di Marchenko-Pastur non concorre alla scelta della soglia: governa lo spettro della matrice, non la singola correlazione.}
+\label{tab:graph-params}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Parametro} & \textbf{Simbolo} & \textbf{Valore} & \textbf{Densità media} \\
+\midrule
+Ampiezza della finestra & $T_w$ & $60$ & -- \\
+Numero di asset & $N$ & $15$ & -- \\
+Rapporto di aspetto & $q = N/T_w$ & $0{,}250$ & -- \\
+Bordo superiore MP & $(1+\sqrt{q})^2$ & $2{,}250$ & -- \\
+Coppie di asset & $\binom{N}{2}$ & $105$ & -- \\
+\midrule
+Soglia calibrata & $\tau$ & $0{,}2145$ & $0{,}974$ \\
+Soglia FWER & $\tau_{\mathrm{FWER}}$ & $0{,}4311$ & $0{,}887$ \\
+Soglia fissa & $\tau_{\mathrm{fissa}}$ & $0{,}3000$ & $0{,}950$ \\
+\midrule
+Livello del test & $\alpha$ & $0{,}05$ & -- \\
+Permutazioni & $B$ & $500$ & -- \\
+Finestre di calibrazione & -- & $24$ & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

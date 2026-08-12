@@ -10,7 +10,7 @@ standard was set when there was no model to defend, and after this script the
 standard is on disk: any later claim is measured against these numbers, not
 against a target chosen once the outcome was visible.
 
-Integration: fourth script in the pipeline (scripts/01-07). Consumes
+Integration: fourth script in the pipeline (scripts/01-08). Consumes
 data/processed/ (from 02_build_graphs.py) through
 cryptognn.features.build_study_data(); produces
 results/metrics/predictions_baselines.parquet,

@@ -108,8 +108,9 @@ project-thesis/
 │   ├── 03_topology_analysis.py
 │   ├── 04_run_baselines.py
 │   ├── 05_run_gcn.py
-│   ├── 06_make_figures.py
-│   └── 07_make_tables.py
+│   ├── 06_run_backtest.py
+│   ├── 07_make_figures.py
+│   └── 08_make_tables.py
 ├── exploration/
 │   └── explore.py              # script con celle `# %%` — niente .ipynb nel repo
 ├── app/
@@ -434,35 +435,45 @@ In `evaluation/metrics.py`:
 
 ### S5.1 Metriche economiche (60')
 
-- [ ] `evaluation/backtest.py::sign_strategy(predictions, returns, cost_bps)` — posizione pari al segno della previsione, equipesata sui 15 asset, con costo applicato **a ogni cambio di posizione**
-- [ ] `sharpe(r, periods=365)`, `max_drawdown(equity)`, rendimento cumulato
-- [ ] Eseguire per ogni modello a **0 e a 10 bps**: se il vantaggio sparisce a 10 bps, è un risultato da riportare, non da nascondere (`sec:evaluation-metrics-methodological-pitfalls`: "un backtest senza costi di transazione dichiarati non è confrontabile con nulla")
+- [x] `evaluation/backtest.py::sign_strategy(predictions, cost_bps)` — posizione pari al segno della previsione, equipesata sui 15 asset, con costo applicato **a ogni cambio di posizione**
+  - **Firma senza `returns`**: la tabella lunga porta già `y_true` accanto a `y_pred` sulla stessa riga. Un secondo argomento potrebbe solo introdurre un disallineamento, e un disallineamento qui non produce un errore ma una curva plausibile.
+- [x] `sharpe(r, periods=365)`, `max_drawdown(equity)`, rendimento cumulato
+- [x] Eseguire per ogni modello a **0 e a 10 bps**: se il vantaggio sparisce a 10 bps, è un risultato da riportare, non da nascondere (`sec:evaluation-metrics-methodological-pitfalls`: "un backtest senza costi di transazione dichiarati non è confrontabile con nulla")
+- [x] **Aggiunto rispetto al piano**: riga di riferimento `buy-and-hold` equipesata, e conversione dei log-rendimenti in rendimenti semplici (`expm1`) prima di pesarli — una posizione corta rende $-(e^r-1)$, non $-r$
+- [x] **Aggiunto rispetto al piano**: `scripts/06_run_backtest.py`, con rinumerazione di figure (07) e tabelle (08). Il backtest è un passo di calcolo e i suoi artefatti sono letti sia dalle figure di S5.2 sia dalle tabelle di S5.3, quindi deve precedere entrambi
 
 ### S5.2 Figure dei risultati (60')
 
-- [ ] `fig_walkforward_scheme.pdf` — diagramma del protocollo, con barre train/validazione/test per ciascun fold
-- [ ] `fig_results_by_fold.pdf` — skill score per fold e per modello, con la linea dello zero evidenziata
-- [ ] `fig_equity_curves.pdf` — curve cumulate, con i costi dichiarati in didascalia
-- [ ] `fig_density_vs_error.pdf` — **scatter tra densità media del grafo nel fold ed errore della GCN nel fold**, con retta di regressione e $\rho$ di Spearman. È la verifica empirica diretta della tensione centrale della tesi (`sec:summary-research-questions`, "il punto di incontro delle due questioni"): la struttura è più informativa proprio quando è più difficile da sfruttare. **Da produrre anche se il risultato è nullo** — un'assenza di relazione è essa stessa una risposta
+- [x] `fig_walkforward_scheme.pdf` — diagramma del protocollo, con barre train/validazione/test per ciascun fold
+- [x] `fig_results_by_fold.pdf` — skill score per fold e per modello, con la linea dello zero evidenziata
+- [x] `fig_equity_curves.pdf` — curve cumulate, con i costi dichiarati in didascalia
+- [x] `fig_density_vs_error.pdf` — **scatter tra densità media del grafo nel fold ed errore della GCN nel fold**, con retta di regressione e $\rho$ di Spearman. È la verifica empirica diretta della tensione centrale della tesi (`sec:summary-research-questions`, "il punto di incontro delle due questioni"): la struttura è più informativa proprio quando è più difficile da sfruttare. **Da produrre anche se il risultato è nullo** — un'assenza di relazione è essa stessa una risposta
+  - **Esito**: nullo, e riportato. $\rho = -0{,}100$ ($p = 0{,}643$) sulla soglia calibrata, $\rho = 0{,}005$ ($p = 0{,}981$) su quella FWER, con 8 fold su 24 a densità esattamente 1. Lo stesso `rank_association()` è chiamato da `viz/figures.py` e da `summary.py`, così il numero della prosa non può divergere da quello annotato sulla figura
 
 ### S5.3 Output per la tesi (60')
 
-- [ ] `scripts/07_make_tables.py` → file `.tex` con `booktabs` (`\toprule`/`\midrule`/`\bottomrule`), coerenti con `tab:architectures-comparison` e `tab:graph-construction` già presenti in tesi:
+- [x] `scripts/08_make_tables.py` → file `.tex` con `booktabs` (`\toprule`/`\midrule`/`\bottomrule`), coerenti con `tab:architectures-comparison` e `tab:graph-construction` già presenti in tesi:
   - `tab_universe.tex` — asset, periodo, statistiche descrittive
   - `tab_graph_params.tex` — $T_w$, $q$, bordo MP, $\tau$ e le due soglie di robustezza
   - `tab_results_main.tex` — RMSE / MAE / accuratezza direzionale / skill per modello, con marcatura della significatività DM
   - `tab_backtest.tex` — Sharpe, massimo drawdown, rendimento cumulato a 0 e 10 bps
-- [ ] Rigenerare **tutte** le figure con `--usetex`, per far combaciare i font con quelli del documento
-- [ ] Copiare i PDF in `../latex-thesis/figures/`
-- [ ] `results/run_manifest.json`: commit git, `config_hash`, `pip freeze`, timestamp, durate
+- [x] **Aggiunto rispetto al piano**: `tab_models.tex`, quinta tabella. La sez. 6.4 argomenta sulla dimensionalità del VAR — 1140 coefficienti da un pannello 365×15, sotto cinque osservazioni per parametro — e sul fatto che il BIC seleziona ordine 0 su ogni fold. Entrambi sono numeri, e un numero che regge un argomento va in tabella invece che solo in prosa
+- [x] Rigenerare **tutte** le figure con `--usetex`, per far combaciare i font con quelli del documento
+- [x] Copiare i PDF in `../latex-thesis/figures/`
+- [x] `results/run_manifest.json`: commit git, `config_hash`, `pip freeze`, timestamp, durate
+  - **Divergenza deliberata, argomentata in `08_make_tables.py::build_manifest`**: al posto di un `pip freeze` completo il manifest registra le versioni degli 8 pacchetti che possono cambiare un numero (una lista di 39 pin transitivi li seppellirebbe; `requirements.txt` resta il lockfile esatto), e **non** registra le durate — non sono recuperabili a posteriori da uno script che non ha eseguito la pipeline, e strumentare gli altri sette perché si cronometrino è un'altra modifica. Al loro posto ci sono i digest SHA-256 di ogni artefatto, che è ciò di cui il criterio di riproducibilità ha effettivamente bisogno; le date di modifica danno comunque l'ordine in cui i passi sono girati
 
 ### S5.4 Pacchetto per la stesura (45')
 
-- [ ] `results/summary.md` — ogni numero che servirà nel Cap. 6, organizzato sezione per sezione (6.1 … 6.6), così che la stesura non richieda di rieseguire nulla
-- [ ] Elenco dei **limiti emersi in corso d'opera** da riportare in `sec:limitations`: survivorship bias dell'universo, singolo periodo, singola fonte dati, snapshot indipendenti
-- [ ] `README.md` — prerequisiti, installazione, i 7 script nell'ordine di esecuzione, tempi attesi
-- [ ] `CLAUDE.md` di `project-thesis/` — convenzioni stabili: la configurazione è l'unica fonte di verità, mai numeri magici nel codice, ogni figura prodotta da script, griglia congelata
-- [ ] Commit finale e tag `v1.0-results`
+- [x] `results/summary.md` — ogni numero che servirà nel Cap. 6, organizzato sezione per sezione (6.1 … 6.6), così che la stesura non richieda di rieseguire nulla
+  - **Divergenza deliberata**: il documento è **generato** da `src/cryptognn/summary.py`, invocato da `08_make_tables.py`, non redatto a mano. È la stessa regola già applicata alle tabelle — un numero trascritto smette di essere d'accordo con la sua fonte al primo rerun — e qui la superficie di trascrizione sarebbe la più grande del progetto. Conseguenza vincolante: il file non contiene alcun timestamp, così due rigenerazioni a monte invariato sono byte-identiche e `run_manifest.json` può registrare onestamente un albero pulito
+  - Nessun nono script: la pipeline resta a 8 passi e il manifest resta l'ultima cosa scritta, dato che descrive tutte le altre
+- [x] Elenco dei **limiti emersi in corso d'opera** da riportare in `sec:limitations`: survivorship bias dell'universo, singolo periodo, singola fonte dati, snapshot indipendenti
+  - Ai quattro previsti se ne aggiungono quattro emersi dai numeri, tutti nella sezione «Limiti da dichiarare» di `summary.md`: la densità media di 0,974 alla soglia calibrata (il grafo **non è rado**, e la sogliatura non è il passo selettivo che il nome suggerisce); il BIC che seleziona ordine 0 su ogni fold, per cui il VAR selezionato coincide numericamente con la media storica; skill score negativo per tutti i modelli, con DM non significativo per la GCN dopo Holm; e il vantaggio del backtest che svanisce a 10 bps, con l'ablazione senza grafo davanti alla GCN
+- [x] `README.md` — prerequisiti, installazione, i 7 script nell'ordine di esecuzione, tempi attesi
+  - Sono **8**: il conteggio del piano è anteriore a `06_run_backtest.py` (cfr. S5.1)
+- [x] `CLAUDE.md` di `project-thesis/` — convenzioni stabili: la configurazione è l'unica fonte di verità, mai numeri magici nel codice, ogni figura prodotta da script, griglia congelata
+- [x] Commit finale e tag `v1.0-results`
 
 ---
 
@@ -470,7 +481,7 @@ In `evaluation/metrics.py`:
 
 Cadrà quasi certamente dopo i 5 sprint pianificati, ma **non è opzionale**: è l'unico artefatto che mostra il grafo *evolvere nel tempo*. Una figura statica mostra due istanti; l'app mostra la transizione, ed è quanto serve in sede di discussione. Serve inoltre da strumento di ispezione quando un numero della sez. 6.6 sembra sospetto.
 
-> **Vincolo architetturale, da rispettare già nello sprint 2.** Le funzioni di disegno in `viz/` devono accettare un `ax: matplotlib.axes.Axes` come parametro e **non chiamare `savefig()` al loro interno**: sono gli script `06_make_figures.py` a comporre la figura e a salvarla. Senza questa disciplina, lo sprint 6 è costretto a duplicare il codice di disegno e l'app finisce per mostrare qualcosa di diverso dalle figure stampate in tesi — che è il modo più rapido di rendere entrambe inaffidabili.
+> **Vincolo architetturale, da rispettare già nello sprint 2.** Le funzioni di disegno in `viz/` devono accettare un `ax: matplotlib.axes.Axes` come parametro e **non chiamare `savefig()` al loro interno**: sono gli script `07_make_figures.py` a comporre la figura e a salvarla. Senza questa disciplina, lo sprint 6 è costretto a duplicare il codice di disegno e l'app finisce per mostrare qualcosa di diverso dalle figure stampate in tesi — che è il modo più rapido di rendere entrambe inaffidabili.
 
 ### S6.1 Impalcatura e caching (45')
 
@@ -493,7 +504,7 @@ Cadrà quasi certamente dopo i 5 sprint pianificati, ma **non è opzionale**: è
 ### S6.3 Pannello principale (60')
 
 - [ ] `col_graph, col_heat = st.columns([3, 2])`
-- [ ] `col_graph` → node-link alla data selezionata, disegnato da `viz.graphs.draw_snapshot(ax, W_thresh_t, pos, ...)`, **la stessa funzione** usata da `06_make_figures.py`
+- [ ] `col_graph` → node-link alla data selezionata, disegnato da `viz.graphs.draw_snapshot(ax, W_thresh_t, pos, ...)`, **la stessa funzione** usata da `07_make_figures.py`
 - [ ] `col_heat` → heatmap di $C_t$ da `viz.topology.draw_heatmap(ax, C_t, order)`, con lo stesso ordinamento gerarchico delle figure e scala colore fissa in $[-1,1]$ (non riadattata alla data, altrimenti i colori non sono confrontabili tra istanti)
 - [ ] Riga di `st.metric` sopra le due colonne: densità, $\bar\rho$, $\lambda_2$, lunghezza MST, autovalori fuori dal bulk — ciascuno con `delta` rispetto a 30 giorni prima, così il compattamento si legge come numero e non solo come immagine
 
@@ -546,8 +557,9 @@ python scripts/02_build_graphs.py            # ~1'   -> W_full, W_thresh, A_hat,
 python scripts/03_topology_analysis.py       # ~1'   -> topology.parquet, event_study.parquet
 python scripts/04_run_baselines.py           # ~3'   -> predictions_baselines.parquet
 python scripts/05_run_gcn.py                 # ~10'  -> predictions_gcn.parquet
-python scripts/06_make_figures.py --usetex   # ~3'   -> 8 PDF
-python scripts/07_make_tables.py             # ~10"  -> 4 file .tex
+python scripts/06_run_backtest.py            # ~2"   -> backtest_all.parquet, backtest_curves_all.parquet
+python scripts/07_make_figures.py --usetex   # ~3'   -> 8 PDF
+python scripts/08_make_tables.py             # ~10"  -> 5 file .tex, summary.md, manifest
 streamlit run app/streamlit_app.py           # sprint 6, richiede gli artefatti sopra
 ```
 

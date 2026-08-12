@@ -15,6 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from scipy import stats
 
 from cryptognn.evaluation.metrics import (
     diebold_mariano,
@@ -23,6 +24,7 @@ from cryptognn.evaluation.metrics import (
     holm_adjusted,
     mae,
     panel_loss_differential,
+    rank_association,
     rmse,
     skill_score,
     summarize_predictions,
@@ -385,3 +387,64 @@ class TestHolmCorrection:
         backward = matrix[(matrix["model_a"] == "zero") & (matrix["model_b"] == "noisy")].iloc[0]
 
         assert forward["p_value_holm"] == pytest.approx(backward["p_value_holm"])
+
+
+class TestRankAssociation:
+    """The Spearman test behind the closing figure of Section 6.5."""
+
+    def test_a_monotone_curve_is_a_perfect_rank_association(self):
+        # Pearson on this pair is 0.97, not 1: the relationship is monotone but
+        # not linear, which is the reason the study reports a rank correlation.
+        x = np.arange(1.0, 21.0)
+
+        assert rank_association(x, x**3).rho == pytest.approx(1.0)
+        assert rank_association(x, -np.exp(x / 5)).rho == pytest.approx(-1.0)
+
+    def test_it_is_invariant_to_a_monotone_rescaling(self):
+        rng = np.random.default_rng(11)
+        x, y = rng.normal(size=30), rng.normal(size=30)
+
+        assert rank_association(x, y).rho == pytest.approx(rank_association(np.exp(x), y).rho)
+
+    def test_ties_are_handled_rather_than_refused(self):
+        """A third of the study's folds sit at a density of exactly 1. That tied
+        block is a saturating measurement, not bad data.
+        """
+        x = np.array([0.9, 0.95, 1.0, 1.0, 1.0, 1.0, 0.92, 0.97])
+        y = np.arange(8.0)
+
+        result = rank_association(x, y)
+
+        assert np.isfinite(result.rho) and result.n == 8
+
+    def test_the_line_is_theil_sen_and_resists_leverage(self):
+        """Least squares follows the leverage points and slopes against rho; the
+        median of pairwise slopes does not.
+
+        The fixture is the shape of the study's own scatter: a saturated cluster
+        trending gently down, plus two far-left points carrying the worst values.
+        On the real data that pattern gives rho -0.10 against an OLS slope of
+        +0.19 -- a figure whose line contradicts the statistic printed on it.
+        """
+        x = np.concatenate(([0.00, 0.02], np.linspace(0.90, 1.00, 18)))
+        y = np.concatenate(([-1.00, -0.95], np.linspace(0.0, -0.20, 18)))
+
+        result = rank_association(x, y)
+
+        assert stats.linregress(x, y).slope > 0, "the fixture must actually mislead OLS"
+        assert result.rho < 0
+        assert result.slope < 0
+
+    @pytest.mark.parametrize(
+        ("x", "y", "match"),
+        [
+            (np.arange(2.0), np.arange(2.0), "at least three"),
+            (np.arange(5.0), np.arange(4.0), "differ in shape"),
+            (np.ones(5), np.arange(5.0), "Series x is constant"),
+            (np.arange(5.0), np.ones(5), "Series y is constant"),
+            (np.zeros((3, 3)), np.zeros((3, 3)), "one-dimensional"),
+        ],
+    )
+    def test_rejects_input_that_has_no_association_to_report(self, x, y, match):
+        with pytest.raises(ValueError, match=match):
+            rank_association(x, y)

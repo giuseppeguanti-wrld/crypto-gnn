@@ -28,6 +28,7 @@ Exports:
   - holm_adjusted(): family-wise correction over a set of p-values
   - panel_loss_differential(): long predictions -> one daily series per model pair
   - summarize_predictions(), diebold_mariano_matrix(): the tables of Section 6.4
+  - rank_association(): monotone association between two fold-level quantities
 
 Integration: consumed by scripts/04_run_baselines.py and, from Sprint 4, by
   05_run_gcn.py, which reuse summarize_predictions() so the baseline table and
@@ -325,3 +326,70 @@ def diebold_mariano_matrix(predictions: pd.DataFrame, h: int = 1) -> pd.DataFram
     adjusted = pd.Series(holm_adjusted(distinct.to_numpy()), index=distinct.index)
     matrix["p_value_holm"] = matrix["pair"].map(adjusted)
     return matrix.drop(columns="pair")
+
+
+# --------------------------------------------------------------------------
+# Association between two fold-level quantities (Section 6.5)
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class RankAssociation:
+    """A monotone association, with the Theil-Sen line a scatter is drawn through."""
+
+    rho: float
+    p_value: float
+    slope: float
+    intercept: float
+    n: int
+
+
+def rank_association(x: np.ndarray, y: np.ndarray) -> RankAssociation:
+    """Spearman's rho between two series, plus a robust line through them.
+
+    The test behind the figure that closes Section 6.5: is the GCN's skill related
+    to how dense the graph was over the fold it was measured on? That is the
+    study's two research questions meeting -- structure is most pronounced exactly
+    when it is hardest to exploit -- so the association has to come with a p-value
+    rather than with an eyeballed slope.
+
+    Spearman rather than Pearson because the hypothesis is monotonicity, not
+    linearity, and because at the calibrated threshold a third of the folds sit at
+    a density of exactly 1: a tied block like that is a saturating measurement,
+    which ranks handle and a product-moment correlation does not.
+
+    The line is Theil-Sen, the median of the pairwise slopes, and not ordinary
+    least squares. Both were tried on this data and they disagree in sign: two
+    folds at the low-density end carry enough leverage to tilt the OLS line
+    upward while rho is negative, which would put a figure at odds with the
+    statistic printed on it. Theil-Sen is the rank-based estimator that belongs
+    beside a rank-based correlation -- it depends on the ordering of the points
+    rather than on their distances, so it cannot be levered by two of them, and
+    it agrees with rho wherever rho has a direction to agree with. The claim is
+    still carried by rho and its p-value; the line only makes the shape visible.
+
+    Raises on fewer than three points or on a constant series: rho is undefined
+    there, and scipy signals it with a NaN that would otherwise be printed as a
+    result.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if x.shape != y.shape:
+        raise ValueError(f"Series differ in shape: {x.shape} vs {y.shape}")
+    if x.ndim != 1:
+        raise ValueError(f"Expected one-dimensional series, got {x.ndim} dimensions")
+    if x.size < 3:
+        raise ValueError(f"Need at least three points to associate, got {x.size}")
+    for name, values in (("x", x), ("y", y)):
+        if np.ptp(values) == 0:
+            raise ValueError(f"Series {name} is constant: no association is defined against it")
+
+    result = stats.spearmanr(x, y)
+    line = stats.theilslopes(y, x)
+    return RankAssociation(
+        rho=float(result.statistic),
+        p_value=float(result.pvalue),
+        slope=float(line.slope),
+        intercept=float(line.intercept),
+        n=int(x.size),
+    )

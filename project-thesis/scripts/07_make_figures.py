@@ -1,4 +1,4 @@
-"""Entry point for the study's figures (S2.5 now, S5.2 later).
+"""Entry point for the study's figures (S2.5 and S5.2).
 
 Loads the artifacts, composes the figures, and saves them. This is the only
 place savefig() appears in the project: the drawing functions of cryptognn.viz
@@ -6,17 +6,20 @@ take an `ax`, and the composition functions of cryptognn.viz.figures return a
 Figure, so the Streamlit app of Sprint 6 can produce the same pictures from the
 same code instead of a second, divergent implementation.
 
-Recomputes nothing: every input comes from scripts 01-03 through
-cryptognn.artifacts.
+Recomputes no result: every input comes from scripts 01-06 through
+cryptognn.artifacts. The folds are rebuilt here because they are a function of
+the configuration rather than an artifact, and from load_returns() rather than
+build_study_data(), which would read volumes, features and the graph tensor to
+use nothing but their date index.
 
-Integration: sixth script in the pipeline (scripts/01-07). Consumes
-data/processed/*.npy, results/metrics/{topology,tau_calibration}.* and
-config/events.yaml; writes PDFs to results/figures/, later copied into
-../latex-thesis/figures/ by S5.3.
+Integration: seventh script in the pipeline (scripts/01-08). Consumes
+data/processed/*.npy and results/metrics/{topology,tau_calibration,
+summary_all_by_fold,backtest_curves_all}.*, plus config/events.yaml; writes PDFs
+to results/figures/, later copied into ../latex-thesis/figures/ by S5.3.
 
 Usage:
-    python scripts/06_make_figures.py
-    python scripts/06_make_figures.py --usetex        # final run, slow
+    python scripts/07_make_figures.py
+    python scripts/07_make_figures.py --usetex        # final run, slow
 """
 from __future__ import annotations
 
@@ -24,17 +27,34 @@ from pathlib import Path
 
 import matplotlib
 
-from cryptognn.artifacts import load_corr, load_tau, load_topology, load_w_full, load_w_thresh
+from cryptognn.artifacts import (
+    load_backtest_curves,
+    load_corr,
+    load_returns,
+    load_summary,
+    load_tau,
+    load_topology,
+    load_w_full,
+    load_w_thresh,
+)
 from cryptognn.cli import build_parser, run
 from cryptognn.config import load_config
+from cryptognn.evaluation.metrics import rank_association
+from cryptognn.evaluation.walkforward import make_folds_from_config
 from cryptognn.events import load_events
 from cryptognn.paths import RESULTS_FIGURES, ensure_dirs
 from cryptognn.viz.figures import (
+    FIGURE_NAMES,
     POST_EVENT_OFFSET,
     figure_correlation_heatmaps,
+    figure_density_vs_error,
+    figure_equity_curves,
     figure_graph_snapshots,
     figure_mp_spectrum,
+    figure_results_by_fold,
     figure_topology_timeseries,
+    figure_walkforward_scheme,
+    fold_test_means,
     select_reference_dates,
 )
 from cryptognn.viz.style import apply_style
@@ -82,6 +102,11 @@ def main() -> None:
     calibration = load_tau()
     events = load_events(args.events)
 
+    by_fold = load_summary("all_by_fold")
+    curves = load_backtest_curves()
+    dates = load_returns().index
+    folds = make_folds_from_config(config, len(dates))
+
     symbols = config.data.symbols
     q = len(symbols) / window
 
@@ -97,6 +122,8 @@ def main() -> None:
     order = hierarchical_order(corr.mean(axis=0))
     print(f"asset order (hierarchical): {[symbols[i] for i in order]}")
 
+    report_association(topology, by_fold, folds, dates)
+
     print("Drawing figures...")
     figures = {
         "fig_topology_timeseries": figure_topology_timeseries(topology, events),
@@ -107,9 +134,39 @@ def main() -> None:
             w_thresh, w_full, corr_index, snapshot_dates, symbols, config.seed
         ),
         "fig_mp_spectrum": figure_mp_spectrum(corr, topology, q),
+        "fig_walkforward_scheme": figure_walkforward_scheme(folds, dates, events),
+        "fig_results_by_fold": figure_results_by_fold(by_fold),
+        "fig_equity_curves": figure_equity_curves(curves),
+        "fig_density_vs_error": figure_density_vs_error(topology, by_fold, folds, dates),
     }
+    # The set script 08 will copy into the thesis. Checked rather than assumed:
+    # a figure added here and not there is published as a stale file from an
+    # earlier run, which is the failure that looks like success.
+    if tuple(figures) != FIGURE_NAMES:
+        raise ValueError(f"Composed {tuple(figures)}, but viz.figures declares {FIGURE_NAMES}")
+
     for name, fig in figures.items():
         _save(fig, outdir, name)
+
+
+def report_association(topology, by_fold, folds, dates) -> None:
+    """The numbers behind fig_density_vs_error, printed for the write-up.
+
+    The figure annotates them, but Section 6.5 has to quote them in prose too,
+    and reading a rho off a PDF is how a thesis ends up with a number that does
+    not match its own figure.
+    """
+    skill = by_fold[by_fold["model"] == "gcn"].sort_values("fold")["skill_score"].to_numpy()
+
+    print(f"\nGCN skill vs graph density, over {len(folds)} folds:")
+    for column in ("graph_density", "graph_density_fwer"):
+        density = fold_test_means(topology, folds, dates, column)
+        association = rank_association(density, skill)
+        saturated = int((density >= 1.0).sum())
+        print(
+            f"  {column:20s} rho {association.rho:+.3f}  p {association.p_value:.3f}  "
+            f"(range {density.min():.3f}-{density.max():.3f}, {saturated} folds at 1.000)"
+        )
 
 
 if __name__ == "__main__":

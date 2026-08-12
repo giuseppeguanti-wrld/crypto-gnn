@@ -8,7 +8,7 @@ Exports:
   - fixed_layout(): node positions computed once on the period-average graph
   - draw_snapshot(): one node-link diagram at those positions
 
-Integration: called by scripts/06_make_figures.py for fig_graph_snapshots.pdf
+Integration: called by scripts/07_make_figures.py for fig_graph_snapshots.pdf
   and by app/streamlit_app.py for its interactive snapshot.
 Why the layout is computed once and reused: a force-directed layout recomputed
   per date moves every node, because the layout responds to the whole weight

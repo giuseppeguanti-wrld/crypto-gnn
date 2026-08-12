@@ -9,7 +9,7 @@ range are not re-downloaded. --force ignores the cache and re-downloads everythi
 for when a symbol's history needs refreshing (e.g. the configured end date moved
 forward) or the cached data is suspected corrupt.
 
-Integration: first script in the pipeline (scripts/01-07); its output (data/raw/)
+Integration: first script in the pipeline (scripts/01-08); its output (data/raw/)
 is consumed by cryptognn.data.returns.build_price_panel() in the next step (S1.4).
 
 Usage:

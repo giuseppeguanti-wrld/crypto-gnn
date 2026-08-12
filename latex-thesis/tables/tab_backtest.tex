@@ -1,0 +1,22 @@
+\begin{table}[H]
+\centering
+\caption[Metriche economiche della strategia sul segno]{Strategia sul segno della previsione, equipesata sui 15 asset e ribilanciata ogni giorno, sui $1\,512$ giorni del periodo di test. Ogni misura è riportata a 0 e a 10 punti base di costo, applicati a ogni cambio di posizione; lo Sharpe è annualizzato su 365 giorni e non sottrae un tasso privo di rischio. Il buy-and-hold è il paniere equipesato acquistato il primo giorno e mantenuto, e non usa alcuna previsione: serve da termine di paragone. La previsione nulla non prende posizione, quindi il suo Sharpe non è definito.}
+\label{tab:backtest}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Sharpe}} & \multicolumn{2}{c}{\textbf{Max drawdown}} & \multicolumn{2}{c}{\textbf{Rend. cumulato}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+\textbf{Modello} & \textbf{0 bps} & \textbf{10 bps} & \textbf{0 bps} & \textbf{10 bps} & \textbf{0 bps} & \textbf{10 bps} \\
+\midrule
+Zero & -- & -- & $0{,}0\%$ & $0{,}0\%$ & $0{,}0\%$ & $0{,}0\%$ \\
+Media storica & $-0{,}665$ & $-0{,}671$ & $-84{,}4\%$ & $-84{,}5\%$ & $-80{,}5\%$ & $-80{,}7\%$ \\
+AR & $-0{,}596$ & $-0{,}718$ & $-79{,}1\%$ & $-82{,}9\%$ & $-75{,}6\%$ & $-80{,}3\%$ \\
+VAR (BIC) & $-0{,}665$ & $-0{,}671$ & $-84{,}4\%$ & $-84{,}5\%$ & $-80{,}5\%$ & $-80{,}7\%$ \\
+VAR ($p=5$) & $0{,}147$ & $-0{,}612$ & $-60{,}6\%$ & $-87{,}0\%$ & $-16{,}2\%$ & $-81{,}2\%$ \\
+GCN & $0{,}453$ & $0{,}014$ & $-66{,}0\%$ & $-83{,}8\%$ & $43{,}1\%$ & $-55{,}1\%$ \\
+GCN senza grafo & $0{,}610$ & $0{,}051$ & $-44{,}2\%$ & $-59{,}3\%$ & $108{,}2\%$ & $-31{,}5\%$ \\
+Buy-and-hold & $0{,}262$ & $0{,}261$ & $-66{,}9\%$ & $-66{,}9\%$ & $-14{,}7\%$ & $-14{,}8\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}

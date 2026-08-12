@@ -16,10 +16,15 @@ import ast
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
+from cryptognn.evaluation.metrics import rank_association
+from cryptognn.evaluation.walkforward import make_folds
 from cryptognn.viz import graphs as viz_graphs
+from cryptognn.viz import results as viz_results
 from cryptognn.viz import topology as viz_topology
+from cryptognn.viz.style import COLORS
 
 import matplotlib.pyplot as plt  # isort: skip -- Agg is selected in conftest
 
@@ -102,13 +107,17 @@ def test_composition_module_exists():
         "heatmap",
         "mp_spectrum",
         "snapshot",
+        "fold_scheme",
+        "model_series",
+        "scatter_fit",
     ],
 )
 def test_drawing_functions_use_the_given_axes(draw, block_corr, topology_frame):
     """Each function draws on the `ax` it is handed and creates no figure of its own.
 
-    Parametrized across both drawing modules on purpose: the property belongs to
-    the layer, not to topology.py or graphs.py individually.
+    Parametrized across every drawing module on purpose: the property belongs to
+    the layer, not to topology.py, graphs.py or results.py individually. A new
+    drawing function that is not listed here is not covered by the contract.
     """
     fig, ax = plt.subplots()
     figures_before = set(plt.get_fignums())
@@ -119,6 +128,15 @@ def test_drawing_functions_use_the_given_axes(draw, block_corr, topology_frame):
         viz_topology.draw_heatmap(ax, block_corr, np.arange(N_ASSETS))
     elif draw == "mp_spectrum":
         viz_topology.draw_mp_spectrum(ax, {"a": np.linspace(0.1, 3.0, 200)}, q=0.25)
+    elif draw == "fold_scheme":
+        dates = pd.date_range("2021-01-01", periods=60, freq="D")
+        viz_results.draw_fold_scheme(ax, make_folds(60, train=20, val=5, test=5, step=5), dates)
+    elif draw == "model_series":
+        frame = pd.DataFrame({"model": ["a"] * 4 + ["b"] * 4, "fold": [0, 1, 2, 3] * 2, "v": np.arange(8.0)})
+        viz_results.draw_model_series(ax, frame, "fold", "v", {"a": COLORS[0], "b": COLORS[1]})
+    elif draw == "scatter_fit":
+        x, y = np.arange(10.0), np.arange(10.0) ** 2
+        viz_results.draw_scatter_fit(ax, x, y, rank_association(x, y))
     else:
         weights = np.clip(block_corr - np.eye(N_ASSETS), 0.0, None)
         layout = viz_graphs.fixed_layout(weights, seed=42)

@@ -2,7 +2,7 @@
 
 Every function here takes an existing `ax` and draws on it. None of them creates
 a figure, and none of them calls savefig(): composing and saving is the job of
-scripts/06_make_figures.py. That separation is what lets the Streamlit app of
+scripts/07_make_figures.py. That separation is what lets the Streamlit app of
 Sprint 6 render the *same* pictures as the thesis by calling the *same*
 functions -- the alternative is two drawing code paths that drift apart until
 neither can be trusted.
@@ -14,7 +14,7 @@ Exports:
   - marchenko_pastur_density(): the theoretical MP density
   - draw_mp_spectrum(): eigenvalue histogram against that density
 
-Integration: called by scripts/06_make_figures.py and by app/streamlit_app.py.
+Integration: called by scripts/07_make_figures.py and by app/streamlit_app.py.
 Why the color scale is pinned: a heatmap rescaled to each date's own range makes
   a calm market and a crisis look identical, since both saturate the colormap.
   Fixing it to [-1, 1] is what makes two dates comparable at a glance.

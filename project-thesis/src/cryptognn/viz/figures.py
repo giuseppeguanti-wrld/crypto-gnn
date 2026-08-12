@@ -7,7 +7,7 @@ thing:
     render one thing on it. They never create a Figure.
   - **Composition** -- this module: functions create a Figure, lay out its axes,
     call the drawing functions, and **return** it. They never save.
-  - **Saving** -- scripts/06_make_figures.py, the only place savefig appears.
+  - **Saving** -- scripts/07_make_figures.py, the only place savefig appears.
 
 Returning the Figure rather than writing it is what makes these functions
 testable: a test can assert that the two graph snapshots really share node
@@ -15,30 +15,68 @@ positions, or that the three heatmaps really share a colour scale, without
 rendering a PDF and looking at it. Those properties are load-bearing -- a
 snapshot pair laid out independently produces a plausible-looking figure that
 means nothing -- and until this module existed no test could reach them, because
-a file named 06_make_figures.py cannot be imported.
+a file named 07_make_figures.py cannot be imported.
 
 Exports:
   - select_reference_dates(): the calm and post-event dates the figures compare
   - figure_topology_timeseries(), figure_correlation_heatmaps(),
-    figure_graph_snapshots(), figure_mp_spectrum()
+    figure_graph_snapshots(), figure_mp_spectrum(): Section 6.6
+  - figure_walkforward_scheme(), figure_results_by_fold(),
+    figure_equity_curves(), figure_density_vs_error(): Section 6.5
+  - fold_test_means(): a topological metric averaged over each fold's test block
 
-Integration: called by scripts/06_make_figures.py, which saves what they return;
+Integration: called by scripts/07_make_figures.py, which saves what they return;
   available to app/streamlit_app.py for its PDF export.
+Why this module imports from evaluation: figure_density_vs_error() needs the
+  Spearman test it annotates, and computing it here rather than in the script
+  keeps it testable -- a file named 07_make_figures.py cannot be imported.
+  evaluation.metrics carries only numpy, pandas and scipy, all of which viz
+  already requires; the Protocols that pull statsmodels and torch live in
+  evaluation.protocols, which stays out.
 """
 from __future__ import annotations
+
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from cryptognn.evaluation.metrics import rank_association
 from cryptognn.viz.graphs import draw_snapshot, fixed_layout
-from cryptognn.viz.style import FIGURE_WIDTH, STACK_PANEL_HEIGHT, WIDE_PANEL_HEIGHT
+from cryptognn.viz.results import draw_fold_scheme, draw_model_series, draw_scatter_fit
+from cryptognn.viz.style import (
+    FIGURE_WIDTH,
+    REFERENCE_COLOR,
+    STACK_PANEL_HEIGHT,
+    WIDE_PANEL_HEIGHT,
+    emphasis_colors,
+)
 from cryptognn.viz.topology import draw_heatmap, draw_metric_series, draw_mp_spectrum
 
 # The first window fully clear of an event: the metric at date t is computed on
 # the returns of [t-59, t], so only at +60 does the window contain no pre-event
 # data at all. Same choice as the event study, for the same reason.
 POST_EVENT_OFFSET = 60
+
+# The zero forecast is these figures' reference line rather than one of their
+# curves: its skill score is identically 0 and its equity identically 1.
+BASELINE = "zero"
+
+# Every figure the study publishes, in the order the chapter introduces them.
+# Named here rather than in the script that draws them because script 08 has to
+# copy exactly this set into the thesis, and a list kept in two places is a list
+# that will one day be copied incomplete.
+FIGURE_NAMES = (
+    "fig_topology_timeseries",
+    "fig_correlation_heatmaps",
+    "fig_graph_snapshots",
+    "fig_mp_spectrum",
+    "fig_walkforward_scheme",
+    "fig_results_by_fold",
+    "fig_equity_curves",
+    "fig_density_vs_error",
+)
 
 
 def select_reference_dates(
@@ -256,5 +294,211 @@ def figure_mp_spectrum(corr: np.ndarray, topology: pd.DataFrame, q: float) -> pl
         fontsize=6.5,
         color="#444444",
     )
+    fig.tight_layout()
+    return fig
+
+
+# --------------------------------------------------------------------------
+# Section 6.5 -- the predictive comparison
+# --------------------------------------------------------------------------
+
+
+def figure_walkforward_scheme(folds: Sequence, dates: pd.DatetimeIndex, events: list) -> plt.Figure:
+    """The evaluation protocol drawn to scale, in calendar time.
+
+    The figure a reader checks the anti-look-ahead claim against. Three things
+    are meant to be legible from it and from nothing else in the chapter: that
+    every test block lies strictly after its own validation and training blocks,
+    that consecutive test blocks tile the period without overlapping, and that
+    both crises fall inside test blocks rather than inside training data.
+
+    Height scales with the fold count so 24 rows stay separable; at 0.13in per
+    fold the bars are about 2mm apart on the page.
+    """
+    fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, 1.15 + 0.13 * len(folds)))
+    draw_fold_scheme(ax, folds, dates, events=events)
+    ax.set_xlabel("Data")
+    fig.tight_layout()
+    return fig
+
+
+def figure_results_by_fold(
+    by_fold: pd.DataFrame,
+    highlight: Sequence[str] = ("gcn", "gcn-nograph"),
+) -> plt.Figure:
+    """Skill score against the zero forecast, fold by fold.
+
+    The overall table of Section 6.4 gives one number per model, which cannot
+    distinguish a model that is uniformly slightly worse from one that is far
+    better in some regimes and far worse in others. On 24 folds spanning two
+    crises that distinction is the whole question, and it only exists here.
+
+    The zero line is the reference by construction: skill is measured against
+    that forecast, so a point above it is a fold the model won.
+
+    The y axis is scaled to the emphasized models and the baselines are allowed
+    off it, with their worst value annotated. var-p5 reaches -1.27 in one fold --
+    fifteen times the whole range the GCN arms move in -- and a shared scale
+    would flatten the comparison the figure exists for into a line. Scaling to
+    the subject and stating what falls outside is the honest form of that
+    choice; the number itself stays visible, and the full range is in
+    summary_all_by_fold.parquet.
+    """
+    series = by_fold[by_fold["model"] != BASELINE]
+    models = list(dict.fromkeys(series["model"]))
+    colors = emphasis_colors(models, highlight)
+
+    fig, ax = plt.subplots(figsize=(FIGURE_WIDTH, WIDE_PANEL_HEIGHT))
+    draw_model_series(
+        ax,
+        series,
+        x="fold",
+        y="skill_score",
+        colors=colors,
+        reference=0.0,
+        marker="o",
+        muted_label="altre baseline",
+    )
+
+    accent = series[series["model"].isin(highlight)]["skill_score"]
+    margin = 0.55 * (accent.max() - accent.min())
+    ax.set_ylim(accent.min() - margin, accent.max() + margin)
+
+    worst = series["skill_score"].min()
+    if worst < ax.get_ylim()[0]:
+        ax.annotate(
+            f"baseline fuori scala fino a ${worst:+.2f}$",
+            xy=(0.5, 0.02),
+            xycoords="axes fraction",
+            fontsize=6.5,
+            color=REFERENCE_COLOR,
+            ha="center",
+            va="bottom",
+        )
+
+    ax.set_xlabel("Fold")
+    ax.set_ylabel("Skill score")
+    fig.tight_layout()
+    return fig
+
+
+def figure_equity_curves(
+    curves: pd.DataFrame,
+    highlight: Sequence[str] = ("gcn", "gcn-nograph", "buy-and-hold"),
+) -> plt.Figure:
+    """The sign strategies' equity, gross of costs and net of them.
+
+    Two panels on one shared y axis, which is the point: the same curve appears
+    twice and the reader compares its two shapes directly. A single panel with
+    both cost levels would double the traces; two panels on independent scales
+    would hide the very difference the pair exists to show.
+
+    The costs are what the figure argues about, so they are in the panel titles
+    rather than only in the caption -- a figure lifted into a slide keeps them.
+    """
+    plotted = curves[curves["model"] != BASELINE]
+    models = list(dict.fromkeys(plotted["model"]))
+    costs = sorted(plotted["cost_bps"].unique())
+    colors = emphasis_colors(models, highlight)
+
+    fig, axes = plt.subplots(
+        1,
+        len(costs),
+        figsize=(FIGURE_WIDTH, WIDE_PANEL_HEIGHT * 1.15),
+        sharey=True,
+    )
+    for ax, cost in zip(np.atleast_1d(axes), costs, strict=True):
+        draw_model_series(
+            ax,
+            plotted[plotted["cost_bps"] == cost],
+            x="date",
+            y="equity",
+            colors=colors,
+            reference=1.0,
+            muted_label="altre baseline",
+        )
+        ax.set_title(f"{cost:g} bps")
+        ax.set_xlabel("Data")
+        ax.tick_params(axis="x", labelrotation=30)
+    np.atleast_1d(axes)[0].set_ylabel("Capitale (1 = iniziale)")
+    fig.tight_layout()
+    return fig
+
+
+def fold_test_means(topology: pd.DataFrame, folds: Sequence, dates: pd.DatetimeIndex, column: str) -> np.ndarray:
+    """Mean of a topological metric over each fold's test block.
+
+    The two frames disagree about timezones -- the return panel is UTC-aware and
+    topology.parquet is naive, because .npy has no timezone concept and the
+    correlation index round-trips through it. Stripping the tzinfo here is the
+    same reconciliation features.align_graph() documents; reindexing without it
+    silently produces all-NaN and a figure of empty axes.
+
+    A caveat the caption carries: the metric at date t is computed on the window
+    [t-59, t], so a fold's mean partly reflects the days before its test block
+    began. That is a property of a rolling window, not a leak -- nothing here
+    feeds a forecast.
+    """
+    if column not in topology.columns:
+        raise ValueError(f"No column {column!r} in topology; available: {sorted(topology.columns)}")
+
+    naive = pd.DatetimeIndex(dates).tz_localize(None) if dates.tz is not None else pd.DatetimeIndex(dates)
+    means = []
+    for fold in folds:
+        window = topology[column].reindex(naive[fold.test])
+        if window.isna().any():
+            raise ValueError(f"Fold {fold.index}: {int(window.isna().sum())} test dates absent from topology")
+        means.append(window.mean())
+    return np.asarray(means, dtype=float)
+
+
+def figure_density_vs_error(
+    topology: pd.DataFrame,
+    by_fold: pd.DataFrame,
+    folds: Sequence,
+    dates: pd.DatetimeIndex,
+    model: str = "gcn",
+    columns: Sequence[tuple[str, str]] = (
+        ("graph_density", r"Densità ($\tau$ calibrata)"),
+        ("graph_density_fwer", r"Densità ($\tau_{\mathrm{FWER}}$)"),
+    ),
+) -> plt.Figure:
+    """Does the GCN do better where the graph is denser? The two questions meeting.
+
+    This is Section 6.5's closing figure and the thesis's own tension put to a
+    test: correlation structure is most pronounced exactly in the regimes where
+    it is hardest to profit from, so a model that reads structure might be
+    helped and hindered by the same thing. A flat cloud is a real answer to that,
+    and the figure is drawn whether or not the slope survives its p-value.
+
+    Skill on the y axis rather than RMSE, deliberately. RMSE is dominated by the
+    fold's volatility level, and density rises in crises for the same reason
+    volatility does -- so a density/RMSE correlation would largely measure that
+    shared driver rather than anything about the model. Skill is already
+    normalized against the zero forecast within the fold, which removes the
+    level and leaves the comparison.
+
+    Two panels because the calibrated threshold saturates: a third of the folds
+    sit at a density of exactly 1, so the left panel shows a column of tied
+    points. That is a property of the threshold worth seeing, not one to hide,
+    and the FWER panel beside it carries the same test where the measurement has
+    room to vary.
+    """
+    arm = by_fold[by_fold["model"] == model]
+    if arm.empty:
+        raise ValueError(f"No rows for model {model!r} in the per-fold summary")
+    skill = arm.sort_values("fold")["skill_score"].to_numpy()
+
+    fig, axes = plt.subplots(
+        1,
+        len(columns),
+        figsize=(FIGURE_WIDTH, WIDE_PANEL_HEIGHT * 1.1),
+        sharey=True,
+    )
+    for ax, (column, label) in zip(np.atleast_1d(axes), columns, strict=True):
+        density = fold_test_means(topology, folds, dates, column)
+        draw_scatter_fit(ax, density, skill, rank_association(density, skill), reference=0.0)
+        ax.set_xlabel(label)
+    np.atleast_1d(axes)[0].set_ylabel(f"Skill score ({model})")
     fig.tight_layout()
     return fig

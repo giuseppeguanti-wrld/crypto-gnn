@@ -33,12 +33,20 @@ def _isolated_tree(tmp_path, monkeypatch):
     all -- a `from ... import DATA_PROCESSED` would bind the real path at import
     time and ignore the patch.
     """
-    processed = tmp_path / "processed"
-    metrics = tmp_path / "metrics"
-    processed.mkdir()
-    metrics.mkdir()
-    monkeypatch.setattr(paths, "DATA_PROCESSED", processed)
-    monkeypatch.setattr(paths, "RESULTS_METRICS", metrics)
+    directories = {
+        "DATA_PROCESSED": tmp_path / "processed",
+        "RESULTS_METRICS": tmp_path / "metrics",
+        "RESULTS": tmp_path / "results",
+        "RESULTS_FIGURES": tmp_path / "results" / "figures",
+        "RESULTS_TABLES": tmp_path / "results" / "tables",
+        # The publication targets, redirected so a test never writes into the
+        # real ../latex-thesis/ tree.
+        "FIGURES": tmp_path / "thesis" / "figures",
+        "TABLES": tmp_path / "thesis" / "tables",
+    }
+    for name, directory in directories.items():
+        directory.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr(paths, name, directory)
     return tmp_path
 
 
@@ -284,6 +292,105 @@ def test_walkforward_outputs_are_named_per_run_group():
     pd.testing.assert_frame_equal(artifacts.load_summary(name="gcn"), summary)
 
 
+def test_backtest_outputs_round_trip():
+    """The two tables scripts/06 produces, read again by scripts 07 and 08.
+
+    Saved as a pair because the figure and the table have to agree: the equity
+    curve drawn in Section 6.5 must be the one the Sharpe beside it was computed
+    from, and the only guarantee of that is a single run writing both.
+    """
+    summary = pd.DataFrame({"model": ["zero"], "cost_bps": [10.0], "sharpe": [float("nan")]})
+    curves = pd.DataFrame(
+        {
+            "model": ["zero", "zero"],
+            "cost_bps": [10.0, 10.0],
+            "date": pd.date_range("2022-05-05", periods=2, freq="D", tz="UTC"),
+            "net_return": [0.0, 0.0],
+            "equity": [1.0, 1.0],
+        }
+    )
+
+    artifacts.save_backtest(summary)
+    artifacts.save_backtest_curves(curves)
+
+    pd.testing.assert_frame_equal(artifacts.load_backtest(), summary)
+    pd.testing.assert_frame_equal(artifacts.load_backtest_curves(), curves)
+
+
+# --------------------------------------------------------------------------
+# Tables, publication and the manifest (scripts/08)
+# --------------------------------------------------------------------------
+
+
+def test_tables_round_trip():
+    body = "\\begin{table}[H]\n\\end{table}\n"
+
+    artifacts.save_table("tab_universe", body)
+
+    assert (paths.RESULTS_TABLES / "tab_universe.tex").exists()
+    assert artifacts.load_table("tab_universe") == body
+
+
+def test_tables_are_written_with_unix_newlines():
+    """The .tex files are copied into a document compiled on whatever machine
+    has MiKTeX. Letting Windows write CRLF makes every regeneration a whole-file
+    diff, which hides the one line that actually changed.
+    """
+    artifacts.save_table("tab_x", "\\toprule\n\\bottomrule\n")
+
+    assert b"\r\n" not in (paths.RESULTS_TABLES / "tab_x.tex").read_bytes()
+
+
+def test_summary_markdown_round_trips():
+    body = "# Sintesi\n\n| a | b |\n"
+
+    artifacts.save_summary_markdown(body)
+
+    assert (paths.RESULTS / "summary.md").exists()
+    assert artifacts.load_summary_markdown() == body
+
+
+def test_summary_markdown_is_written_with_unix_newlines():
+    """summary.md is rewritten on every run of scripts/08 and has to come out
+    byte-identical when nothing upstream changed. CRLF would make each rerun a
+    whole-file diff, and the manifest would then record a dirty tree that is not.
+    """
+    artifacts.save_summary_markdown("# Sintesi\n\ntesto\n")
+
+    assert b"\r\n" not in (paths.RESULTS / "summary.md").read_bytes()
+
+
+def test_publish_copies_figures_and_tables_into_the_thesis():
+    (paths.RESULTS_FIGURES / "fig_a.pdf").write_bytes(b"%PDF-1.4")
+    artifacts.save_table("tab_a", "\\toprule\n")
+
+    written = artifacts.publish_to_thesis(["fig_a"], ["tab_a"])
+
+    assert (paths.FIGURES / "fig_a.pdf").read_bytes() == b"%PDF-1.4"
+    assert (paths.TABLES / "tab_a.tex").exists()
+    assert len(written) == 2
+
+
+def test_publish_refuses_a_partial_set():
+    """A thesis that compiles with seven figures out of eight is worse than one
+    that refuses to compile: the missing one is found by a reader, not a build.
+    """
+    (paths.RESULTS_FIGURES / "fig_a.pdf").write_bytes(b"%PDF-1.4")
+
+    with pytest.raises(artifacts.MissingArtifactError, match="fig_b"):
+        artifacts.publish_to_thesis(["fig_a", "fig_b"], [])
+
+    assert not list(paths.FIGURES.iterdir()), "nothing may be copied when the set is incomplete"
+
+
+def test_manifest_round_trips_as_json():
+    manifest = {"git": {"commit": "abc123", "dirty": False}, "artifacts": {"a.parquet": {"sha256": "0" * 64}}}
+
+    artifacts.save_manifest(manifest)
+
+    assert artifacts.load_manifest() == manifest
+
+
 # --------------------------------------------------------------------------
 # Missing artifacts
 # --------------------------------------------------------------------------
@@ -321,6 +428,11 @@ def test_walkforward_outputs_are_named_per_run_group():
         (lambda: artifacts.load_summary(name="all"), artifacts.COMMAND_GCN),
         (lambda: artifacts.load_summary(name="all_by_fold"), artifacts.COMMAND_GCN),
         (lambda: artifacts.load_dm_matrix(name="all"), artifacts.COMMAND_GCN),
+        (lambda: artifacts.load_backtest(), artifacts.COMMAND_BACKTEST),
+        (lambda: artifacts.load_backtest_curves(), artifacts.COMMAND_BACKTEST),
+        (lambda: artifacts.load_table("tab_universe"), artifacts.COMMAND_TABLES),
+        (lambda: artifacts.load_summary_markdown(), artifacts.COMMAND_TABLES),
+        (lambda: artifacts.load_manifest(), artifacts.COMMAND_TABLES),
     ],
 )
 def test_missing_artifact_names_the_command_that_makes_it(loader, command):

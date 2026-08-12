@@ -9,7 +9,7 @@ Reads only artifacts already on disk and recomputes nothing upstream: the
 correlation tensor, the graphs, and the calibrated thresholds all come from
 02_build_graphs.py. Running it twice yields the same files.
 
-Integration: third script in the pipeline (scripts/01-07). Consumes
+Integration: third script in the pipeline (scripts/01-08). Consumes
 data/processed/{corr_*,corr_index,W_full,W_thresh}.npy,
 results/metrics/tau_calibration.json and config/events.yaml; produces
 results/metrics/topology.parquet and results/metrics/event_study.parquet.

@@ -1,0 +1,18 @@
+\begin{table}[H]
+\centering
+\caption[Parametrizzazione dei modelli]{Parametrizzazione dei modelli confrontati. I parametri sono la media sui fold, e le osservazioni per parametro li rapportano al pannello di addestramento di un fold: 365 giorni per 15 asset, cioè $5\,475$ valori. Due letture, entrambe rilevanti per il capitolo: il VAR con ordine fissato a 5 stima $1\,140$ coefficienti, meno di cinque osservazioni ciascuno, che è la maledizione della dimensionalità in forma misurata anziché asserita; e il criterio BIC seleziona ordine $0$ su tutti i fold, per cui il VAR selezionato non stima alcun coefficiente incrociato e coincide numericamente con la media storica. La griglia della GCN ($16$ o $32$ unità nascoste, dropout $0{,}2$ o $0{,}5$) è stata congelata prima di osservare qualunque risultato; la configurazione è scelta sulla validazione interna al fold e la previsione di test è la media sui 5 semi.}
+\label{tab:models}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Modello} & \textbf{Selezione dell'ordine} & \textbf{Parametri} & \textbf{Oss./par.} \\
+\midrule
+Zero & nessuna stima & -- & -- \\
+Media storica & media del train & $15$ & $365{,}0$ \\
+AR & BIC, $p \leq 5$ (medio $0{,}18$) & $18$ & $309{,}9$ \\
+VAR (BIC) & BIC, $p = 0$ su ogni fold & $15$ & $365{,}0$ \\
+VAR ($p=5$) & fisso, $p = 5$ & $1\,140$ & $4{,}8$ \\
+GCN & griglia su validazione & $248$ & $22{,}1$ \\
+GCN senza grafo & griglia su validazione & $268$ & $20{,}5$ \\
+\bottomrule
+\end{tabular}
+\end{table}

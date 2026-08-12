@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\caption[Confronto predittivo tra i modelli]{Accuratezza fuori campione sui $22\,680$ valori previsti del periodo di test, ordinata per RMSE crescente. Lo skill score è la frazione di errore quadratico rimossa rispetto alla previsione nulla, quindi è positivo solo per un modello che la batte. La statistica di Diebold-Mariano confronta ciascun modello con la previsione nulla ed è \emph{negativa quando il modello è il più accurato dei due}; è calcolata sul differenziale di perdita mediato tra i 15 asset a ogni data, non sulle previsioni singole, che non sono indipendenti. Il $p$ è corretto secondo Holm sull'insieme dei confronti a coppie. L'accuratezza direzionale della previsione nulla non è definita: non esprime alcuna direzione.}
+\label{tab:results-main}
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+\textbf{Modello} & \textbf{RMSE} & \textbf{MAE} & \textbf{Acc. dir.} & \textbf{Skill} & \textbf{DM} & \textbf{$p$ (Holm)} \\
+\midrule
+Zero & $0{,}04145$ & $0{,}02764$ & -- & $0{,}0000$ & -- & -- \\
+Media storica & $0{,}04156$ & $0{,}02773$ & $50{,}0\%$ & $-0{,}0052$ & $2{,}78$ & $0{,}077$ \\
+VAR (BIC) & $0{,}04156$ & $0{,}02773$ & $50{,}0\%$ & $-0{,}0052$ & $2{,}78$ & $0{,}077$ \\
+GCN senza grafo & $0{,}04162$ & $0{,}02776$ & $51{,}2\%$ & $-0{,}0080$ & $1{,}59$ & $1{,}000$ \\
+AR & $0{,}04162$ & $0{,}02774$ & $50{,}4\%$ & $-0{,}0082$ & $3{,}36$ & $0{,}012$ \\
+GCN & $0{,}04177$ & $0{,}02801$ & $50{,}9\%$ & $-0{,}0156$ & $1{,}82$ & $0{,}683$ \\
+VAR ($p=5$) & $0{,}04978$ & $0{,}03471$ & $50{,}1\%$ & $-0{,}4423$ & $11{,}00$ & $<0{,}001$ \\
+\bottomrule
+\end{tabular}
+\end{table}

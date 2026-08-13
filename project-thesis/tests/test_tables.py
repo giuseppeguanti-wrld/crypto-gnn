@@ -37,6 +37,7 @@ from cryptognn.tables import (
     plain_integer,
     plain_number,
     plain_pvalue,
+    table_models,
 )
 
 
@@ -305,6 +306,24 @@ class TestTableContents:
 
         assert latex_integer(1140) in row
         assert "$4{,}8$" in row
+
+    def test_the_model_table_flags_a_non_uniform_var_bic_order(self, diagnostics, config):
+        """table_models() must not claim "su ogni fold" when the folds disagree.
+
+        Averaging the per-fold order and truncating to int -- the previous
+        approach -- can print a plausible-looking p even when one fold selected
+        a different order, silently making the caption's claim false.
+        """
+        baselines, gcn = diagnostics
+        mutated = baselines.copy()
+        first_var_bic_row = (mutated["model"] == "var-bic") & (mutated["fold"] == mutated["fold"].min())
+        mutated.loc[first_var_bic_row, "var_lag_order"] = 1.0
+
+        row = next(row for row in _body_rows(table_models(mutated, gcn, config)) if "VAR (BIC)" in row)
+
+        assert "su ogni fold" not in row
+        assert "0" in row
+        assert "1" in row
 
     def test_the_results_table_has_one_row_per_model(self, tables, summary):
         rows = _body_rows(tables["tab_results_main"])

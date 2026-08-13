@@ -355,6 +355,48 @@ def table_graph_params(calibration: TauCalibration, config: Config) -> str:
 # --------------------------------------------------------------------------
 
 
+def _var_bic_orders(baselines: pd.DataFrame) -> list[int]:
+    """The distinct BIC-selected VAR orders across folds, sorted.
+
+    A single source for both the table row and the caption prose below: either
+    deriving "the order" from a mean and truncating to int -- the previous
+    approach -- can print a plausible-looking p even when folds disagree,
+    silently making an "ogni fold" / "tutti i fold" claim false. summary.py's
+    _section_protocol() already computes the same distinct-value set for the
+    same column; this mirrors that instead of re-deriving a weaker one.
+    """
+    return sorted(
+        {int(value) for value in baselines.loc[baselines["model"] == "var-bic", "var_lag_order"].dropna()}
+    )
+
+
+def _var_bic_selection_label(orders: list[int]) -> str:
+    """'BIC, p = X su ogni fold' when every fold agrees, an honest list otherwise."""
+    if len(orders) == 1:
+        return f"BIC, $p = {orders[0]}$ su ogni fold"
+    joined = ", ".join(str(order) for order in orders)
+    return f"BIC, $p \\in \\{{{joined}\\}}$ a seconda del fold"
+
+
+def _var_bic_narrative(orders: list[int]) -> str:
+    """The caption's account of what BIC selected, honest under any outcome.
+
+    The strong claim -- the selected VAR estimates no cross-asset coefficient
+    and coincides numerically with the historical mean -- is only true when
+    every fold agrees on order 0; it does not follow from a merely uniform
+    nonzero order, let alone a non-uniform one.
+    """
+    if orders == [0]:
+        return (
+            "il criterio BIC seleziona ordine $0$ su tutti i fold, per cui il VAR selezionato "
+            "non stima alcun coefficiente incrociato e coincide numericamente con la media storica"
+        )
+    if len(orders) == 1:
+        return f"il criterio BIC seleziona ordine ${orders[0]}$ su tutti i fold"
+    joined = ", ".join(str(order) for order in orders)
+    return f"il criterio BIC seleziona ordine ${{{joined}}}$ a seconda del fold"
+
+
 def table_models(baselines: pd.DataFrame, gcn: pd.DataFrame, config: Config) -> str:
     """Parameters estimated per fold, and how many observations support each one.
 
@@ -387,7 +429,8 @@ def table_models(baselines: pd.DataFrame, gcn: pd.DataFrame, config: Config) -> 
             latex_number(n_observations / n_params, decimals=1) if supported else MISSING,
         ]
 
-    var_bic_lag = mean_of(baselines, "var-bic", "var_lag_order")
+    var_bic_orders = _var_bic_orders(baselines)
+    var_bic_selection = _var_bic_selection_label(var_bic_orders)
     var_p5_params = mean_of(baselines, "var-p5", "n_params")
     ar_lag = latex_number(mean_of(baselines, "ar", "ar_lag_mean"), decimals=2)
     grid = config.model.gcn
@@ -398,7 +441,7 @@ def table_models(baselines: pd.DataFrame, gcn: pd.DataFrame, config: Config) -> 
         [model_label("zero"), "nessuna stima", MISSING, MISSING],
         row("mean", "media del train", float(len(config.data.symbols))),
         row("ar", f"BIC, $p \\leq {config.model.ar.max_lag}$ (medio {ar_lag})", mean_of(baselines, "ar", "n_params")),
-        row("var-bic", f"BIC, $p = {int(var_bic_lag)}$ su ogni fold", mean_of(baselines, "var-bic", "n_params")),
+        row("var-bic", var_bic_selection, mean_of(baselines, "var-bic", "n_params")),
         row("var-p5", f"fisso, $p = {config.model.var.fixed_lag}$", var_p5_params),
         row("gcn", "griglia su validazione", mean_of(gcn, "gcn", "n_params")),
         row("gcn-nograph", "griglia su validazione", mean_of(gcn, "gcn-nograph", "n_params")),
@@ -415,9 +458,7 @@ def table_models(baselines: pd.DataFrame, gcn: pd.DataFrame, config: Config) -> 
             "Due letture, entrambe rilevanti per il capitolo: il VAR con ordine fissato a "
             f"{config.model.var.fixed_lag} stima {latex_integer(var_p5_params)} coefficienti, meno "
             "di cinque osservazioni ciascuno, che è la maledizione della dimensionalità in forma "
-            f"misurata anziché asserita; e il criterio BIC seleziona ordine ${int(var_bic_lag)}$ su "
-            "tutti i fold, per cui il VAR selezionato non stima alcun coefficiente incrociato e "
-            "coincide numericamente con la media storica. La griglia della GCN "
+            f"misurata anziché asserita; e {_var_bic_narrative(var_bic_orders)}. La griglia della GCN "
             f"({hidden} unità nascoste, dropout {dropouts}) è stata congelata prima di osservare "
             "qualunque risultato; la configurazione è scelta sulla validazione interna al fold e la "
             f"previsione di test è la media sui {len(grid.seeds)} semi."

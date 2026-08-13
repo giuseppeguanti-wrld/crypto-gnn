@@ -58,7 +58,7 @@ si rifiuta di partire se ne manca uno, indicando il comando che lo produce. Sono
 tutti idempotenti e rieseguibili senza pulizia manuale.
 
 ```powershell
-pytest tests/ -q                             # 557 test, inclusi i 4 anti-look-ahead
+pytest tests/ -q                             # 566 test, inclusi i 4 anti-look-ahead
 ruff check src/ tests/ scripts/
 
 python scripts/01_download_data.py           # ~2'    klines Binance -> data/raw/
@@ -147,8 +147,21 @@ project-thesis/
 `PLANNING.md` documenta le decisioni congelate e il registro dei rischi;
 `CLAUDE.md` le convenzioni di lavoro sul codice.
 
-## Non ancora presente
+## Esploratore interattivo
 
-L'esploratore interattivo Streamlit (`app/streamlit_app.py`, Sprint 6) mostrerà il
-grafo evolvere nel tempo riusando le stesse funzioni di disegno delle figure della
-tesi. Richiederà gli artefatti degli script 01–03 e non ricalcolerà nulla.
+```powershell
+streamlit run app/streamlit_app.py
+```
+
+Richiede gli artefatti degli script `01_download_data.py`–`03_topology_analysis.py`
+(pannello dei rendimenti, correlazioni, soglia calibrata, metriche topologiche): se
+ne manca uno, l'app mostra il comando esatto da eseguire invece di un traceback.
+Non ricalcola mai la pipeline — l'unica eccezione è la soglia, un confronto NumPy
+istantaneo su una matrice $15\times15$.
+
+Mostra il grafo di correlazione e la heatmap a una data scelta da slider, la
+possibilità di confrontare due date affiancate, e la stessa fascia di serie
+topologiche di `fig_topology_timeseries.pdf` con gli eventi di crisi marcati. Il
+grafo e la heatmap sono disegnati dalle stesse funzioni (`viz.graphs.draw_snapshot`,
+`viz.topology.draw_heatmap`) usate da `07_make_figures.py`, cosicché l'app mostra
+sempre esattamente ciò che le figure della tesi mostrano.

@@ -63,6 +63,19 @@ POST_EVENT_OFFSET = 60
 # curves: its skill score is identically 0 and its equity identically 1.
 BASELINE = "zero"
 
+# The four panels of fig_topology_timeseries.pdf: metric column(s), their
+# in-panel labels (None for a single untitled series), and the shared y-label.
+# Named here rather than inlined in figure_topology_timeseries() because
+# app/streamlit_app.py draws the same four panels around its date slider and
+# must not carry a second copy of this list -- exactly the risk FIGURE_NAMES
+# above is named here to avoid.
+TOPOLOGY_TIMESERIES_PANELS: tuple[tuple[list[str], list[str] | None, str], ...] = (
+    (["mean_correlation"], None, r"$\bar\rho$"),
+    (["graph_density", "graph_density_fwer"], [r"$\tau$", r"$\tau_{\mathrm{FWER}}$"], "Densità"),
+    (["algebraic_connectivity_combinatorial"], None, r"$\lambda_2$"),
+    (["mst_length"], None, "Lung. MST"),
+)
+
 # Every figure the study publishes, in the order the chapter introduces them.
 # Named here rather than in the script that draws them because script 08 has to
 # copy exactly this set into the thesis, and a list kept in two places is a list
@@ -129,12 +142,7 @@ def figure_topology_timeseries(topology: pd.DataFrame, events: list) -> plt.Figu
     is invariant to a uniform rescaling of the weights and is therefore nearly
     flat here (cv 0.021 against 0.178).
     """
-    panels = [
-        (["mean_correlation"], None, r"$\bar\rho$"),
-        (["graph_density", "graph_density_fwer"], [r"$\tau$", r"$\tau_{\mathrm{FWER}}$"], "Densità"),
-        (["algebraic_connectivity_combinatorial"], None, r"$\lambda_2$"),
-        (["mst_length"], None, "Lung. MST"),
-    ]
+    panels = TOPOLOGY_TIMESERIES_PANELS
 
     fig, axes = plt.subplots(
         len(panels),

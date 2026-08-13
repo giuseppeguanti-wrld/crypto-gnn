@@ -510,17 +510,22 @@ Cadrà quasi certamente dopo i 5 sprint pianificati, ma **non è opzionale**: è
 
 ### S6.4 Fascia temporale (45')
 
-- [ ] Sotto le colonne, a tutta larghezza: le serie topologiche dello sprint 2 con `axvline` sulla data selezionata, disegnate da `viz.topology.draw_metric_series(ax, df, metric, events)`
-- [ ] Marcatori degli eventi letti da `config/events.yaml`, gli stessi di `fig_topology_timeseries.pdf`
-- [ ] Lo slider resta l'unica sorgente di verità sulla data selezionata (Streamlit non offre selezione da click su una figura matplotlib): nessun secondo meccanismo di navigazione che possa desincronizzarsi
+- [x] Sotto le colonne, a tutta larghezza: le serie topologiche dello sprint 2 con `axvline` sulla data selezionata, disegnate da `viz.topology.draw_metric_series(ax, df, metric, events)`
+- [x] Marcatori degli eventi letti da `config/events.yaml`, gli stessi di `fig_topology_timeseries.pdf`
+- [x] Lo slider resta l'unica sorgente di verità sulla data selezionata (Streamlit non offre selezione da click su una figura matplotlib): nessun secondo meccanismo di navigazione che possa desincronizzarsi
+  - **Aggiunto rispetto al piano**: la lista dei 4 pannelli (`mean_correlation`, `graph_density`+`graph_density_fwer`, `algebraic_connectivity_combinatorial`, `mst_length`), prima scritta solo dentro `figure_topology_timeseries()`, è stata estratta come `TOPOLOGY_TIMESERIES_PANELS` in `viz/figures.py` e importata anche dall'app: evita di tenere la stessa lista in due file, lo stesso rischio già segnalato per `FIGURE_NAMES` nello stesso modulo. La riga verticale sulla data selezionata usa `REFERENCE_COLOR` a tratto pieno, deliberatamente diversa dal tratteggio grigio (`EVENT_COLOR`) degli eventi di crisi, così le due categorie di marcatore non si confondono
 
 ### S6.5 Rifiniture e chiusura (30')
 
-- [ ] `st.session_state` per conservare data e soglia tra i rerun
-- [ ] Nota in calce all'app: $\tau$ calibrata, $T_w$, periodo, numero di asset — così uno screenshot resta autoesplicativo fuori contesto
-- [ ] Sezione nel `README.md`: `streamlit run app/streamlit_app.py`, con l'avvertenza che richiede gli artefatti degli sprint 1–2
-- [ ] Aggiungere `streamlit>=1.39` a `requirements.txt` (fin qui era commentato come opzionale)
-- [ ] Commit: `feat: interactive graph explorer`
+- [x] `st.session_state` per conservare data e soglia tra i rerun
+  - **Nota tecnica**: per i due widget condizionali (`τ manuale`, visibile solo su "Manuale"; "Seconda data", visibile solo con "Confronta due date" attivo) legare la persistenza alla sola `key=` del widget non basta — Streamlit scarta lo stato legato alla key di un widget nei rerun in cui quel widget non viene istanziato, quindi tornando su "Manuale" il valore ripartiva sempre da τ calibrata. Il fix usa una entry di `session_state` separata e sempre viva (`tau_manual_value`, `second_date_value`), passata come `value=` e riscritta dopo la chiamata al widget. Il caso è coperto da `tests/test_app.py::test_manual_threshold_value_persists_across_radio_toggle`, che senza il fix falliva davvero (verificato)
+- [x] Nota in calce all'app: $\tau$ calibrata, $T_w$, periodo, numero di asset — così uno screenshot resta autoesplicativo fuori contesto
+- [x] Sezione nel `README.md`: `streamlit run app/streamlit_app.py`, con l'avvertenza che richiede gli artefatti degli sprint 1–2
+  - **Precisazione**: gli artefatti richiesti sono in realtà quelli degli script 01–**03** (non 01–02): il pannello principale e la fascia temporale leggono anche `topology.parquet`, prodotto da `03_topology_analysis.py`
+- [x] Aggiungere `streamlit>=1.39` a `requirements.txt` (fin qui era commentato come opzionale)
+  - **Nota**: `pyproject.toml` aveva già `app = ["streamlit>=1.39"]` da Sprint 5; l'aggiunta qui è al lockfile pienamente pinnato (`streamlit==1.61.1` più le sue 22 dipendenze transitive nuove, ai valori effettivamente installati nel venv di riferimento)
+  - **Bug reale intercettato dalla verifica**: `streamlit>=1.61` dichiara `pyarrow<25`, incompatibile con il pin esistente `pyarrow==25.0.0` — `uv pip install -r requirements.txt` falliva la risoluzione in un venv pulito. Corretto abbassando il pin a `pyarrow==24.0.0` (dentro il vincolo `pyarrow>=17` di `pyproject.toml`) e riverificato: installazione pulita in un venv isolato, `pytest tests/ -q` verde (566/566) con quell'ambiente esatto, non solo con quello di sviluppo già popolato
+- [x] Commit: `feat: interactive graph explorer`
 
 **DoD M6** — l'app si avvia da artefatti freschi, mostra il grafo a qualunque data del periodo, e i numeri visualizzati coincidono con `topology.parquet`.
 

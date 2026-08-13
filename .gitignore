@@ -98,7 +98,10 @@ ipython_config.py
 #   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
 #   This is especially recommended for binary packages to ensure reproducibility, and is more
 #   commonly ignored for libraries.
-# uv.lock
+#   project-thesis has already chosen requirements.txt as its pinned lockfile (see the comment
+#   atop project-thesis/pyproject.toml); uv.lock is an incidental byproduct of running `uv run`/
+#   `uv sync` there, not a second lockfile the project tracks.
+uv.lock
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.

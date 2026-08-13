@@ -2,42 +2,42 @@
   "artifacts": {
     "results\\figures\\fig_correlation_heatmaps.pdf": {
       "bytes": 95780,
-      "modified": "2026-08-12T08:56:36+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "b4e71d386e6946e217c1a25e482bacd07124cd683ead1955c6e01ee6aced4e77"
     },
     "results\\figures\\fig_density_vs_error.pdf": {
       "bytes": 105439,
-      "modified": "2026-08-12T08:56:44+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "a18aa7ce0423f0f9bec97fde791a33277e6ffec2de5cc389e54f837cad986c98"
     },
     "results\\figures\\fig_equity_curves.pdf": {
       "bytes": 180502,
-      "modified": "2026-08-12T08:56:41+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "b3b78758ef8f9a1b7e4045696f4bd31d149ef00946f72e1dd53d1e6f99379273"
     },
     "results\\figures\\fig_graph_snapshots.pdf": {
       "bytes": 78340,
-      "modified": "2026-08-12T08:56:40+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "99dbcb3ef29ba1fb70475357c2cdbf2890da60e0bf6ba6d5d117ff50ca946e2b"
     },
     "results\\figures\\fig_mp_spectrum.pdf": {
       "bytes": 126793,
-      "modified": "2026-08-12T08:56:40+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "95c4a25c4e6b805eac93af3e66a47d763839892d639b3ba527ceb913a36e7ec2"
     },
     "results\\figures\\fig_results_by_fold.pdf": {
       "bytes": 95224,
-      "modified": "2026-08-12T08:56:41+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "811d9d6a12216554759e16aabf3319392321c42288ef959a74d93e719dc6943e"
     },
     "results\\figures\\fig_topology_timeseries.pdf": {
       "bytes": 163213,
-      "modified": "2026-08-12T08:56:36+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "dd4e84e82822487928c062a3e2a25ececf28598fce1a857dda43fc2c8ec40853"
     },
     "results\\figures\\fig_walkforward_scheme.pdf": {
       "bytes": 74409,
-      "modified": "2026-08-12T08:56:41+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "2e2d8dc1d500354c785a010f94699bf9bb2d0df7266f1e7902c049b8a0ad73ad"
     },
     "results\\metrics\\acf_abs_returns.parquet": {
@@ -52,12 +52,12 @@
     },
     "results\\metrics\\backtest_all.parquet": {
       "bytes": 7024,
-      "modified": "2026-08-12T08:07:51+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "4ef8978acec3150ff383ddb5af97949d1d83ffe4019a106761b704600f5669f6"
     },
     "results\\metrics\\backtest_curves_all.parquet": {
       "bytes": 411261,
-      "modified": "2026-08-12T08:07:51+00:00",
+      "modified": "2026-08-12T14:05:22+00:00",
       "sha256": "c57369836ae2ecfee787940fe84eeca23045a7eaafc1a66d78db8e1026d5b08a"
     },
     "results\\metrics\\descriptive.parquet": {
@@ -149,9 +149,9 @@
     "packages": {
       "matplotlib": "3.11.1",
       "networkx": "3.6.1",
-      "numpy": "2.5.1",
+      "numpy": "2.5.2",
       "pandas": "3.0.5",
-      "pyarrow": "25.0.0",
+      "pyarrow": "25.0.1",
       "scipy": "1.18.0",
       "statsmodels": "0.14.6",
       "torch": "2.13.0"
@@ -159,10 +159,10 @@
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.14.4"
   },
-  "generated_at": "2026-08-12T13:47:01+00:00",
+  "generated_at": "2026-08-13T15:25:46+00:00",
   "git": {
-    "branch": "sprnt5",
-    "commit": "e24086cc010eaf869a3ade9dd7926c9c08a20b14",
+    "branch": "interface",
+    "commit": "9c906cae7180aeb0900619dda200961d69e3eb52",
     "dirty": false
   }
 }

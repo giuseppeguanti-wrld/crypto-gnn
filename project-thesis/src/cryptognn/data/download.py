@@ -28,18 +28,18 @@ from cryptognn.paths import DATA_RAW
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 
 _KLINE_COLUMNS = [
-    "open_time",
-    "open",
-    "high",
-    "low",
-    "close",
-    "volume",
-    "close_time",
-    "quote_volume",
-    "trades",
-    "taker_buy_base",
-    "taker_buy_quote",
-    "ignore",
+    "open_time",        # The exact moment the candle started to form
+    "open",             # The very first price at which a trade was executed at the beginning of this time interval
+    "high",             # The absolute highest price reached by the asset during this timeframe
+    "low",              # The absolute lowest price reached
+    "close",            # The very last traded price before the timeframe expired
+    "volume",           # The total amount of the asset you are trading (the "base asset") that changed hands in this timeframe
+    "close_time",       # The exact moment the candle closes, in milliseconds
+    "quote_volume",     # The total amount of the asset you use to pay (the "quote asset") traded in this timeframe
+    "trades",           # The total count of individual transactions (executed orders) that took place between buyers and sellers to form this candle
+    "taker_buy_base",   # The aggressive buying pressure in the base asset
+    "taker_buy_quote",  # It shows how many USDT were spent by aggressive market buyers
+    "ignore",           # This field was historically used for Binance's internal purposes
 ]
 
 
@@ -104,14 +104,16 @@ def fetch_klines(
     start: date | str,
     end: date | str,
     interval: str,
+    quote: str = "USDT",
     force: bool = False,
 ) -> pd.DataFrame:
     """Download daily OHLCV history for one asset and return it as a tidy DataFrame.
 
-    `symbol` is the base asset (e.g. "BTC"); the USDT-quoted pair is queried
-    against Binance, matching the frozen decision to trade only /USDT pairs.
-    Returns a DataFrame indexed by open_time (UTC, normalized to midnight) with
-    columns close, volume, quote_volume, trades, trimmed to exactly [start, end].
+    `symbol` is the base asset (e.g. "BTC"); `quote` is the asset it is priced
+    in (config.data.quote, "USDT" by default here to match the frozen decision
+    to trade only /USDT pairs -- see download_universe()). Returns a DataFrame
+    indexed by open_time (UTC, normalized to midnight) with columns close,
+    volume, quote_volume, trades, trimmed to exactly [start, end].
 
     Caches to data/raw/{pair}_{interval}.parquet: if that file already exists
     and its date range covers [start, end], the cached data is returned and no
@@ -119,7 +121,7 @@ def fetch_klines(
     cache file is overwritten. `force=True` skips the cache check unconditionally
     (used by scripts/01_download_data.py --force).
     """
-    pair = f"{symbol}USDT"
+    pair = f"{symbol}{quote}"
     start_ts = pd.Timestamp(start, tz="UTC").normalize()
     end_ts = pd.Timestamp(end, tz="UTC").normalize()
 
@@ -164,6 +166,8 @@ def download_universe(config: Config, force: bool = False) -> dict[str, pd.DataF
     same shape produced by fetch_klines().
     """
     return {
-        symbol: fetch_klines(symbol, config.data.start, config.data.end, config.data.interval, force=force)
+        symbol: fetch_klines(
+            symbol, config.data.start, config.data.end, config.data.interval, quote=config.data.quote, force=force
+        )
         for symbol in tqdm(config.data.symbols, desc="Downloading universe")
     }

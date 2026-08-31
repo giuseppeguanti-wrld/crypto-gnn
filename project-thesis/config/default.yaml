@@ -44,7 +44,7 @@ model:
   # was seen. BIC selects p=0 on all 24 folds, so the VAR would otherwise never
   # estimate a single cross-asset coefficient; forcing p=5 gives the multivariate
   # comparator the study needs, and the 15*(15*5+1) = 1140 coefficients from 365
-  # observations that Section 6.4 discusses.
+  # observations.
   var: {max_lag: 5, ic: bic, fixed_lag: 5}
   ar:  {max_lag: 5, ic: bic}
 

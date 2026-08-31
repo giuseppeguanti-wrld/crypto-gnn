@@ -259,3 +259,6 @@ main.pdf
 project-thesis/data/
 project-thesis/docs/
 project-thesis/results/figures/*.png
+
+# Claude Code personal skills/config (CLAUDE.md files live outside .claude/ and are unaffected)
+.claude/

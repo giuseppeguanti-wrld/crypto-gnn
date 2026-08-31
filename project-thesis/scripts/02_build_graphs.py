@@ -84,8 +84,8 @@ def main() -> None:
     ensure_dirs()
 
     print("Building price and volume panels...")
-    prices = build_price_panel(DATA_RAW, config.data.symbols)
-    volumes = build_volume_panel(DATA_RAW, config.data.symbols)
+    prices = build_price_panel(DATA_RAW, config.data.symbols, quote=config.data.quote)
+    volumes = build_volume_panel(DATA_RAW, config.data.symbols, quote=config.data.quote)
     validate_panel(prices, volumes, config.data.start, config.data.end)
     print(f"  {prices.shape[0]} days x {prices.shape[1]} assets, validated.")
 

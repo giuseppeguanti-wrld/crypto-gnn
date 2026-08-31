@@ -1,144 +1,144 @@
 {
   "artifacts": {
     "results\\figures\\fig_correlation_heatmaps.pdf": {
-      "bytes": 95780,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "b4e71d386e6946e217c1a25e482bacd07124cd683ead1955c6e01ee6aced4e77"
+      "bytes": 34114,
+      "modified": "2026-08-31T14:27:04+00:00",
+      "sha256": "c93574201f456bd7921557d72bd69864ecc251ec226fd90c3ee11887efcf78ad"
     },
     "results\\figures\\fig_density_vs_error.pdf": {
-      "bytes": 105439,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "a18aa7ce0423f0f9bec97fde791a33277e6ffec2de5cc389e54f837cad986c98"
+      "bytes": 24502,
+      "modified": "2026-08-31T14:27:05+00:00",
+      "sha256": "d8dc9a3c6bda439cdfa2166e61dd8dbd369c760e047914256783f32ae6493745"
     },
     "results\\figures\\fig_equity_curves.pdf": {
-      "bytes": 180502,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "b3b78758ef8f9a1b7e4045696f4bd31d149ef00946f72e1dd53d1e6f99379273"
+      "bytes": 120319,
+      "modified": "2026-08-31T14:27:05+00:00",
+      "sha256": "cb7d6ef4caef638aabed0b6cdf4e8b510b689f108c16b730184136297d22e1ad"
     },
     "results\\figures\\fig_graph_snapshots.pdf": {
-      "bytes": 78340,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "99dbcb3ef29ba1fb70475357c2cdbf2890da60e0bf6ba6d5d117ff50ca946e2b"
+      "bytes": 37297,
+      "modified": "2026-08-31T14:27:04+00:00",
+      "sha256": "7c54b9421978dd9c9e9d648136cfeda7e4385e1f0f05474dc7d9bf62149c47f4"
     },
     "results\\figures\\fig_mp_spectrum.pdf": {
-      "bytes": 126793,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "95c4a25c4e6b805eac93af3e66a47d763839892d639b3ba527ceb913a36e7ec2"
+      "bytes": 25147,
+      "modified": "2026-08-31T14:27:04+00:00",
+      "sha256": "3209a18e2f4661abb56349d493b90dfb5776f27754ab6e88986df94c2e8ff57a"
     },
     "results\\figures\\fig_results_by_fold.pdf": {
-      "bytes": 95224,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "811d9d6a12216554759e16aabf3319392321c42288ef959a74d93e719dc6943e"
+      "bytes": 22036,
+      "modified": "2026-08-31T14:27:05+00:00",
+      "sha256": "0612327f7cc45e44f664998c5deb3c773bf28f7db0a0d21350841550dbb2af7e"
     },
     "results\\figures\\fig_topology_timeseries.pdf": {
-      "bytes": 163213,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "dd4e84e82822487928c062a3e2a25ececf28598fce1a857dda43fc2c8ec40853"
+      "bytes": 76029,
+      "modified": "2026-08-31T14:27:04+00:00",
+      "sha256": "b8a4ac7f92da0152ed53949c2d357ad441ae87cf4042b6f4fab802db317b4268"
     },
     "results\\figures\\fig_walkforward_scheme.pdf": {
-      "bytes": 74409,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "2e2d8dc1d500354c785a010f94699bf9bb2d0df7266f1e7902c049b8a0ad73ad"
+      "bytes": 13218,
+      "modified": "2026-08-31T14:27:05+00:00",
+      "sha256": "c2afef0975d5ff75c324459f42dd8c92859e6d8145b6c61765bee21f610f4df6"
     },
     "results\\metrics\\acf_abs_returns.parquet": {
       "bytes": 12894,
-      "modified": "2026-08-10T13:47:24+00:00",
-      "sha256": "45ef4bd5af601658f8c043797ad31655f8a501429002948ac031667540dd09d3"
+      "modified": "2026-08-31T14:21:59+00:00",
+      "sha256": "f3969f5f08ab4e3efa6bf7a9823280b379edb5b2b6e0689d7a1fb080f2adc024"
     },
     "results\\metrics\\acf_returns.parquet": {
       "bytes": 12894,
-      "modified": "2026-08-10T13:47:24+00:00",
-      "sha256": "2f96f8d684efedd001d65a696be6309bd998ba261b7fd68a9e4f34fa1f55f5a7"
+      "modified": "2026-08-31T14:21:59+00:00",
+      "sha256": "871c9d47c6e1f5504f34ecc39e5ef3fd511dde7b013adf0853e05ebb6b5d9729"
     },
     "results\\metrics\\backtest_all.parquet": {
       "bytes": 7024,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "4ef8978acec3150ff383ddb5af97949d1d83ffe4019a106761b704600f5669f6"
+      "modified": "2026-08-31T14:26:42+00:00",
+      "sha256": "4fcb0e72ba5721ada57c87120e26cc2f0485b3903e0c0eb1fad03daab3b397bf"
     },
     "results\\metrics\\backtest_curves_all.parquet": {
       "bytes": 411261,
-      "modified": "2026-08-12T14:05:22+00:00",
-      "sha256": "c57369836ae2ecfee787940fe84eeca23045a7eaafc1a66d78db8e1026d5b08a"
+      "modified": "2026-08-31T14:26:42+00:00",
+      "sha256": "4a61ff3b08b1837f6e4416eca788abbef80cb697f74e6cad379b872c48db2c65"
     },
     "results\\metrics\\descriptive.parquet": {
       "bytes": 4487,
-      "modified": "2026-08-10T13:47:24+00:00",
-      "sha256": "b5270aef750fe53101ffe8a6a6f3481ddc28876744d44e6e97dad978c9dad934"
+      "modified": "2026-08-31T14:21:59+00:00",
+      "sha256": "b9e40bc6d4a05ca997ef5657293b22e41abef833b7fcecec3b8407e0cbe1677a"
     },
     "results\\metrics\\diagnostics_baselines.parquet": {
-      "bytes": 9820,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "990c28cd6d18f928488184b2efb7a461f7b5cdb0cc8839219c7872dfd4d82c29"
+      "bytes": 9853,
+      "modified": "2026-08-31T14:22:52+00:00",
+      "sha256": "aa2b0963bb53d245be1d3131305e09019a9eebe05f2a44ed07891b66d757f430"
     },
     "results\\metrics\\diagnostics_gcn.parquet": {
-      "bytes": 14526,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "779f99d64b6b8245ec51c1977484f09e9ece5658c0e3eeb886304dd348b3bf96"
+      "bytes": 14530,
+      "modified": "2026-08-31T14:25:46+00:00",
+      "sha256": "de26f7de610320ce20bd247561ad8f8d325f692574ebfc694c663c23012928c9"
     },
     "results\\metrics\\dm_all.parquet": {
-      "bytes": 5913,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "6162c9a8b3fdd4b0bd6b2071fe82acbba9c141914cd73698f1f663ac3e5567a7"
+      "bytes": 5909,
+      "modified": "2026-08-31T14:25:47+00:00",
+      "sha256": "e93319ac8b0cef884440bfb3013ebe26275094f3431174bb77410428f82c9b90"
     },
     "results\\metrics\\dm_baselines.parquet": {
       "bytes": 5422,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "60f9e6a7163784758f6a786b7494f1cd967f6490587f2008067d1204af1cc36d"
+      "modified": "2026-08-31T14:22:52+00:00",
+      "sha256": "b05095073c8ec671140a66bd865d79be15181712ff014f8a41001f14f1e236c2"
     },
     "results\\metrics\\event_study.parquet": {
       "bytes": 9721,
-      "modified": "2026-08-09T18:33:17+00:00",
-      "sha256": "70ad3e1b8ce5d9edd6e08b0dc772b2a92bf2241ce3a47cc3edfb1c0c1c34c240"
+      "modified": "2026-08-31T14:22:28+00:00",
+      "sha256": "21959c2f8d7babf691632fba04a29e53f31dd5a961678aff882493b64a215007"
     },
     "results\\metrics\\ljung_box_abs_returns.parquet": {
       "bytes": 2971,
-      "modified": "2026-08-10T13:47:24+00:00",
-      "sha256": "14fc1d9079c22b44568ee3721ee6aeaffb97cd5fbfae3f69178a5c67c33c1f8f"
+      "modified": "2026-08-31T14:21:59+00:00",
+      "sha256": "fbe1f5be39d6a138fd3e5d65961df9ea26e9ed28161f2ec3f06df7479d8284ba"
     },
     "results\\metrics\\ljung_box_returns.parquet": {
       "bytes": 2983,
-      "modified": "2026-08-10T13:47:24+00:00",
-      "sha256": "cc527eb2de7a4609163500df8e3fe2deef758152fb45deb6b35f38ab9dc89062"
+      "modified": "2026-08-31T14:21:59+00:00",
+      "sha256": "415353e1d2e67d364042d73f802af53fc3a23d658b2b548e0e72d6de39807016"
     },
     "results\\metrics\\predictions_baselines.parquet": {
       "bytes": 715932,
-      "modified": "2026-08-10T11:49:22+00:00",
-      "sha256": "71582bddb12820ae15d88615e31f2c98d50d269c54df2ff4e58648200ec057a9"
+      "modified": "2026-08-31T14:22:52+00:00",
+      "sha256": "fffc93f518b9f1162eacdf5782300741fbccf16f51901a5965c0c377351bfd59"
     },
     "results\\metrics\\predictions_gcn.parquet": {
       "bytes": 740173,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "5c9d456c5750a710d1da1031972c4d1ed527ed2af7d3eb87035930e951401761"
+      "modified": "2026-08-31T14:25:46+00:00",
+      "sha256": "1eecae528a733a105652e325b5d6ce3373e0de560cf14d85ea83e988932d038e"
     },
     "results\\metrics\\summary_all.parquet": {
       "bytes": 5271,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "a9de0ac28f5b427d228a311b882eb997a576cb8d45876460f75362b08757e572"
+      "modified": "2026-08-31T14:25:47+00:00",
+      "sha256": "3ca24e1896013c78bf86ec6b2dd12e26da1cc603225062169d4a47b831a3f37d"
     },
     "results\\metrics\\summary_all_by_asset.parquet": {
       "bytes": 8722,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "83c72db6820d4f0196cb49bb56fcf337f0b755f35958039f382e12658a3f9596"
+      "modified": "2026-08-31T14:25:47+00:00",
+      "sha256": "2fefa6694a1ddc5c4c6c5a6f4e54842d759c23c7e01401a841c63cd34e5cbcdc"
     },
     "results\\metrics\\summary_all_by_fold.parquet": {
       "bytes": 10832,
-      "modified": "2026-08-12T07:48:14+00:00",
-      "sha256": "5580148a07855ef7c5dfcb44f53299462967b50ab9b04090a25414c35559798f"
+      "modified": "2026-08-31T14:25:47+00:00",
+      "sha256": "04d1b4f859fb6aa5d674c74e9c97de48d12d04c00fcc0cec17337d3e1d5f6b33"
     },
     "results\\metrics\\summary_baselines.parquet": {
       "bytes": 5179,
-      "modified": "2026-08-10T11:49:22+00:00",
-      "sha256": "bba424eba6b820d6db12eaebbb1ff0365eb4434a43edb576612121e12248c0eb"
+      "modified": "2026-08-31T14:22:52+00:00",
+      "sha256": "5df4875df4a270a9ab1571d845ac6c6916af2208f446e9571596243f48fafde4"
     },
     "results\\metrics\\tau_calibration.json": {
       "bytes": 2482,
-      "modified": "2026-08-10T13:47:24+00:00",
+      "modified": "2026-08-31T14:22:00+00:00",
       "sha256": "ab8413fb7b99acd8f15f0b859ecf1480792a27124c5cc2d5c9801f0cf893441c"
     },
     "results\\metrics\\topology.parquet": {
       "bytes": 133659,
-      "modified": "2026-08-09T18:33:17+00:00",
-      "sha256": "89ef4797e27c14aab7227988af13a9e6cb826eabbe7d355f2e396ca12a1cc82f"
+      "modified": "2026-08-31T14:22:28+00:00",
+      "sha256": "36760f5e8d0e8097e7ba3168ed378562cfa9ec8dbde36c07fb7c4c8ebae8a0ba"
     }
   },
   "config": {
@@ -159,10 +159,10 @@
     "platform": "Windows-11-10.0.26200-SP0",
     "python": "3.14.4"
   },
-  "generated_at": "2026-08-13T15:25:46+00:00",
+  "generated_at": "2026-08-31T14:27:19+00:00",
   "git": {
-    "branch": "interface",
-    "commit": "9c906cae7180aeb0900619dda200961d69e3eb52",
-    "dirty": false
+    "branch": "refining",
+    "commit": "989b3fcc06ee2636391ef5068e9c6a92a7c2828c",
+    "dirty": true
   }
 }

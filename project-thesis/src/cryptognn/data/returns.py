@@ -25,22 +25,23 @@ import numpy as np
 import pandas as pd
 
 
-def build_price_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
+def build_price_panel(raw_dir: Path | str, symbols: list[str], quote: str = "USDT") -> pd.DataFrame:
     """Join the cached close-price series of every symbol into one wide panel.
 
-    Reads data/raw/{SYMBOL}USDT_1d.parquet for each symbol (as cached by
-    cryptognn.data.download.fetch_klines) and extracts its `close` column. The
-    resulting DataFrame has one column per symbol (in the given order) and a
-    UTC date index that is the union of all symbols' dates -- any symbol missing
-    a given date gets NaN there. No alignment, filling, or interpolation happens
-    here: validate_panel() (next step) is responsible for catching and rejecting gaps.
+    Reads data/raw/{SYMBOL}{quote}_1d.parquet for each symbol (as cached by
+    cryptognn.data.download.fetch_klines, quote defaulting to "USDT" to match
+    config.data.quote) and extracts its `close` column. The resulting DataFrame
+    has one column per symbol (in the given order) and a UTC date index that is
+    the union of all symbols' dates -- any symbol missing a given date gets NaN
+    there. No alignment, filling, or interpolation happens here: validate_panel()
+    (next step) is responsible for catching and rejecting gaps.
     """
     raw_dir = Path(raw_dir)
-    closes = {symbol: pd.read_parquet(raw_dir / f"{symbol}USDT_1d.parquet")["close"] for symbol in symbols}
+    closes = {symbol: pd.read_parquet(raw_dir / f"{symbol}{quote}_1d.parquet")["close"] for symbol in symbols}
     return pd.DataFrame(closes)
 
 
-def build_volume_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
+def build_volume_panel(raw_dir: Path | str, symbols: list[str], quote: str = "USDT") -> pd.DataFrame:
     """Join the cached traded volume of every symbol into one wide panel.
 
     Structurally identical to build_price_panel(), on the `volume` column: the
@@ -57,7 +58,7 @@ def build_volume_panel(raw_dir: Path | str, symbols: list[str]) -> pd.DataFrame:
     two are used together.
     """
     raw_dir = Path(raw_dir)
-    volumes = {symbol: pd.read_parquet(raw_dir / f"{symbol}USDT_1d.parquet")["volume"] for symbol in symbols}
+    volumes = {symbol: pd.read_parquet(raw_dir / f"{symbol}{quote}_1d.parquet")["volume"] for symbol in symbols}
     return pd.DataFrame(volumes)
 
 

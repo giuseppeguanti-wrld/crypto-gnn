@@ -83,8 +83,8 @@ Esito della selezione e costo dell'addestramento:
 
 | Arm | Configurazione più scelta | MSE val. | Epoche | Early stop | Parametri | Secondi |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| GCN | h=16, p=0,5 (9/24 fold) | 0,001706 | 66,7 | 100,0% | 248 | 2,57 |
-| GCN senza grafo | h=32, p=0,2 (9/24 fold) | 0,001720 | 91,8 | 98,3% | 268 | 3,85 |
+| GCN | h=16, p=0,5 (9/24 fold) | 0,001706 | 66,7 | 100,0% | 248 | 2,25 |
+| GCN senza grafo | h=32, p=0,2 (9/24 fold) | 0,001720 | 91,8 | 98,3% | 268 | 3,67 |
 
 Lettura per la sez. 6.3: le quattro celle della griglia sono separate alla sesta cifra decimale. La scelta dell'iperparametro non discrimina, il che è coerente con un segnale assente più che con un modello mal calibrato — e va detto, perché protegge il capitolo dall'obiezione «avete cercato poco».
 

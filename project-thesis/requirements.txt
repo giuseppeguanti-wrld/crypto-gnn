@@ -32,7 +32,7 @@ patsy==1.0.2
 pillow==12.3.0
 pluggy==1.6.0
 protobuf==7.35.1
-pyarrow==25.0.1
+pyarrow==24.0.0
 pydeck==0.9.3
 pygments==2.20.0
 pyparsing==3.3.2

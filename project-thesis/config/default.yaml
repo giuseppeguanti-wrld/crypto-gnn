@@ -1,13 +1,19 @@
 data:
+  # Public endpoint, no API key, close uniformly at 00:00 UTC -- citable in the thesis.
   source: binance
   quote: USDT
   interval: 1d
+  # Covers Terra/Luna (2022-05) and FTX (2022-11) with an ample pre-crisis period.
   start: 2021-01-01
   end: 2026-06-30
+  # Continuously quoted on Binance since December 2020; no stablecoin (near-zero
+  # correlation with the rest of the universe -- an isolated node in the graph).
   symbols: [BTC, ETH, BNB, XRP, ADA, SOL, DOGE, DOT, AVAX,
             LINK, LTC, BCH, XLM, TRX, ETC]
 
 graph:
+  # T_w=60 with N=15 gives the Marchenko-Pastur aspect ratio q=N/T_w=0.25, so the
+  # theoretical upper edge (1+sqrt(q))^2 = 2.25 sits where sec:6.6 needs it.
   window: 60
   weight: mantegna
   self_loops: true

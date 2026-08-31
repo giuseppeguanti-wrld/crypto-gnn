@@ -11,7 +11,7 @@ requires-python = ">=3.13"
 license = "MIT"
 authors = [{ name = "Giuseppe Guanti" }]
 
-# Direct dependencies only, with the lower bounds of PLANNING section 3.
+# Direct dependencies only, with the lower bounds verified in Sprint 1.
 # requirements.txt stays as the fully pinned lockfile of a working environment:
 # this list says what the study depends on, that one says what it was run with.
 dependencies = [

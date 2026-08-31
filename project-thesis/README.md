@@ -144,8 +144,7 @@ project-thesis/
 └── results/                  metriche, figure, tabelle, summary, manifest
 ```
 
-`PLANNING.md` documenta le decisioni congelate e il registro dei rischi;
-`CLAUDE.md` le convenzioni di lavoro sul codice.
+`CLAUDE.md` documenta le convenzioni di lavoro sul codice.
 
 ## Esploratore interattivo
 

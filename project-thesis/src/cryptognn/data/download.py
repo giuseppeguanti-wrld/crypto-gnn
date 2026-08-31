@@ -33,10 +33,10 @@ _KLINE_COLUMNS = [
     "high",             # The absolute highest price reached by the asset during this timeframe
     "low",              # The absolute lowest price reached
     "close",            # The very last traded price before the timeframe expired
-    "volume",           # The total amount of the asset you are trading (the "base asset") that changed hands in this timeframe
+    "volume",           # Total base-asset amount traded in this timeframe
     "close_time",       # The exact moment the candle closes, in milliseconds
-    "quote_volume",     # The total amount of the asset you use to pay (the "quote asset") traded in this timeframe
-    "trades",           # The total count of individual transactions (executed orders) that took place between buyers and sellers to form this candle
+    "quote_volume",     # Total quote-asset amount traded in this timeframe
+    "trades",           # Total count of executed orders that formed this candle
     "taker_buy_base",   # The aggressive buying pressure in the base asset
     "taker_buy_quote",  # It shows how many USDT were spent by aggressive market buyers
     "ignore",           # This field was historically used for Binance's internal purposes

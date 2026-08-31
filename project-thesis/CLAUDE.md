@@ -4,13 +4,14 @@ Questo file guida il lavoro del codice sperimentale per il Capitolo 6 (studio di
 
 ## Cosa è questo progetto
 
-Studio di caso empirico che implementa e confronta tre modelli di previsione multi-asset su 15 criptovalute:
+Studio di caso empirico che implementa e confronta quattro famiglie di modelli di previsione multi-asset su 15 criptovalute:
 
 - **GCN** (Graph Convolutional Network) — modello a due layer su grafo di correlazione dinamico
 - **VAR** (Vector AutoRegression) — baseline multivariata
-- **Naive forecaster** — baseline univariata e zero
+- **AR** (per-asset AutoRegression) — baseline univariata, il "modello univariato" letterale della prima domanda di ricerca
+- **Naive forecaster** (zero / media storica) — il vero avversario in finanza
 
-Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido.
+Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido. **Stato**: pipeline completa e taggata `v1.0-results` (Sprint 1–5) più l'app interattiva di Sprint 6; `pytest tests/` verde (567 test) e `ruff check` pulito. Resta da scrivere il Cap. 6 della tesi a partire da `results/summary.md`.
 
 ## Convenzioni stabili
 
@@ -90,13 +91,13 @@ Un test anti-look-ahead che non fallisce quando la fuga c'è non protegge nulla:
 ### Commit e branching
 
 - Un commit per milestone completata, non micro-commit per file singoli
-- Messaggio: breve imperativo italiano, es. `feat: data pipeline and rolling correlation` (ma in inglese, per coerenza con codice)
-- Branch di lavoro: `sprnt1`, `sprnt2`, ecc. — uno per sprint
+- Messaggio: breve (1-2 righe), imperativo, in inglese per coerenza col codice, es. `feat: data pipeline and rolling correlation`
+- Branch di lavoro: `sprnt1`, `sprnt2`, ecc. durante gli sprint 1–6; a pipeline chiusa (tag `v1.0-results`), branch generici come `refining`/`refactoring` per revisione e bugfix pre-stesura del Cap. 6
 - Non force-push su main
 
 ### Testing
 
-- **`tests/` rispecchia `src/cryptognn/`**: il test di `graph/metrics.py` sta in `tests/graph/test_metrics.py`, quello di `evaluation/metrics.py` in `tests/evaluation/test_metrics.py`. Due package possono avere un modulo con lo stesso nome, e i rispettivi test pure — è la ragione di `--import-mode=importlib` in `pyproject.toml`. I moduli di radice (`artifacts`, `cli`, `config`, `events`, `features`, `paths`, `windows`) hanno il test in `tests/`.
+- **`tests/` rispecchia `src/cryptognn/`**: il test di `graph/metrics.py` sta in `tests/graph/test_metrics.py`, quello di `evaluation/metrics.py` in `tests/evaluation/test_metrics.py`. Due package possono avere un modulo con lo stesso nome, e i rispettivi test pure — è la ragione di `--import-mode=importlib` in `pyproject.toml`. I moduli di radice (`artifacts`, `cli`, `config`, `events`, `features`, `paths`, `summary`, `tables`, `windows`) hanno il test in `tests/`. Eccezione dichiarata: `tests/test_app.py` copre `app/streamlit_app.py`, che non vive sotto `src/cryptognn/` — l'app è testata comunque perché legge artefatti prodotti dagli script, non li ricalcola (vedi vincolo architetturale in "Ogni figura da script").
 - Rispecchiare non vuol dire un file per file: `tests/models/test_baselines.py` copre `naive`, `ar` e `var` insieme perché la conformità al `Protocol` si verifica iterando `baseline_factories()`, e `tests/viz/test_contract.py` verifica una regola che vale per l'intero package e non per un suo modulo.
 - Le fixture condivise da più package stanno in `tests/conftest.py`; le costanti che le descrivono in `tests/synthetic.py`, **non** nel conftest — un file da cui altri moduli importano dev'essere un modulo, non un meccanismo di pytest.
 - `pytest tests/` deve passare pulitamente prima di qualunque run
@@ -119,7 +120,8 @@ project-thesis/
 │   ├── tables.py             ← le 5 tabelle LaTeX del Cap. 6
 │   └── summary.py            ← results/summary.md, ogni numero per la stesura
 ├── scripts/01-08_*.py        ← entry point, da eseguire in ordine
-├── tests/                    ← pytest, con la stessa alberatura di src/cryptognn/
+├── app/streamlit_app.py      ← Sprint 6, grafo interattivo su artefatti già prodotti
+├── tests/                    ← pytest, con la stessa alberatura di src/cryptognn/ (più test_app.py)
 └── results/                  ← output (metrics, figures, tables)
 ```
 
@@ -145,7 +147,7 @@ streamlit run app/streamlit_app.py           # Sprint 6
 2. **Test first**: scrivi test anti-look-ahead prima di generare risultati
 3. **Figure from script**: ogni figura generata da `scripts/07_make_figures.py`, niente manuale
 4. **Determinismo**: `torch.manual_seed()`, `np.random.default_rng()`, `torch.use_deterministic_algorithms(True)` in ogni modello
-5. **Riproducibilità**: `run_manifest.json` deve contenere commit git, config_hash, pip freeze, timestamp, durate
+5. **Riproducibilità**: `run_manifest.json` contiene commit git, config_hash, timestamp, le versioni degli 8 pacchetti che possono cambiare un numero (non un `pip freeze` completo — `requirements.txt` resta il lockfile esatto) e il digest SHA-256 di ogni artefatto prodotto (non le durate — non sono recuperabili a posteriori da uno script che non ha eseguito la pipeline; motivazione completa in `08_make_tables.py::build_manifest`)
 6. **Limiti espliciti**: ogni risultato dichiara i limiti (survivorship bias, singolo periodo, snapshot indipendenti, ecc.) pronti per sez. 7.3
 
 Questo file è l'unico documento di convenzioni del progetto: le motivazioni delle scelte non ovvie stanno nei docstring, accanto al codice che le applica, non in un piano separato.

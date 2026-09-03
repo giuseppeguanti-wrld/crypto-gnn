@@ -145,7 +145,9 @@ def event_study(
                        (-60 -> +60), between non-overlapping windows; the
                        headline figure, repeated on every row of the group
       pct_change_local percentage change across the inner offsets (-30 -> +30),
-                       a narrower horizon kept for comparability
+                       a narrower horizon kept for comparability; NaN when
+                       `offsets` has fewer than 4 entries, since there is then
+                       no inner pair distinct from the outer one to read
 
     An offset outside the sample yields NaN rather than the nearest available
     date: silently substituting a reading from months away would be worse than
@@ -182,7 +184,15 @@ def event_study(
     study = pd.DataFrame.from_records(records)
 
     outer = _change_between(study, offsets[0], offsets[-1])
-    inner = _change_between(study, offsets[1], offsets[-2]) if len(offsets) >= 4 else outer
+    # Below 4 offsets, offsets[1] and offsets[-2] either collide with each
+    # other (3 offsets: always a 0% no-op) or with the outer pair reversed (2
+    # offsets), neither of which is a genuine narrower reading. NaN says so
+    # honestly instead of quietly repeating pct_change_clean under a second name.
+    inner = (
+        _change_between(study, offsets[1], offsets[-2])
+        if len(offsets) >= 4
+        else pd.Series(np.nan, index=outer.index)
+    )
     study["pct_change_clean"] = _broadcast(study, outer)
     study["pct_change_local"] = _broadcast(study, inner)
 

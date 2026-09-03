@@ -237,3 +237,15 @@ def test_event_study_rejects_degenerate_input(step_topology):
         event_study(step_topology, [])
     with pytest.raises(ValueError, match="at least two offsets"):
         event_study(step_topology, [Event(key="e", date=EVENT_DATE.date(), label="E")], offsets=(0,))
+
+
+def test_event_study_pct_change_local_is_nan_without_enough_offsets(step_topology):
+    """With fewer than 4 offsets there is no inner pair distinct from the outer
+    one; pct_change_local must say so honestly, not silently copy pct_change_clean.
+    """
+    events = [Event(key="e", date=EVENT_DATE.date(), label="E")]
+
+    study = event_study(step_topology, events, offsets=(-60, 0, 60))
+
+    assert study["pct_change_local"].isna().all()
+    assert not study["pct_change_clean"].isna().any()

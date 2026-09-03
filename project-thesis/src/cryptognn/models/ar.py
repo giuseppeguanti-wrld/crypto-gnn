@@ -37,6 +37,10 @@ if TYPE_CHECKING:
 class PerAssetARForecaster:
     """AR(p) per asset, p selected by information criterion on the train block.
 
+    Each asset a is forecast from its own past alone:
+
+        r[t+1, a] = const[a] + sum_{k=1}^{order[a]} coef[a, k] * r[t+1-k, a]
+
     Each asset gets its own order: the selection is run N times on N series, not
     once on a pooled one, because an order that suits BTC has no reason to suit
     XLM. Orders and coefficients are stored as dense (N,) and (N, p_max) arrays

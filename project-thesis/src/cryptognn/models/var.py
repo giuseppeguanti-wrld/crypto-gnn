@@ -45,10 +45,15 @@ if TYPE_CHECKING:
 class VARForecaster:
     """VAR(p) on the return panel, p by information criterion or fixed.
 
+    Every asset's forecast draws on every asset's past:
+
+        r[t+1, target] = const[target]
+            + sum_{lag=1}^{k_ar} sum_{source} coef[lag, source, target] * r[t+1-lag, source]
+
     `lags=None` selects the order by `config.model.var.ic` up to `max_lag`;
     an integer fixes it. The fitted coefficients are reshaped once into
     (p, N_source, N_target) so a forecast is a contraction over the lag and
-    source axes, matching the algebra of y_hat = c + sum_i A_i y_{t+1-i}.
+    source axes, matching the algebra above.
     """
 
     def __init__(self, config: Config, lags: int | None = None) -> None:

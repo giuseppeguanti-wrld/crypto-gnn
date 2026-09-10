@@ -1,0 +1,53 @@
+\chapter*{Panoramica del progetto}
+\addcontentsline{toc}{chapter}{Panoramica del progetto}
+\label{ch:project-overview}
+
+% Capitolo non numerato, come l'Introduzione: fa da cerniera tra la
+% motivazione (Introduzione) e i capitoli tecnici, con un registro proprio
+% (struttura del codice, non teoria né motivazione). Le sezioni interne sono
+% rinumerate localmente (1, 2) come nell'Introduzione; il contatore delle
+% sezioni va azzerato perché l'Introduzione ne ha già usate 4. Ripristinati
+% entrambi in fondo al capitolo.
+\let\oldthesection\thesection
+\renewcommand{\thesection}{\arabic{section}}
+\setcounter{section}{0}
+
+\section{Struttura del progetto}
+\label{sec:project-structure}
+
+Come fatto presente nell'Introduzione, le questioni di ricerca trovano risposta empirica nel progetto software \texttt{cryptognn}, che offre un riscontro diretto, nei capitoli che seguono, alla teoria matematica e alla letteratura econofisica. Lo studio, implementato in Python, vive in script che guidano la pipeline sperimentale e che, per separazione delle responsabilità, si occupano ciascuno di una parte diversa del progetto:
+
+\begin{itemize}
+    \item \path{01_download_data.py}. Scarica l'universo di 15 asset da Binance, con cache idempotente su disco.
+    \item \path{02_build_graphs.py}. Costruisce il pannello dei prezzi e dei rendimenti, calcola i fatti stilizzati, il tensore di correlazione mobile, calibra la soglia $\tau$ e costruisce i grafi consumati a valle.
+    \item \path{03_topology_analysis.py}. Riduce ogni finestra di correlazione alle metriche scalari che ne descrivono la struttura e ne analizza l'andamento in corrispondenza delle tre date di crisi accennate nell'Introduzione.
+    \item \path{04_run_baselines.py}. Esegue le baseline di confronto attraverso il protocollo di validazione walk-forward.
+    \item \path{05_run_gcn.py}. Esegue la GCN e la sua ablation senza grafo sulla stessa griglia di iperparametri e sugli stessi semi casuali per entrambe le varianti.
+    \item \path{06_run_backtest.py}. Trasforma le previsioni di ogni modello in una strategia di trading elementare basata sul segno, valutata a due livelli di costo di transazione.
+    \item \path{07_make_figures.py}. Genera tutte le figure della tesi dagli artefatti già prodotti, senza ricalcolare alcun risultato.
+    \item \path{08_make_tables.py}. Genera le tabelle, il file di riepilogo con i risultati numerici dello studio e scrive il manifest di riproducibilità, che registra commit, configurazione e hash degli artefatti prodotti così da poter verificare che la stessa configurazione restituisca sempre gli stessi risultati.
+\end{itemize}
+
+Ciascuno script si limita ad orchestrare le funzioni definite nei package di \path{src/cryptognn/}. Un'app Streamlit in \path{app/} espone gli stessi artefatti — grafi di correlazione e metriche topologiche — per un'esplorazione interattiva al di fuori della pipeline batch. La struttura del progetto nel suo complesso è la seguente:
+
+\begin{Verbatim}[frame=single, fontsize=\footnotesize]
+project-thesis/
+├── config/              # file di configurazione dello studio
+├── data/                # dati grezzi ed elaborati
+├── src/cryptognn/
+│   ├── data/            # download e preprocessing delle serie storiche
+│   ├── graph/           # grafo di correlazione e metriche topologiche
+│   ├── models/          # i modelli previsivi: GCN, VAR, AR, naive
+│   └── evaluation/      # protocollo di validazione e backtest
+├── scripts/
+├── app/                 # app Streamlit
+├── results/             # figure, tabelle e metriche dello studio
+└── tests/               # suite di test
+\end{Verbatim}
+
+\section{Suite di test}
+\label{sec:project-tests}
+
+La correttezza dell'intera pipeline è garantita da una suite di $568$ test in \path{tests/}, la cui struttura rispecchia quella di \path{src/cryptognn/}. In particolare, la classe \texttt{TestNoLookAhead} (\path{tests/evaluation/test_walkforward.py}) verifica l'assenza di \emph{look-ahead bias}, ovvero l'uso implicito, durante la previsione, di informazione che a quel momento non sarebbe ancora disponibile. L'errore non farebbe fallire la pipeline, ma renderebbe silenziosamente i risultati migliori di quanto sarebbero in un impiego reale. La relativa logica è discussa nel \Cref{ch:from-cnn-to-gnn}.
+
+\let\thesection\oldthesection

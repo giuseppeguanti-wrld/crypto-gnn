@@ -2,8 +2,9 @@
 
 These verify the arrangement properties the figures depend on for their meaning
 -- a shared node layout, a shared colour scale, a shared time axis. Each is
-load-bearing and each fails silently: a snapshot pair laid out independently
-still renders a handsome picture, it just no longer shows what it claims to.
+load-bearing and each fails silently: crisis figures laid out independently of
+one another still render handsome pictures, they just no longer show what they
+claim to.
 
 None of this was reachable before the composition functions moved out of
 scripts/07_make_figures.py, whose name cannot be imported.
@@ -17,6 +18,7 @@ import pytest
 from cryptognn.evaluation.walkforward import make_folds
 from cryptognn.events import Event
 from cryptognn.viz import figures
+from cryptognn.viz.graphs import fixed_layout
 from cryptognn.viz.style import FIGURE_WIDTH
 from cryptognn.viz.topology import hierarchical_order
 
@@ -78,45 +80,41 @@ def events() -> list[Event]:
 # --------------------------------------------------------------------------
 
 
-class TestSelectReferenceDates:
-    def test_calm_is_the_least_correlated_window(self, topology, events):
-        dates = figures.select_reference_dates(topology, events, ("ftx",))
-
-        assert dates["Calmo"] == topology["mean_correlation"].idxmin()
-
-    def test_crisis_is_the_first_fully_post_event_window(self, topology, events):
+class TestPostEventDates:
+    def test_crisis_is_the_first_fully_post_event_window(self, events):
         """Offset +60: at the event date the 60-day window is 59/60 pre-event,
         so reading it there would understate the shock.
         """
-        dates = figures.select_reference_dates(topology, events, ("ftx",))
+        dates = figures.post_event_dates(events, ("ftx",))
 
         expected = pd.Timestamp("2021-11-08") + pd.Timedelta(days=figures.POST_EVENT_OFFSET)
-        assert dates["FTX +60g"] == expected
+        assert dates["ftx"] == expected
 
-    def test_order_and_labels(self, topology, events):
-        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
+    def test_keyed_by_event_in_the_order_requested(self, events):
+        """The key names the figure file, so it is what the mapping is keyed by."""
+        dates = figures.post_event_dates(events, ("terra_luna", "ftx"))
 
-        assert list(dates) == ["Calmo", "Terra/Luna +60g", "FTX +60g"]
+        assert list(dates) == ["terra_luna", "ftx"]
 
-    def test_unknown_key_lists_the_available_ones(self, topology, events):
+    def test_unknown_key_lists_the_available_ones(self, events):
         """The keys come from config/events.yaml; renaming one there must produce
         a message that says what to use, not a bare KeyError.
         """
         with pytest.raises(ValueError) as error:
-            figures.select_reference_dates(topology, events, ("luna_terra",))
+            figures.post_event_dates(events, ("luna_terra",))
 
         message = str(error.value)
         assert "luna_terra" in message
         assert "ftx" in message and "china_crackdown" in message
 
-    def test_offset_is_configurable(self, topology, events):
-        dates = figures.select_reference_dates(topology, events, ("ftx",), offset=30)
+    def test_offset_is_configurable(self, events):
+        dates = figures.post_event_dates(events, ("ftx",), offset=30)
 
-        assert dates["FTX +30g"] == pd.Timestamp("2021-11-08") + pd.Timedelta(days=30)
+        assert dates["ftx"] == pd.Timestamp("2021-11-08") + pd.Timedelta(days=30)
 
 
 # --------------------------------------------------------------------------
-# The four compositions
+# The compositions
 # --------------------------------------------------------------------------
 
 
@@ -167,16 +165,27 @@ def curves(corr_index) -> pd.DataFrame:
     return pd.concat(blocks, ignore_index=True)
 
 
-def _all_figures(corr, corr_index, weights, topology, events, folds, by_fold, curves):
+def _event_figures(corr, corr_index, weights, events) -> dict:
+    """The three crisis figures, composed the way the script composes them.
+
+    Ordering and layout are built once and shared, which is the property the
+    figures rest on: see TestEventPanels.
+    """
     order = hierarchical_order(corr.mean(axis=0))
-    dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
-    pair = figures.select_reference_dates(topology, events, ("china_crackdown",))
+    layout = fixed_layout(weights.mean(axis=0), seed=42, labels=SYMBOLS)
+    dates = figures.post_event_dates(events, tuple(event.key for event in events))
+    return {
+        f"event_{key}": figures.figure_event_panels(
+            weights, corr, corr_index, date, SYMBOLS, layout, order
+        )
+        for key, date in dates.items()
+    }
+
+
+def _all_figures(corr, corr_index, weights, topology, events, folds, by_fold, curves):
     return {
         "timeseries": figures.figure_topology_timeseries(topology, events),
-        "heatmaps": figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order),
-        "snapshots": figures.figure_graph_snapshots(
-            weights, weights, corr_index, pair, SYMBOLS, seed=42
-        ),
+        **_event_figures(corr, corr_index, weights, events),
         "spectrum": figures.figure_mp_spectrum(corr, topology, q=N_ASSETS / 60),
         "scheme": figures.figure_walkforward_scheme(folds, corr_index, events),
         "by_fold": figures.figure_results_by_fold(by_fold),
@@ -245,99 +254,90 @@ class TestTopologyTimeseries:
         assert density_panel.get_legend() is not None
 
 
-class TestCorrelationHeatmaps:
-    def test_panels_share_the_colour_scale(self, corr, corr_index, topology, events):
+class TestEventPanels:
+    """The properties three separate crisis figures must share to be comparable.
+
+    A single figure of several panels could be checked by eye; three files, read
+    pages apart, cannot. Everything that used to hold within one figure -- one
+    layout, one ordering, one colour scale -- has to be asserted across figures
+    now, because nothing in the rendered PDFs would reveal its absence.
+    """
+
+    def test_every_figure_pins_the_colour_scale(self, corr, corr_index, weights, events):
         """A per-date rescaling would give a calm market and a crisis the same
-        saturated colours, which is exactly the comparison the panels exist for.
+        saturated colours, which is exactly the comparison these figures exist
+        for.
         """
-        order = hierarchical_order(corr.mean(axis=0))
-        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
+        produced = _event_figures(corr, corr_index, weights, events)
 
-        fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
-
-        images = [image for ax in fig.get_axes() for image in ax.images]
-        assert len(images) == 3
+        images = [image for fig in produced.values() for ax in fig.get_axes() for image in ax.images]
+        assert len(images) == len(produced)
         assert all(image.get_clim() == (-1.0, 1.0) for image in images)
 
-    def test_panels_share_the_asset_ordering(self, corr, corr_index, topology, events):
-        """Same cell, same pair, in every panel."""
-        order = hierarchical_order(corr.mean(axis=0))
-        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
+    def test_every_figure_shares_the_asset_ordering(self, corr, corr_index, weights, events):
+        """Same cell, same pair, in every figure."""
+        produced = _event_figures(corr, corr_index, weights, events)
+        expected = [SYMBOLS[i] for i in hierarchical_order(corr.mean(axis=0))]
 
-        fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
+        for name, fig in produced.items():
+            heatmap = next(ax for ax in fig.get_axes() if ax.images)
+            assert [t.get_text() for t in heatmap.get_xticklabels()] == expected, name
+            # Both axes are named: each figure has to be readable on its own.
+            assert [t.get_text() for t in heatmap.get_yticklabels()] == expected, name
 
-        panels = [ax for ax in fig.get_axes() if ax.images]
-        labels = [[t.get_text() for t in ax.get_xticklabels()] for ax in panels]
-        assert labels[0] == labels[1] == labels[2]
-        assert labels[0] == [SYMBOLS[i] for i in order]
-
-    def test_every_panel_names_both_axes(self, corr, corr_index, topology, events):
-        """The panels of a grid sit apart from one another, so each must be
-        readable on its own: a panel whose rows are named only on its neighbour
-        cannot be interpreted without counting cells across a gap.
-        """
-        order = hierarchical_order(corr.mean(axis=0))
-        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
-
-        fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
-
-        expected = [SYMBOLS[i] for i in order]
-        for panel in [ax for ax in fig.get_axes() if ax.images]:
-            assert [t.get_text() for t in panel.get_yticklabels()] == expected
-            assert [t.get_text() for t in panel.get_xticklabels()] == expected
-
-    def test_spare_cell_holds_the_colourbar(self, corr, corr_index, topology, events):
-        """Three panels in a 2x2 grid leave one cell free; the colour bar takes
-        it, so the grid stays square instead of losing width to a bar squeezed
-        against the figure edge.
-        """
-        order = hierarchical_order(corr.mean(axis=0))
-        dates = figures.select_reference_dates(topology, events, ("terra_luna", "ftx"))
-
-        fig = figures.figure_correlation_heatmaps(corr, corr_index, dates, SYMBOLS, order)
-
-        panels = [ax for ax in fig.get_axes() if ax.images]
-        assert len(panels) == 3
-        # The spare grid cell is turned off, and a colour bar axes was added.
-        assert any(not ax.axison for ax in fig.get_axes())
-
-
-class TestGraphSnapshots:
-    def test_both_panels_use_identical_node_positions(self, weights, corr_index, topology, events):
-        """The property the whole figure rests on.
+    def test_every_figure_uses_identical_node_positions(self, corr, corr_index, weights, events):
+        """The property the whole comparison rests on.
 
         A force-directed layout recomputed per date moves every node, so two
         independently laid out snapshots differ everywhere and the compaction
-        drowns among nodes that merely shifted. The result still looks like a
-        proper figure, which is why this needs a test rather than an eye.
+        drowns among nodes that merely shifted. Across separate figures there is
+        no shared axis to give that away, which is why this needs a test rather
+        than an eye.
         """
-        dates = figures.select_reference_dates(topology, events, ("china_crackdown",))
+        produced = list(_event_figures(corr, corr_index, weights, events).values())
 
-        fig = figures.figure_graph_snapshots(
-            weights, weights, corr_index, dates, SYMBOLS, seed=42
+        positions = [
+            next(
+                c.get_offsets()
+                for ax in fig.get_axes()
+                for c in ax.collections
+                if len(c.get_offsets()) == N_ASSETS
+            )
+            for fig in produced
+        ]
+        for other in positions[1:]:
+            np.testing.assert_allclose(positions[0], other)
+
+    def test_pairs_the_graph_with_the_matrix(self, corr, corr_index, weights, events):
+        """Two panels, one window: the thresholded graph and the raw matrix."""
+        fig = next(iter(_event_figures(corr, corr_index, weights, events).values()))
+
+        assert len([ax for ax in fig.get_axes() if ax.images]) == 1
+        assert any(
+            len(c.get_offsets()) == N_ASSETS for ax in fig.get_axes() for c in ax.collections
+        )
+        assert fig.get_figwidth() == pytest.approx(FIGURE_WIDTH)
+
+    def test_draws_the_window_nearest_the_date_requested(self, corr, corr_index, weights):
+        """The figures carry no title, so nothing in the picture says which
+        window it is: the caption's claim rests on this lookup alone. A date
+        between two windows must resolve to the nearer one, not to the first or
+        to a silently empty panel.
+        """
+        order = hierarchical_order(corr.mean(axis=0))
+
+        fig = figures.figure_event_panels(
+            weights,
+            corr,
+            corr_index,
+            corr_index[10] + pd.Timedelta(hours=7),
+            SYMBOLS,
+            fixed_layout(weights.mean(axis=0), seed=42, labels=SYMBOLS),
+            order,
         )
 
-        panels = fig.get_axes()
-        assert len(panels) == 2
-        positions = [
-            next(c.get_offsets() for c in ax.collections if len(c.get_offsets()) == N_ASSETS)
-            for ax in panels
-        ]
-        np.testing.assert_allclose(positions[0], positions[1])
-
-    def test_layout_follows_the_seed(self, weights, corr_index, topology, events):
-        """Reproducibility: the same seed must redraw the thesis identically."""
-        dates = figures.select_reference_dates(topology, events, ("china_crackdown",))
-
-        def node_positions(seed):
-            fig = figures.figure_graph_snapshots(
-                weights, weights, corr_index, dates, SYMBOLS, seed=seed
-            )
-            ax = fig.get_axes()[0]
-            return next(c.get_offsets() for c in ax.collections if len(c.get_offsets()) == N_ASSETS)
-
-        np.testing.assert_allclose(node_positions(42), node_positions(42))
-        assert not np.allclose(node_positions(42), node_positions(7))
+        image = next(im for ax in fig.get_axes() for im in ax.images)
+        np.testing.assert_allclose(image.get_array(), corr[10][np.ix_(order, order)])
 
 
 class TestMpSpectrum:

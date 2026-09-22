@@ -46,17 +46,17 @@ from cryptognn.paths import RESULTS_FIGURES, ensure_dirs
 from cryptognn.viz.figures import (
     FIGURE_NAMES,
     POST_EVENT_OFFSET,
-    figure_correlation_heatmaps,
     figure_density_vs_error,
     figure_equity_curves,
-    figure_graph_snapshots,
+    figure_event_panels,
     figure_mp_spectrum,
     figure_results_by_fold,
     figure_topology_timeseries,
     figure_walkforward_scheme,
     fold_test_means,
-    select_reference_dates,
+    post_event_dates,
 )
+from cryptognn.viz.graphs import fixed_layout
 from cryptognn.viz.style import apply_style
 from cryptognn.viz.topology import hierarchical_order
 
@@ -110,16 +110,19 @@ def main() -> None:
     symbols = config.data.symbols
     q = len(symbols) / window
 
-    # Dates come from the data, never hardcoded: calm is the least correlated
-    # window, crisis is each event's first fully post-event window.
-    heatmap_dates = select_reference_dates(topology, events, ("terra_luna", "ftx"))
-    snapshot_dates = select_reference_dates(topology, events, ("china_crackdown",))
-    calm_date = heatmap_dates["Calmo"]
-    print(f"calm window: {calm_date.date()} (mean rho = {topology['mean_correlation'].min():.3f})")
+    # Dates come from the data, never hardcoded: each crisis figure is drawn at
+    # its event's first fully post-event window.
+    event_keys = tuple(event.key for event in events)
+    event_dates = post_event_dates(events, event_keys)
     print(f"tau = {calibration.tau:.4f}, q = {q:.3f}, post-event offset = {POST_EVENT_OFFSET}d")
 
-    # One ordering for every panel that uses it.
+    # One ordering and one layout for every panel that uses them. Computed here
+    # rather than inside the compositions because the three event figures are
+    # separate files: a layout or an ordering recomputed per date would move
+    # every node and reshuffle every row between them, and with no shared axis
+    # to give the drift away it would read as the market having changed.
     order = hierarchical_order(corr.mean(axis=0))
+    layout = fixed_layout(w_full.mean(axis=0), seed=config.seed, labels=symbols)
     print(f"asset order (hierarchical): {[symbols[i] for i in order]}")
 
     report_association(topology, by_fold, folds, dates)
@@ -127,12 +130,12 @@ def main() -> None:
     print("Drawing figures...")
     figures = {
         "fig_topology_timeseries": figure_topology_timeseries(topology, events),
-        "fig_correlation_heatmaps": figure_correlation_heatmaps(
-            corr, corr_index, heatmap_dates, symbols, order
-        ),
-        "fig_graph_snapshots": figure_graph_snapshots(
-            w_thresh, w_full, corr_index, snapshot_dates, symbols, config.seed
-        ),
+        **{
+            f"fig_event_{key}": figure_event_panels(
+                w_thresh, corr, corr_index, date, symbols, layout, order
+            )
+            for key, date in event_dates.items()
+        },
         "fig_mp_spectrum": figure_mp_spectrum(corr, topology, q),
         "fig_walkforward_scheme": figure_walkforward_scheme(folds, dates, events),
         "fig_results_by_fold": figure_results_by_fold(by_fold),

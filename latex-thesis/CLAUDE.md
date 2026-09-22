@@ -1,53 +1,57 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # CLAUDE.md — latex-thesis/
 
-Guida al lavoro su questa cartella. Consultare prima di modificare struttura, capitoli o bibliografia.
+Si applica al lavoro dentro `latex-thesis/`, in aggiunta al `CLAUDE.md` in root.
 
-## Obiettivo della tesi
+## Build
 
-Tesi di laurea **triennale**, compilativa (~60 pagine di corpo), dal titolo *Graph Neural Network per la previsione multi-asset di criptovalute*. Contributo duplice: (1) vantaggio predittivo di una GNN vs. modello univariato; (2) evoluzione della struttura del grafo di correlazione tra regime stabile e crisi.
+MiKTeX (`pdflatex`, `latexmk`, `biber` nel PATH utente). Da `latex-thesis/`:
 
-**Base matematica.** Grafo pesato $G=(V,E,W)$ (nodi = criptovalute, pesi = correlazione di Pearson su finestra mobile). Laplaciano $L=D-W$, proprietà spettrali = "frequenze" del grafo. Architettura centrale: GCN di Kipf & Welling, $H^{(l+1)} = \sigma(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)})$. Baseline: VAR.
-
-Filo conduttore: *perché serve un grafo → matematica del grafo → si impara sul grafo → cosa succede nei mercati cripto*.
-
-## Struttura e decisioni tecniche
-
-`main.tex` orchestratrice via `\input`; un `.tex` per capitolo in `chapters/` (nomi file inglesi, contenuto italiano); `frontmatter/` (titlepage, dedication, disclaimer, abstract, acronyms, acknowledgements); `bibliography/references.bib`; `figures/`.
-
-- Classe `report`, `twoside,openright,12pt`. `\raggedbottom` impostato in `preamble.tex` (default `flushbottom` di `twoside` stirava gli spazi tra paragrafi/voci di lista fino a badness 10000 su pagine con poco contenuto).
-- **Introduzione non numerata**: `\chapter*{Introduzione}` con sezioni interne rinumerate localmente come `1, 2, 3, 4` (non `1.1...`) via `\thesection` sovrascritto e ripristinato a fine capitolo — imita la convenzione del template Uniba. Di conseguenza i capitoli numerati partono da **Fondamenti matematici = Cap. 1** fino a **Conclusioni = Cap. 5** (Cap. 6 studio di caso resta non attivato). Ogni riferimento all'Introduzione altrove nel testo è in prosa ("L'Introduzione ha mostrato...", mai `\cref`, che non funziona su un capitolo non numerato).
-- **Bibliografia — punto aperto**: attualmente `biblatex`+`biber`, stile `numeric`. Il template Uniba (confrontato e poi eliminato dalla repo, 2026-08-02) usa BibTeX classico (`plain`), che non supporta `\textcite`/`\Textcite` (15 occorrenze da riscrivere a mano) e non stampa i DOI (44 voci). **In attesa di risposta dei relatori** su quale stile sia vincolante prima di cambiare motore.
-- Notazione fissata al Cap. 2, vincolante ovunque: $G, V, E, W, D, L, U, \Lambda, N$.
-- Ambienti `definition`/`proposition`/`theorem`/`example`/`remark` in `preamble.tex`, con `aliascnt` per far stampare a `cleveref` il nome corretto invece di "Definition" (contatore condiviso).
-- Titlepage compilato: relatori Mazzia/Iavernaro, candidato Guanti, "Tesi di Laurea in Calcolo Numerico", A.A. 2025–2026.
-
-## Ambiente di build
-
-MiKTeX via `winget` (`pdflatex`, `latexmk`, `biber` in PATH utente). Comando di riferimento da `latex-thesis/`:
 ```
-latexmk -pdf -bibtex main.tex
+latexmk -pdf -bibtex -shell-escape main.tex
 ```
-Un processo avviato **prima** dell'installazione di MiKTeX non vede il PATH aggiornato finché non viene riavviato per intero (non basta "Reload Window" di VS Code). Il warning `pdflatex: ... not checked for MiKTeX updates` è innocuo. Dopo ogni modifica, ricompilare e controllare l'assenza di `Undefined`/`Underfull`/`Overfull` nel log.
 
-## Stato di avanzamento
+- `-shell-escape` è **obbligatorio**: gli snippet Python usano `minted` (serve `pygmentize` nel PATH). Il commento in testa a `main.tex` e il `README.md` riportano ancora il comando senza il flag: sono obsoleti.
+- Bibliografia `biblatex` + `biber` (stile `numeric`, `sorting=nyt`); `-bibtex` fa lanciare a latexmk il backend giusto.
+- Dopo ogni modifica, ricompilare e controllare `main.log` per `Undefined`, `Overfull`, `Underfull`. Non esiste un test suite: il log pulito è la verifica.
+- Un processo avviato prima dell'installazione di MiKTeX non vede il PATH aggiornato finché non viene riavviato del tutto. Il warning `not checked for MiKTeX updates` è innocuo.
+- I file `*-SAVE-ERROR` sono residui del salvataggio fallito di un editor, non sorgenti.
 
-Corpo scritto per intero: Introduzione, Cap. 1–4 (Fondamenti matematici, Dalle CNN alle GNN, Modellazione serie finanziarie e grafo, Analisi comparativa), Cap. 5 (Conclusioni). **Cap. 6 (studio di caso) non attivato** — `\input` commentato in `main.tex`, il file resta l'indice con i tre commenti di opzione A/B/C in testa.
+## Architettura del documento
 
-Il lavoro sperimentale in `../project-thesis/` è ora **completo**: pipeline `01-08_*.py` più l'app Streamlit di Sprint 6, tag `v1.0-results` (2026-08-31). La decisione tra le opzioni A/B/C è stata presa il 2026-08-03 — **Opzione B, confronto predittivo GCN vs. VAR vs. naive (sez. 6.1–6.6 complete)** — ed è quanto la pipeline produce. Il capitolo è quindi scrivibile senza eseguire altro codice, a partire da `../project-thesis/results/summary.md` (ogni numero, sezione per sezione), le 5 tabelle `.tex` e le 8 figure già copiate in `figures/`. Nota per la stesura: la soglia $\tau$ è calibrata su un null di permutazione, non "sul bordo di Marchenko-Pastur" come dice ancora il testo del Cap. 3 — MP governa lo spettro della matrice ed è usato altrove (sez. 6.6) per contare gli autovalori fuori dal bulk, ma non è il criterio usato per $\tau$. La formulazione del Cap. 3 va corretta in fase di stesura del Cap. 6. Una volta attivato, la sez. "Domande di ricerca" dell'Introduzione e diversi punti dei Cap. 3–5/Conclusioni andranno rivisti per reintrodurre il contributo empirico (elenco preciso nei commenti guida di `chapters/06-case-study.tex`).
+`main.tex` orchestra tutto via `\input`; `preamble.tex` contiene pacchetti e ogni personalizzazione (leggerlo prima di aggiungere pacchetti o ambienti: molte scelte hanno un commento che ne spiega il motivo).
 
-**Frontmatter ancora da scrivere, deliberatamente rimandato**: `abstract.tex`, `dedication.tex`, `acknowledgements.tex` — tutti e tre con TODO espliciti, da completare solo dopo il Cap. 6.
+- **Numeri di file ≠ numeri di capitolo.** `01-introduction.tex` e `01-project-overview.tex` sono `\chapter*` non numerati (Introduzione, Panoramica del progetto), con `\thesection` ridefinito localmente a `1, 2, …` e ripristinato a fine file. Il primo capitolo numerato è quindi `02-graph-laplacian-theory.tex` = **Cap. 1**, e così via fino a `08-conclusions.tex` = **Cap. 7**. I commenti d'intestazione dei capitoli usano la numerazione del PDF.
+- I capitoli non numerati non si possono referenziare con `\cref`: vanno citati in prosa ("L'Introduzione ha mostrato…").
+- I capitoli riscritti durante la ristrutturazione (es. `05-`, `07-`, `08-`) si aprono con un blocco di commenti `% ===` che registra le decisioni di stesura di quella sessione (fonti assorbite, prefissi dei label, scelte su tabelle/snippet). Leggerlo prima di modificare il capitolo; alcune note possono riferirsi a file già rimossi (`YYY_literature-review.tex`, `ZZZ_old-case-study.tex`).
+- **Snippet di codice**: `\begin{listing}[H]` + `minted{python}` (float stile ruled, numerato per capitolo, `\cref` stampa "Listing"), oppure l'ambiente `longlisting{caption}{label}` definito in `preamble.tex` per blocchi che devono spezzarsi tra pagine. Il codice è verbatim da `../project-thesis/`; le omissioni si segnano con `# ...`.
+- Alberi di directory: `fancyvrb` + `pmboxdraw`, non minted (Pygments non gestisce i box-drawing).
+- Ambienti `definition`/`proposition`/`theorem`/`example`/`remark` condividono un contatore per capitolo tramite `aliascnt`, così `cleveref` stampa il nome giusto. I nomi italiani per `\cref` di ogni tipo sono in `preamble.tex`: un nuovo tipo di float/ambiente richiede il suo `\crefname`/`\Crefname`.
+- `\cleardoublepage` è ridefinito per lasciare vuote le pagine bianche inserite; `\raggedbottom` è voluto (evita lo stiramento degli spazi di `flushbottom` in `twoside`). `openright` è attualmente commentato in `main.tex`.
 
-**Revisione complessiva del corpo scritto** (2026-08-02): filo conduttore coerente, dimostrazioni complete (non solo asserite), buona tensione finale tra le due domande di ricerca. Nessun problema di sostanza rilevato oltre ai tre file di frontmatter mancanti. Inviato ai relatori per una prima revisione.
+### Dati e figure dal progetto
 
-## Linguaggio e convenzioni di scrittura
+Numeri, tabelle e figure provengono da `../project-thesis/`, mai calcolati a mano:
 
-- Italiano formale e tecnico, terza persona/impersonale, terminologia coerente (mai alternare "grafo"/"network" senza motivo).
-- Citazioni sempre `\cite{}`/`\textcite{}`; capitoli/sezioni sempre `\cref{}`/`\Cref{}` (mai "Capitolo 2" scritto a mano) — eccetto l'Introduzione, non numerata (vedi sopra).
-- `\Cref{}` a inizio periodo, `\cref{}` a metà periodo. `\enquote{}` per termini gergali alla prima occorrenza, non per terminologia tecnica stabile.
-- Titoli di sezione: corti, senza sottotitoli descrittivi con i due punti (convenzione applicata retroattivamente a gran parte dei Cap. 3–5, 7 il 2026-08-02 — vedi git log per l'elenco puntuale delle riformulazioni).
-- Nuovo acronimo mai comparso come sigla → aggiungerlo a `frontmatter/acronyms.tex`, non scioglierlo in nota.
-- Nuova citazione non in `references.bib` → verificare autori/anno/rivista via ricerca web prima di aggiungerla, mai a memoria.
+- ogni cifra citata nel testo → `../project-thesis/results/summary.md` (generato da `scripts/08_make_tables.py`);
+- figure → prodotte in `../project-thesis/results/figures/` da `scripts/07_make_figures.py` e copiate in `figures/` con lo stesso nome;
+- tabelle → generate in `tables/` e incluse con `\input{tables/...}`, oppure ricopiate inline quando il capitolo le estende (vedi commento d'intestazione del capitolo).
 
-## Prossimi passi
+## Convenzioni di scrittura
 
-Attendere risposta dei relatori su: (1) motore bibliografico (biblatex/numeric vs. BibTeX/plain), (2) pagine bianche fronte-retro prima di alcuni capitoli (convenzione `openright`, eliminabile se non richiesta). Il lavoro sperimentale è concluso: resta da scrivere il Cap. 6 (dati pronti, vedi "Stato di avanzamento") e i tre file di frontmatter mancanti.
+- Italiano formale e tecnico, forma impersonale; nomi dei file in inglese. Terminologia coerente (non alternare "grafo"/"network").
+- Notazione fissata nel Cap. 1 (`02-graph-laplacian-theory.tex`) e vincolante ovunque: $G, V, E, W, D, L, U, \Lambda, N$.
+- Riferimenti sempre con `\cref`/`\Cref` (`\Cref` a inizio periodo), mai "Capitolo 2" scritto a mano. Citazioni con `\cite`/`\textcite`.
+- `\enquote{}` per termini gergali alla prima occorrenza, non per terminologia tecnica stabile.
+- Titoli di sezione corti, senza sottotitoli dopo i due punti.
+- Nuovo acronimo → `frontmatter/acronyms.tex`, non sciolto in nota. Nuova voce bibliografica → verificare autori/anno/sede con una ricerca, mai a memoria.
+- Label di capitolo nella forma `ch:<nome>`; label introdotti durante la ristrutturazione hanno un prefisso per capitolo (es. `topo-`, `bt-`) per evitare collisioni.
+
+## Stato
+
+Tesi in ristrutturazione dal 2026-09-09: da compilativa a tesi che integra teoria e codice. Il vecchio capitolo unico "Caso di studio" e la rassegna della letteratura sono stati smontati e distribuiti nei capitoli tecnici; la struttura attuale è quella di `main.tex`. Il piano di ristrutturazione è tenuto dall'utente fuori dalla repo.
+
+Punto aperto con i relatori: motore bibliografico (`biblatex`/`numeric` attuale vs. BibTeX `plain` del template Uniba, che non supporta `\textcite` né stampa i DOI). Non cambiare motore senza indicazione.

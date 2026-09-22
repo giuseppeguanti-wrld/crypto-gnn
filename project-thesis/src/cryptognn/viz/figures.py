@@ -10,17 +10,17 @@ thing:
   - **Saving** -- scripts/07_make_figures.py, the only place savefig appears.
 
 Returning the Figure rather than writing it is what makes these functions
-testable: a test can assert that the two graph snapshots really share node
-positions, or that the three heatmaps really share a colour scale, without
-rendering a PDF and looking at it. Those properties are load-bearing -- a
-snapshot pair laid out independently produces a plausible-looking figure that
-means nothing -- and until this module existed no test could reach them, because
-a file named 07_make_figures.py cannot be imported.
+testable: a test can assert that the three event figures really share their node
+positions and their colour scale, without rendering a PDF and looking at it.
+Those properties are load-bearing -- crisis panels laid out independently of one
+another produce plausible-looking figures that mean nothing -- and until this
+module existed no test could reach them, because a file named
+07_make_figures.py cannot be imported.
 
 Exports:
-  - select_reference_dates(): the calm and post-event dates the figures compare
-  - figure_topology_timeseries(), figure_correlation_heatmaps(),
-    figure_graph_snapshots(), figure_mp_spectrum(): Section 6.6
+  - post_event_dates(): the date each crisis figure is drawn at
+  - figure_topology_timeseries(), figure_event_panels(), figure_mp_spectrum():
+    Section 6.6
   - figure_walkforward_scheme(), figure_results_by_fold(),
     figure_equity_curves(), figure_density_vs_error(): Section 6.5
   - fold_test_means(): a topological metric averaged over each fold's test block
@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 
 from cryptognn.evaluation.metrics import rank_association
-from cryptognn.viz.graphs import draw_snapshot, fixed_layout
+from cryptognn.viz.graphs import draw_snapshot
 from cryptognn.viz.results import draw_fold_scheme, draw_model_series, draw_scatter_fit
 from cryptognn.viz.style import (
     FIGURE_WIDTH,
@@ -80,10 +80,14 @@ TOPOLOGY_TIMESERIES_PANELS: tuple[tuple[list[str], list[str] | None, str], ...] 
 # Named here rather than in the script that draws them because script 08 has to
 # copy exactly this set into the thesis, and a list kept in two places is a list
 # that will one day be copied incomplete.
+# The three event figures are named after the keys of config/events.yaml, so
+# declaring a fourth event there makes script 07 stop on its own guard rather
+# than publish a figure the thesis never includes.
 FIGURE_NAMES = (
     "fig_topology_timeseries",
-    "fig_correlation_heatmaps",
-    "fig_graph_snapshots",
+    "fig_event_china_crackdown",
+    "fig_event_terra_luna",
+    "fig_event_ftx",
     "fig_mp_spectrum",
     "fig_walkforward_scheme",
     "fig_results_by_fold",
@@ -92,22 +96,20 @@ FIGURE_NAMES = (
 )
 
 
-def select_reference_dates(
-    topology: pd.DataFrame,
+def post_event_dates(
     events: list,
     keys: tuple[str, ...],
     offset: int = POST_EVENT_OFFSET,
 ) -> dict[str, pd.Timestamp]:
-    """The dates the comparison figures are drawn at, derived from the data.
+    """The date each crisis figure is drawn at, keyed by its event.
 
-    Returns a mapping from panel label to date, in order: first the calm
-    reference, then one post-event date per requested key.
+    Each date is its event plus `offset` days, the first window containing no
+    pre-event observations; taking the event date itself would read a window
+    that is 59/60 pre-event and so understate the shock.
 
-    The calm reference is the window with the lowest mean correlation -- chosen
-    by the data rather than picked by eye. Each crisis date is its event plus
-    `offset` days, the first window containing no pre-event observations; taking
-    the event date itself would read a window that is 59/60 pre-event and so
-    understate the shock.
+    Keyed by the event key rather than by a display label because the figures
+    carry no title of their own: the chapter names the event in the caption, and
+    the key is what the figure's filename is built from.
 
     Raises a ValueError listing the available keys when one is unknown, instead
     of the bare KeyError a dict lookup would give: the keys come from
@@ -121,11 +123,9 @@ def select_reference_dates(
             f"Unknown event key(s) {unknown}; config/events.yaml declares {sorted(by_key)}"
         )
 
-    dates = {"Calmo": topology["mean_correlation"].idxmin()}
-    for key in keys:
-        event = by_key[key]
-        dates[f"{event.label} +{offset}g"] = pd.Timestamp(event.date) + pd.Timedelta(days=offset)
-    return dates
+    return {
+        key: pd.Timestamp(by_key[key].date) + pd.Timedelta(days=offset) for key in keys
+    }
 
 
 def figure_topology_timeseries(topology: pd.DataFrame, events: list) -> plt.Figure:
@@ -166,102 +166,67 @@ def figure_topology_timeseries(topology: pd.DataFrame, events: list) -> plt.Figu
     return fig
 
 
-def figure_correlation_heatmaps(
+def figure_event_panels(
+    w_thresh: np.ndarray,
     corr: np.ndarray,
     corr_index: pd.DatetimeIndex,
-    dates: dict[str, pd.Timestamp],
+    date: pd.Timestamp,
     symbols: list[str],
+    layout: dict,
     order: np.ndarray,
+    label_size: float = 5.5,
 ) -> plt.Figure:
-    """Correlation matrices in a grid, on one shared colour scale.
+    """One crisis date, read twice: the thresholded graph and the raw correlation matrix.
 
-    Laid out two per row rather than in a single strip: three 15x15 matrices side
-    by side across \\textwidth leave each cell about 3mm, too small to read. A
-    2x2 grid gives each panel roughly 7cm instead of 4.3cm -- half again as wide,
-    two and a half times the area -- while keeping all three on one page, which a
-    comparison figure needs: the reader cannot hold a field of red squares in
-    memory across a page turn.
+    The two panels are the same window seen at two removes -- C_t as the pipeline
+    measures it, and the graph W_thresh built from it -- so they belong in one
+    figure rather than in two placed pages apart. The chapter discusses each
+    event in its own paragraph, which is why a figure covers one date instead of
+    collecting several: a reader arguing about FTX should not have to find its
+    panel among four.
 
-    `order` is computed once on the period-average matrix and passed in, so the
-    same cell means the same pair in every panel; the scale is pinned to [-1, 1]
-    inside draw_heatmap for the same reason. Recomputing either per date would
-    make the panels incomparable while still looking fine.
+    `layout` and `order` are arguments rather than computations: a spring layout
+    and a clustering order both respond to the whole matrix they are given, so
+    recomputing either per date would move every node and reshuffle every row
+    between figures. With three separate figures there is no shared axis to give
+    the drift away -- the panels would simply look different, and the difference
+    would read as the market changing. They must come from fixed_layout() and
+    hierarchical_order() called once on the period average, which is also what
+    makes the colour scale pinned inside draw_heatmap() worth anything.
+
+    The figure carries no title: the event and the date it is drawn at are in the
+    caption below it, and repeating them inside the frame said the same thing
+    twice within a centimetre. `date` is still resolved by nearest neighbour, so
+    the window drawn can differ from the event date plus the offset -- what the
+    caption claims is now checked by the tests rather than shown in the picture.
+
+    One `label_size` serves both panels, at 5.5pt rather than the 6.5 the graph
+    used when it had half of \\textwidth to itself: the node discs are smaller
+    here, and measured against the final usetex output 6.5 pushed the asset names
+    past their discs. What still overflows at 5.5 is DOGE, drawn small because
+    its weighted degree is low -- the case draw_snapshot outlines its labels for.
     """
-    n_columns = 2
-    n_rows = int(np.ceil(len(dates) / n_columns))
-    fig, axes = plt.subplots(
-        n_rows,
-        n_columns,
-        figsize=(FIGURE_WIDTH, FIGURE_WIDTH * n_rows / n_columns * 1.06),
+    position = corr_index.get_indexer([date], method="nearest")[0]
+
+    # Full width, a little over half as tall: two square panels of about 7cm,
+    # plus room for the heatmap's rotated tick labels. The right cell is the
+    # wider one because the colour bar and the tick labels are taken out of it:
+    # with equal cells the matrix ends up visibly smaller than the graph beside
+    # it, and the panel the reader is asked to compare against the others is the
+    # one that shrank.
+    fig, (ax_graph, ax_heatmap) = plt.subplots(
+        1,
+        2,
+        figsize=(FIGURE_WIDTH, FIGURE_WIDTH / 2 * 1.12),
+        width_ratios=(1.0, 1.28),
     )
-    flat = axes.ravel()
+    draw_snapshot(ax_graph, w_thresh[position], layout, labels=symbols, label_size=label_size)
+    image = draw_heatmap(ax_heatmap, corr[position], order, labels=symbols, label_size=label_size)
 
-    image = None
-    for panel, (label, date) in enumerate(dates.items()):
-        position = corr_index.get_indexer([date], method="nearest")[0]
-        image = draw_heatmap(
-            flat[panel],
-            corr[position],
-            order,
-            labels=symbols,
-            title=f"{label} — {corr_index[position].date()}",
-            label_size=7.0,
-        )
-
-    # The colour bar takes the cell the panels leave empty, so the grid stays
-    # square and no space is spent on a bar squeezed against the figure edge.
-    for spare in flat[len(dates) :]:
-        spare.set_axis_off()
-    if len(dates) < len(flat):
-        cax = flat[len(dates)].inset_axes([0.15, 0.45, 0.7, 0.05])
-        colorbar = fig.colorbar(image, cax=cax, orientation="horizontal")
-    else:
-        colorbar = fig.colorbar(image, ax=axes, fraction=0.02, pad=0.02)
+    colorbar = fig.colorbar(image, ax=ax_heatmap, fraction=0.046, pad=0.04)
     colorbar.set_label(r"$\rho$")
     colorbar.ax.tick_params(labelsize=7)
 
-    fig.tight_layout()
-    return fig
-
-
-def figure_graph_snapshots(
-    w_thresh: np.ndarray,
-    w_full: np.ndarray,
-    corr_index: pd.DatetimeIndex,
-    dates: dict[str, pd.Timestamp],
-    symbols: list[str],
-    seed: int,
-) -> plt.Figure:
-    """Calm against crisis, at node positions computed once for both panels.
-
-    The single layout is what makes the figure mean anything: a force-directed
-    layout recomputed per date moves every node, so two independently laid out
-    snapshots differ everywhere and the compaction is lost among nodes that
-    merely moved.
-
-    The layout comes from the average **complete** graph, not the thresholded
-    one: every pair contributes its true proximity, so the positions reflect the
-    market's structure rather than which edges happened to survive tau. The
-    edges drawn are the thresholded ones.
-    """
-    layout = fixed_layout(w_full.mean(axis=0), seed=seed, labels=symbols)
-
-    # Two panels across \textwidth make each one about 2.95in wide, and a
-    # force-directed layout fills a roughly square box, so the height is set to
-    # match rather than to a fixed ratio: any extra would be white space, any
-    # less would compress the graph into a band.
-    panel_width = FIGURE_WIDTH / len(dates)
-    fig, axes = plt.subplots(1, len(dates), figsize=(FIGURE_WIDTH, panel_width * 1.16))
-    for ax, (label, date) in zip(axes, dates.items(), strict=True):
-        position = corr_index.get_indexer([date], method="nearest")[0]
-        draw_snapshot(
-            ax,
-            w_thresh[position],
-            layout,
-            labels=symbols,
-            title=f"{label} — {corr_index[position].date()}",
-            label_size=6.5,
-        )
     fig.tight_layout()
     return fig
 

@@ -655,8 +655,9 @@ def _section_topology(topology: pd.DataFrame, event_study: pd.DataFrame) -> list
     )
     lines += _event_tables(event_study)
     lines += [
-        "Figure corrispondenti: `fig_topology_timeseries.pdf`, `fig_correlation_heatmaps.pdf`, "
-        "`fig_graph_snapshots.pdf`, `fig_mp_spectrum.pdf`.",
+        "Figure corrispondenti: `fig_topology_timeseries.pdf`, `fig_mp_spectrum.pdf` e una figura "
+        "per evento con grafo e heatmap affiancati (`fig_event_china_crackdown.pdf`, "
+        "`fig_event_terra_luna.pdf`, `fig_event_ftx.pdf`).",
     ]
     return lines
 
@@ -807,8 +808,9 @@ def _section_limitations(
 def _section_index() -> list[str]:
     figure_sections = {
         "fig_topology_timeseries": "6.6",
-        "fig_correlation_heatmaps": "6.6",
-        "fig_graph_snapshots": "6.6",
+        "fig_event_china_crackdown": "6.6",
+        "fig_event_terra_luna": "6.6",
+        "fig_event_ftx": "6.6",
         "fig_mp_spectrum": "6.6",
         "fig_walkforward_scheme": "6.4",
         "fig_results_by_fold": "6.5",

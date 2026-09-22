@@ -41,6 +41,17 @@
 \usepackage{amsthm}
 \usepackage{mathtools}
 
+% --- Liste ---
+\usepackage{enumitem} % style=nextline per description con etichette lunghe (nomi di file)
+
+% --- Alberi di directory (Unicode box-drawing, es. Panoramica del progetto) ---
+% fancyvrb per un blocco verbatim con cornice, senza passare da minted/Pygments
+% (che non riconosce i caratteri di disegno delle linee); pmboxdraw insegna a
+% pdfLaTeX a disegnarli come regoli vettoriali, dato che non fanno parte dei
+% font Latin Modern.
+\usepackage{fancyvrb}
+\usepackage{pmboxdraw}
+
 % --- Figure e tabelle ---
 \usepackage{graphicx}
 \usepackage{float} % [H] per la Tabella 3.1, per evitare che il float si separi dal paragrafo che la introduce
@@ -64,6 +75,58 @@
 \algrenewcommand\algorithmicdo{\textbf{esegui}}
 \algrenewcommand\algorithmicend{\textbf{fine}}
 \algrenewcommand\algorithmicreturn{\textbf{restituisci}}
+
+% --- Codice sorgente (snippet Python dal progetto, dal Cap. 1 in poi) ---
+% Richiede la compilazione con `latexmk -pdf -bibtex -shell-escape main.tex`
+% (Pygments/pygmentize deve essere raggiungibile dal PATH). Su Overleaf non
+% serve alcuna configurazione: shell-escape per minted è abilitato in automatico.
+\usepackage{minted}
+\usemintedstyle{default}
+\setminted{
+    fontsize=\small,
+    breaklines,
+    tabsize=4,
+    frame=none,
+    % FancyVrb (usato da minted) apre e chiude l'ambiente con uno spazio verticale
+    % calcolato da \topsep/\partopsep (le stesse dimensioni di un ambiente 'list'),
+    % non nullo per default: misurato ~13pt su entrambi i lati, ma nel float
+    % "listing" solo quello in chiusura restava visibile (quello in apertura viene
+    % assorbito dalla riga sotto la caption), dando l'impressione di una riga
+    % bianca residua in fondo al blocco. Si azzerano qui entrambi.
+    listparameters={\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}},
+}
+
+% Ambiente flottante "Listing" in stile ruled, come nel template UniBa: sostituisce
+% il riquadro chiuso (frame=single) usato in precedenza. Numerazione per capitolo,
+% come figure e tabelle. Usa il pacchetto float già caricato sopra.
+\floatstyle{ruled}
+\newfloat{listing}{htbp}{lol}
+\floatname{listing}{Listing}
+\usepackage{chngcntr}
+\counterwithin{listing}{chapter}
+% Stile ruled senza la riga orizzontale sopra la caption (resta solo quella tra
+% caption e codice, e quella di chiusura in fondo al blocco). \fs@ruled è definito
+% da float.sty; qui si ridefinisce solo \@fs@pre come vuoto, il resto invariato.
+\makeatletter
+\renewcommand\fs@ruled{%
+    \def\@fs@cfont{\bfseries}\let\@fs@capt\floatc@ruled
+    \def\@fs@pre{}%
+    \def\@fs@post{\kern2pt\hrule\relax}%
+    \def\@fs@mid{\kern2pt\hrule\kern2pt}%
+    \let\@fs@iftopcapt\iftrue}
+\makeatother
+\captionsetup[listing]{justification=centering, singlelinecheck=false}
+\newenvironment{longlisting}[2]{%
+    \par\addvspace{\intextsep}%
+    \vskip 0pt plus 8\baselineskip\penalty-100\vskip 0pt plus -8\baselineskip
+    \captionsetup{type=listing, labelfont=bf, labelsep=space, strut=off,
+        aboveskip=0pt, belowskip=0pt}%
+    \caption{#1}\label{#2}%
+    \nobreak\kern2pt\hrule\kern2pt\nobreak
+}{%
+    \par\nobreak\kern2pt\hrule\relax
+    \par\addvspace{\intextsep}%
+}
 
 % --- Bibliografia ---
 \usepackage[
@@ -91,7 +154,9 @@
 \Crefname{figure}{Figura}{Figure}
 \crefname{table}{Tabella}{Tabelle}
 \Crefname{table}{Tabella}{Tabelle}
-\crefname{equation}{Equazione}{Equazioni}
+\crefname{listing}{Listing}{Listing}
+\Crefname{listing}{Listing}{Listing}
+\crefname{equation}{equazione}{equazioni}
 \Crefname{equation}{Equazione}{Equazioni}
 % cleveref non localizza le congiunzioni tra riferimenti multipli (\cref{a,b});
 % i comandi non esistono finché cleveref stesso non li definisce a inizio documento,

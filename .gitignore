@@ -253,6 +253,10 @@ __marimo__/
 *.xmpdata
 latexmk.log
 main.pdf
+# minted (Pygments) cache: ignora tutto tranne lo stile "github" scritto a mano,
+# che deve restare tracciato per essere disponibile anche su Overleaf
+latex-thesis/_minted/*
+!latex-thesis/_minted/github.style.minted
 
 # Project
 # Ignore project-specific files and directories that are not meant to be shared or versioned.

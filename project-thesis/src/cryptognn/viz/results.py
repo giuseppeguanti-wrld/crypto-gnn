@@ -48,7 +48,7 @@ from cryptognn.viz.style import COLORS, EVENT_COLOR, MUTED, REFERENCE_COLOR
 # Train, validation, test. Fixed slots, in the order the blocks occur in time, so
 # the legend reads in the same direction as the bars.
 BLOCK_COLORS = (COLORS[0], COLORS[2], COLORS[1])
-BLOCK_LABELS = ("Train", "Validazione", "Test")
+BLOCK_LABELS = ("Train", "Validation", "Test")
 
 
 def draw_fold_scheme(

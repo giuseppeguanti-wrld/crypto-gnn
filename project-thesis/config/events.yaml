@@ -19,10 +19,7 @@ events:
       Crollo generalizzato del mercato cripto seguito all'inasprimento delle
       restrizioni cinesi su scambi e mining, con perdite intraday superiori al
       30% sui principali asset.
-    # DA AGGIUNGERE: nessun riferimento in references.bib copre ancora questo
-    # evento (briola2023anatomy e akyildirim2023understanding riguardano
-    # Terra/Luna e FTX). Va inserita una fonte prima della stesura della sez. 6.6.
-    citation: ""
+    citation: griffith2023cryptocurrency
 
   - key: terra_luna
     date: 2022-05-09

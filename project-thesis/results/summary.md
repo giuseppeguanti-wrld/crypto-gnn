@@ -237,7 +237,7 @@ Metriche lette a -60, -30, 0, +30, +60 giorni da ciascun evento. La variazione r
 | Quota del modo di mercato | 0,772 | 0,733 | 0,720 | 0,812 | 0,822 | 6,5% | 10,8% | 90,2% |
 | Autovalori fuori dal bulk MP | 1,000 | 1,000 | 1,000 | 1,000 | 1,000 | 0,0% | 0,0% | 0,0% |
 
-Figure corrispondenti: `fig_topology_timeseries.pdf`, `fig_correlation_heatmaps.pdf`, `fig_graph_snapshots.pdf`, `fig_mp_spectrum.pdf`.
+Figure corrispondenti: `fig_topology_timeseries.pdf`, `fig_mp_spectrum.pdf` e una figura per evento con grafo e heatmap affiancati (`fig_event_china_crackdown.pdf`, `fig_event_terra_luna.pdf`, `fig_event_ftx.pdf`).
 
 ## Limiti da dichiarare
 
@@ -259,8 +259,9 @@ Tutti pubblicati in `../latex-thesis/` da `scripts/08_make_tables.py`.
 | Artefatto | Tipo | Sezione |
 | --- | --- | ---: |
 | `fig_topology_timeseries.pdf` | figura | 6.6 |
-| `fig_correlation_heatmaps.pdf` | figura | 6.6 |
-| `fig_graph_snapshots.pdf` | figura | 6.6 |
+| `fig_event_china_crackdown.pdf` | figura | 6.6 |
+| `fig_event_terra_luna.pdf` | figura | 6.6 |
+| `fig_event_ftx.pdf` | figura | 6.6 |
 | `fig_mp_spectrum.pdf` | figura | 6.6 |
 | `fig_walkforward_scheme.pdf` | figura | 6.4 |
 | `fig_results_by_fold.pdf` | figura | 6.5 |

@@ -11,7 +11,7 @@ Studio di caso empirico che implementa e confronta quattro famiglie di modelli d
 - **AR** (per-asset AutoRegression) — baseline univariata, il "modello univariato" letterale della prima domanda di ricerca
 - **Naive forecaster** (zero / media storica) — il vero avversario in finanza
 
-Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido. **Stato**: pipeline completa e taggata `v1.0-results` (Sprint 1–5) più l'app interattiva di Sprint 6; `pytest tests/` verde (567 test) e `ruff check` pulito. Resta da scrivere il Cap. 6 della tesi a partire da `results/summary.md`.
+Il progetto è strutturato come **verifica di un'ipotesi**, non dimostrazione di un vantaggio: un risultato negativo ben documentato è un esito valido — ed è, di fatto, il risultato ottenuto: nessuno dei sette modelli confrontati batte la previsione nulla in modo statisticamente significativo. **Stato**: pipeline completa e taggata `v1.0-results` (Sprint 1–5) più l'app interattiva di Sprint 6; `pytest tests/` verde (567 test) e `ruff check` pulito. Il capitolo 6 della tesi (sez. 6.1–6.6) è scritto e attivato in `latex-thesis/`, a partire da `results/summary.md`, e verificato con un audit indipendente contro questo codice (2026-09-07, nessuna discrepanza).
 
 ## Convenzioni stabili
 
@@ -148,6 +148,6 @@ streamlit run app/streamlit_app.py           # Sprint 6
 3. **Figure from script**: ogni figura generata da `scripts/07_make_figures.py`, niente manuale
 4. **Determinismo**: `torch.manual_seed()`, `np.random.default_rng()`, `torch.use_deterministic_algorithms(True)` in ogni modello
 5. **Riproducibilità**: `run_manifest.json` contiene commit git, config_hash, timestamp, le versioni degli 8 pacchetti che possono cambiare un numero (non un `pip freeze` completo — `requirements.txt` resta il lockfile esatto) e il digest SHA-256 di ogni artefatto prodotto (non le durate — non sono recuperabili a posteriori da uno script che non ha eseguito la pipeline; motivazione completa in `08_make_tables.py::build_manifest`)
-6. **Limiti espliciti**: ogni risultato dichiara i limiti (survivorship bias, singolo periodo, snapshot indipendenti, ecc.) pronti per sez. 7.3
+6. **Limiti espliciti**: ogni risultato dichiara i limiti (survivorship bias, singolo periodo, snapshot indipendenti, ecc.) pronti per sez. 7.2 (`sec:limitations`) — non 7.3, che è le direzioni future
 
 Questo file è l'unico documento di convenzioni del progetto: le motivazioni delle scelte non ovvie stanno nei docstring, accanto al codice che le applica, non in un piano separato.

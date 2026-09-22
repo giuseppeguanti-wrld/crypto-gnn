@@ -1,14 +1,16 @@
-// ============================================================
-// references.bib — bibliografia della tesi (biblatex/biber)
-//
-// Voci trascritte dalla rassegna bibliografica di partenza, organizzate
-// per area tematica. Dove la fonte originale indicava "et al." senza
-// elenco completo degli autori, si usa "and others" (reso da biblatex
-// come "et al.") invece di inventare nomi non verificati.
-// ============================================================
+% ============================================================
+% references.bib — bibliografia della tesi (biblatex/biber)
+%
+% Voci trascritte dalla rassegna bibliografica di partenza, organizzate
+% per area tematica. Le voci con "and others" (reso da biblatex come
+% "et al.") conservano questa forma per scelta: gli elenchi completi
+% sono stati verificati contro Crossref e DataCite il 2026-09-17, ma
+% non vengono trascritti perché lo stile "numeric", con il valore di
+% default maxnames=3, stampa comunque "et al." oltre il terzo autore.
+% ============================================================
 
 
-// ---------- Fondamenti matematici e Graph Signal Processing ----------
+% ---------- Fondamenti matematici e Graph Signal Processing ----------
 
 @book{chung1997spectral,
   author    = "Chung, Fan R. K.",
@@ -18,32 +20,19 @@
   doi       = "10.1090/cbms/092"
 }
 
-@article{shuman2013emerging,
-  author    = "Shuman, David I. and others",
-  title     = "The Emerging Field of Signal Processing on Graphs",
-  journal   = "IEEE Signal Processing Magazine",
-  year      = "2013",
-  doi       = "10.1109/msp.2012.2235192"
-}
-
-@article{vonluxburg2007tutorial,
-  author    = "von Luxburg, Ulrike",
-  title     = "A Tutorial on Spectral Clustering",
-  journal   = "Statistics and Computing",
-  year      = "2007",
-  doi       = "10.1007/s11222-007-9033-z"
-}
-
-@book{golub2013matrix,
-  author    = "Golub, Gene H. and Van Loan, Charles F.",
-  title     = "Matrix Computations",
-  edition   = "4",
-  publisher = "Johns Hopkins University Press",
-  year      = "2013"
+@article{marchenkopastur1967,
+  author    = "Mar{\v{c}}enko, Vladimir A. and Pastur, Leonid A.",
+  title     = "Distribution of Eigenvalues for Some Sets of Random Matrices",
+  journal   = "Mathematics of the USSR-Sbornik",
+  volume    = "1",
+  number    = "4",
+  pages     = "457--483",
+  year      = "1967",
+  doi       = "10.1070/SM1967v001n04ABEH001994"
 }
 
 
-// ---------- Reti neurali e convoluzione classica ----------
+% ---------- Reti neurali e convoluzione classica ----------
 
 @article{rumelhart1986learning,
   author    = "Rumelhart, David E. and Hinton, Geoffrey E. and Williams, Ronald J.",
@@ -55,17 +44,6 @@
   doi       = "10.1038/323533a0"
 }
 
-@article{lecun1998gradient,
-  author    = "LeCun, Yann and Bottou, L\'eon and Bengio, Yoshua and Haffner, Patrick",
-  title     = "Gradient-Based Learning Applied to Document Recognition",
-  journal   = "Proceedings of the IEEE",
-  volume    = "86",
-  number    = "11",
-  pages     = "2278--2324",
-  year      = "1998",
-  doi       = "10.1109/5.726791"
-}
-
 @book{goodfellow2016deep,
   author    = "Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron",
   title     = "Deep Learning",
@@ -74,23 +52,7 @@
 }
 
 
-// ---------- Graph Neural Networks ----------
-
-@inproceedings{bruna2014spectral,
-  author    = "Bruna, Joan and others",
-  title     = "Spectral Networks and Locally Connected Networks on Graphs",
-  booktitle = "International Conference on Learning Representations (ICLR)",
-  year      = "2014",
-  doi       = "10.48550/arXiv.1312.6203"
-}
-
-@inproceedings{defferrard2016chebnet,
-  author    = "Defferrard, Micha{\"e}l and Bresson, Xavier and Vandergheynst, Pierre",
-  title     = "Convolutional Neural Networks on Graphs with Fast Localized Spectral Filtering",
-  booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
-  year      = "2016",
-  doi       = "10.48550/arXiv.1606.09375"
-}
+% ---------- Graph Neural Networks ----------
 
 @inproceedings{kipf2017gcn,
   author    = "Kipf, Thomas N. and Welling, Max",
@@ -98,15 +60,6 @@
   booktitle = "International Conference on Learning Representations (ICLR)",
   year      = "2017",
   doi       = "10.48550/arXiv.1609.02907"
-}
-
-@inproceedings{hamilton2017graphsage,
-  author    = "Hamilton, William L. and Ying, Rex and Leskovec, Jure",
-  title     = "Inductive Representation Learning on Large Graphs",
-  booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
-  pages     = "1024--1034",
-  year      = "2017",
-  doi       = "10.48550/arXiv.1706.02216"
 }
 
 @inproceedings{velickovic2018gat,
@@ -117,17 +70,9 @@
   doi       = "10.48550/arXiv.1710.10903"
 }
 
-@book{hamilton2020graph,
-  author    = "Hamilton, William L.",
-  title     = "Graph Representation Learning",
-  publisher = "Morgan and Claypool Publishers",
-  year      = "2020",
-  doi       = "10.1007/978-3-031-01588-5"
-}
-
 @misc{bronstein2021geometric,
   author    = "Bronstein, Michael M. and others",
-  title     = "Geometric Deep Learning: Grids, Groups, Graphs, Geodesics and Gauges",
+  title     = "Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges",
   year      = "2021",
   doi       = "10.48550/arXiv.2104.13478"
 }
@@ -150,14 +95,6 @@
   doi       = "10.1609/aaai.v32i1.11604"
 }
 
-@inproceedings{alon2021bottleneck,
-  author    = "Alon, Uri and Yahav, Eran",
-  title     = "On the Bottleneck of Graph Neural Networks and its Practical Implications",
-  booktitle = "International Conference on Learning Representations (ICLR)",
-  year      = "2021",
-  doi       = "10.48550/arXiv.2006.05205"
-}
-
 @article{wu2021survey,
   author    = "Wu, Zonghan and others",
   title     = "A Comprehensive Survey on Graph Neural Networks",
@@ -167,7 +104,7 @@
 }
 
 
-// ---------- Serie temporali finanziarie ----------
+% ---------- Serie temporali finanziarie ----------
 
 @book{tsay2010analysis,
   author    = "Tsay, Ruey S.",
@@ -194,26 +131,15 @@
   doi       = "10.1080/713665670"
 }
 
-@article{granger1969investigating,
-  author    = "Granger, C. W. J.",
-  title     = "Investigating Causal Relations by Econometric Models and Cross-spectral Methods",
-  journal   = "Econometrica",
-  volume    = "37",
-  number    = "3",
-  pages     = "424--438",
-  year      = "1969",
-  doi       = "10.2307/1912791"
-}
-
-@article{szekely2007distance,
-  author    = "Sz\'ekely, G\'abor J. and Rizzo, Maria L. and Bakirov, Nail K.",
-  title     = "Measuring and Testing Dependence by Correlation of Distances",
-  journal   = "The Annals of Statistics",
-  volume    = "35",
-  number    = "6",
-  pages     = "2769--2794",
-  year      = "2007",
-  doi       = "10.1214/009053607000000505"
+@article{ljungbox1978measure,
+  author    = "Ljung, Greta M. and Box, George E. P.",
+  title     = "On a Measure of Lack of Fit in Time Series Models",
+  journal   = "Biometrika",
+  volume    = "65",
+  number    = "2",
+  pages     = "297--303",
+  year      = "1978",
+  doi       = "10.1093/biomet/65.2.297"
 }
 
 @article{dieboldyilmaz2012spillover,
@@ -223,16 +149,6 @@
   volume    = "28",
   year      = "2012",
   doi       = "10.1016/j.ijforecast.2011.02.006"
-}
-
-@incollection{embrechts2002correlation,
-  author    = "Embrechts, Paul and McNeil, Alexander and Straumann, Daniel",
-  title     = "Correlation and Dependence in Risk Management: Properties and Pitfalls",
-  booktitle = "Risk Management: Value at Risk and Beyond",
-  editor    = "Dempster, M. A. H.",
-  publisher = "Cambridge University Press",
-  year      = "2002",
-  doi       = "10.1017/cbo9780511615337.008"
 }
 
 @article{white2000reality,
@@ -246,16 +162,6 @@
   doi       = "10.1111/1468-0262.00152"
 }
 
-@article{bergmeir2012use,
-  author    = "Bergmeir, Christoph and Ben\'itez, Jos\'e M.",
-  title     = "On the Use of Cross-Validation for Time Series Predictor Evaluation",
-  journal   = "Information Sciences",
-  volume    = "191",
-  pages     = "192--213",
-  year      = "2012",
-  doi       = "10.1016/j.ins.2011.12.028"
-}
-
 @article{basu2015regularized,
   author    = "Basu, Sumanta and Michailidis, George",
   title     = "Regularized Estimation in Sparse High-Dimensional Time Series Models",
@@ -266,7 +172,7 @@
 }
 
 
-// ---------- Reti di correlazione ed econofisica ----------
+% ---------- Reti di correlazione ed econofisica ----------
 
 @article{mantegna1999hierarchical,
   author    = "Mantegna, Rosario N.",
@@ -286,7 +192,7 @@
 
 @article{onnela2003dynamics,
   author    = "Onnela, Jukka-Pekka and others",
-  title     = "Dynamics of Market Correlations",
+  title     = "Dynamics of Market Correlations: Taxonomy and Portfolio Analysis",
   journal   = "Physical Review E",
   year      = "2003",
   doi       = "10.1103/physreve.68.056110"
@@ -301,70 +207,7 @@
 }
 
 
-// ---------- GNN in finanza e criptovalute ----------
-
-@inproceedings{chen2018incorporating,
-  author    = "Chen, Yingmei and Wei, Zhongyu and Huang, Xuanjing",
-  title     = "Incorporating Corporation Relationship via Graph Convolutional Neural Networks for Stock Price Prediction",
-  booktitle = "Proceedings of the ACM International Conference on Information and Knowledge Management (CIKM)",
-  year      = "2018",
-  doi       = "10.1145/3269206.3269269"
-}
-
-@article{feng2019temporal,
-  author    = "Feng, Fuli and others",
-  title     = "Temporal Relational Ranking for Stock Prediction",
-  journal   = "ACM Transactions on Information Systems (TOIS)",
-  year      = "2019",
-  doi       = "10.1145/3309547"
-}
-
-@misc{matsunaga2019exploring,
-  author    = "Matsunaga, Daiki and Suzumura, Toyotaro and Takahashi, Toshihiro",
-  title     = "Exploring Graph Neural Networks for Stock Market Predictions with Rolling Window Analysis",
-  year      = "2019",
-  doi       = "10.48550/arXiv.1909.10660"
-}
-
-@misc{kim2019hats,
-  author    = "Kim, Raehyun and So, Chan Ho and Jeong, Minbyul and Lee, Sanghoon and Kim, Jinkyu and Kang, Jaewoo",
-  title     = "{HATS}: A Hierarchical Graph Attention Network for Stock Movement Prediction",
-  year      = "2019",
-  doi       = "10.48550/arXiv.1908.07999",
-  note      = "arXiv:1908.07999"
-}
-
-@inproceedings{yu2018stgcn,
-  author    = "Yu, Bing and Yin, Haoteng and Zhu, Zhanxing",
-  title     = "Spatio-Temporal Graph Convolutional Networks",
-  booktitle = "Proceedings of the International Joint Conference on Artificial Intelligence (IJCAI)",
-  year      = "2018",
-  doi       = "10.24963/ijcai.2018/505"
-}
-
-@inproceedings{seo2018gcrn,
-  author    = "Seo, Youngjoo and Defferrard, Micha{\"e}l and Vandergheynst, Pierre and Bresson, Xavier",
-  title     = "Structured Sequence Modeling with Graph Convolutional Recurrent Networks",
-  booktitle = "International Conference on Neural Information Processing (ICONIP)",
-  year      = "2018",
-  doi       = "10.1007/978-3-030-04167-0_33"
-}
-
-@inproceedings{li2018dcrnn,
-  author    = "Li, Yaguang and Yu, Rose and Shahabi, Cyrus and Liu, Yan",
-  title     = "Diffusion Convolutional Recurrent Neural Network: Data-Driven Traffic Forecasting",
-  booktitle = "International Conference on Learning Representations (ICLR)",
-  year      = "2018",
-  doi       = "10.48550/arXiv.1707.01926"
-}
-
-@misc{corbet2019cryptocurrencies,
-  author    = "Corbet, Shaen and others",
-  title     = "Cryptocurrencies as a Financial Asset: A Systematic Analysis",
-  year      = "2019",
-  doi       = "10.2139/ssrn.3143122",
-  note      = "Working paper SSRN: sostituisce la versione pubblicata su International Review of Financial Analysis, ritirata dall'editore nel marzo 2019"
-}
+% ---------- GNN in finanza e criptovalute ----------
 
 @article{ji2019dynamic,
   author    = "Ji, Qiang and others",
@@ -372,24 +215,6 @@
   journal   = "International Review of Financial Analysis",
   year      = "2019",
   doi       = "10.1016/j.irfa.2018.12.002"
-}
-
-@inproceedings{weber2019antimoney,
-  author    = "Weber, Mark and Domeniconi, Giacomo and Chen, Jie and Weidele, Daniel Karl I. and Bellei, Claudio and Robinson, Tom and Leiserson, Charles E.",
-  title     = "Anti-Money Laundering in {Bitcoin}: Experimenting with Graph Convolutional Networks for Financial Forensics",
-  booktitle = "KDD Workshop on Anomaly Detection in Finance",
-  year      = "2019",
-  doi       = "10.48550/arXiv.1908.02591"
-}
-
-@article{yin2024forecasting,
-  author    = "Yin, Wei and Chen, Ziling and Luo, Xinxin and Kirkulak-Uludag, Berna",
-  title     = "Forecasting Cryptocurrencies' Price with the Financial Stress Index: A Graph Neural Network Prediction Strategy",
-  journal   = "Applied Economics Letters",
-  volume    = "31",
-  number    = "7",
-  year      = "2024",
-  doi       = "10.1080/13504851.2022.2141436"
 }
 
 @article{briola2023anatomy,
@@ -410,24 +235,117 @@
   doi       = "10.1016/j.frl.2023.103643"
 }
 
-
-// ---------- Strumenti ----------
-
-@misc{fey2019pytorch,
-  author    = "Fey, Matthias and Lenssen, Jan E.",
-  title     = "Fast Graph Representation Learning with {PyTorch} Geometric",
-  year      = "2019",
-  doi       = "10.48550/arXiv.1903.02428"
+@article{griffith2023cryptocurrency,
+  author    = "Griffith, Todd and Clancey-Shang, Danjue",
+  title     = "Cryptocurrency Regulation and Market Quality",
+  journal   = "Journal of International Financial Markets, Institutions and Money",
+  volume    = "84",
+  year      = "2023",
+  doi       = "10.1016/j.intfin.2023.101744"
 }
 
-@misc{networkx_docs,
-  author    = "{NetworkX Developers}",
-  title     = "{NetworkX} Documentation",
-  note      = "Documentazione ufficiale"
+
+% ---------- Caso di studio: metodi statistici e addestramento ----------
+
+@article{dieboldmariano1995comparing,
+  author    = "Diebold, Francis X. and Mariano, Roberto S.",
+  title     = "Comparing Predictive Accuracy",
+  journal   = "Journal of Business and Economic Statistics",
+  volume    = "13",
+  number    = "3",
+  pages     = "253--263",
+  year      = "1995",
+  doi       = "10.1080/07350015.1995.10524599"
 }
 
-@misc{statsmodels_docs,
-  author    = "{statsmodels Developers}",
-  title     = "{statsmodels} Documentation",
-  note      = "Documentazione ufficiale, sezione VAR"
+@article{harvey1997testing,
+  author    = "Harvey, David and Leybourne, Stephen and Newbold, Paul",
+  title     = "Testing the Equality of Prediction Mean Squared Errors",
+  journal   = "International Journal of Forecasting",
+  volume    = "13",
+  number    = "2",
+  pages     = "281--291",
+  year      = "1997",
+  doi       = "10.1016/S0169-2070(96)00719-4"
+}
+
+@article{sharpe1966mutual,
+  author    = "Sharpe, William F.",
+  title     = "Mutual Fund Performance",
+  journal   = "The Journal of Business",
+  volume    = "39",
+  number    = "1",
+  pages     = "119--138",
+  year      = "1966"
+}
+
+@article{sharpe1994sharpe,
+  author    = "Sharpe, William F.",
+  title     = "The Sharpe Ratio",
+  journal   = "The Journal of Portfolio Management",
+  volume    = "21",
+  number    = "1",
+  pages     = "49--58",
+  year      = "1994",
+  doi       = "10.3905/jpm.1994.409501"
+}
+
+@article{holm1979simple,
+  author    = "Holm, Sture",
+  title     = "A Simple Sequentially Rejective Multiple Test Procedure",
+  journal   = "Scandinavian Journal of Statistics",
+  volume    = "6",
+  number    = "2",
+  pages     = "65--70",
+  year      = "1979"
+}
+
+@article{schwarz1978estimating,
+  author    = "Schwarz, Gideon",
+  title     = "Estimating the Dimension of a Model",
+  journal   = "The Annals of Statistics",
+  volume    = "6",
+  number    = "2",
+  pages     = "461--464",
+  year      = "1978",
+  doi       = "10.1214/aos/1176344136"
+}
+
+@book{good2005permutation,
+  author    = "Good, Phillip I.",
+  title     = "Permutation, Parametric, and Bootstrap Tests of Hypotheses",
+  edition   = "3",
+  publisher = "Springer",
+  year      = "2005",
+  doi       = "10.1007/b138696"
+}
+
+@inproceedings{kingmaba2015adam,
+  author    = "Kingma, Diederik P. and Ba, Jimmy",
+  title     = "Adam: A Method for Stochastic Optimization",
+  booktitle = "International Conference on Learning Representations (ICLR)",
+  year      = "2015",
+  doi       = "10.48550/arXiv.1412.6980"
+}
+
+@article{srivastava2014dropout,
+  author    = "Srivastava, Nitish and Hinton, Geoffrey and Krizhevsky, Alex and Sutskever, Ilya and Salakhutdinov, Ruslan",
+  title     = "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
+  journal   = "Journal of Machine Learning Research",
+  volume    = "15",
+  number    = "1",
+  pages     = "1929--1958",
+  year      = "2014"
+}
+
+
+% ---------- Strumenti ----------
+
+@misc{binance_api_docs,
+  author    = "{Binance}",
+  title     = "{Market Data} Endpoints -- {Kline/Candlestick} Data",
+  year      = "2026",
+  url       = "https://developers.binance.com/docs/binance-spot-api-docs/rest-api/market-data-endpoints",
+  urldate   = "2026-09-17",
+  note      = "Documentazione ufficiale dell'API REST, endpoint \texttt{/api/v3/klines}"
 }

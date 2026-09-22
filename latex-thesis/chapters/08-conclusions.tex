@@ -1,0 +1,68 @@
+% ============================================================
+% CAPITOLO 7 — Conclusioni e sviluppi futuri
+% Riscritto il 2026-09-17 sui risultati dei Cap. 4, 5 e 6.
+% Sostituisce la versione pre-ristrutturazione. Decisioni di sessione:
+%   - La prima questione non è più "cosa dice la letteratura" ma l'esito
+%     empirico dei Cap. 5/6: ogni riferimento alla rassegna è rimosso.
+%   - La derivazione della GCN è riassunta come nel Cap. 2 attuale
+%     (località, pesi condivisi, equivarianza, self-loop, normalizzazione,
+%     renormalization trick): niente Chebyshev né base di autovettori U.
+%   - Prosa quantitativa: le cifre decisive sono in linea, senza
+%     introdurre tabelle o figure nuove in questo capitolo.
+%   - Subsection numerate (erano \subsection*), per coerenza coi Cap. 4-7.
+% ============================================================
+\chapter{Conclusioni e sviluppi futuri}
+\label{ch:conclusions}
+
+\section{Sintesi rispetto alle questioni di ricerca}
+\label{sec:summary-research-questions}
+
+La \Cref{sec:objectives-research-questions} ha formulato due questioni: quale vantaggio predittivo offra la struttura relazionale tra criptovalute rispetto ad un approccio che le tratti come asset indipendenti e come quella struttura si trasformi nel passaggio da un mercato stabile ad uno di crisi. I capitoli precedenti hanno costruito gli strumenti per affrontarle e ne hanno misurato le risposte; questa sezione ne offre una sintesi unitaria.
+
+\subsection{Il vantaggio della struttura}
+
+Il \Cref{ch:forecasting-models} ha derivato la GCN dalle sole proprietà di località, condivisione dei pesi ed equivarianza per permutazione, come modo per recuperare l'informazione che un approccio univariato scarta per costruzione. I parametri $W^{(l)}$ agiscono sullo spazio delle feature e non sui nodi (\cref{sec:gcn-kipf-welling}), il che consente di applicare lo stesso layer ad un grafo che si ricostruisce ad ogni finestra (\cref{sec:dynamic-graphs-temporal-question}).
+
+Sui dati, però, quell'informazione non si traduce in previsione. Nel \Cref{ch:training-and-comparison} nessuno dei sei modelli batte la previsione nulla, e la GCN non se ne distingue nemmeno dopo la correzione di Holm ($p_{\mathrm{Holm}}=0{,}683$); il confronto con la propria ablation senza grafo, forma più diretta della questione, restituisce $\mathrm{DM}=1{,}338$ con $p=0{,}181$, e il segno indica nel braccio dotato di grafo il meno accurato dei due. Le scomposizioni per asset e per fold confermano il quadro e l'accuratezza direzionale non supera mai il $51{,}2\%$.
+
+L'esito non dipende dalla sola rete. Il BIC riduce quasi sempre AR e VAR al caso degenere di ordine nullo (\cref{sec:var-baseline}) e la griglia della GCN restituisce celle indistinguibili tra loro (\cref{tab:tc-gcn-grid}).
+
+Il \Cref{ch:backtest} raggiunge lo stesso punto per via economica. A costo nullo la strategia sul segno delle previsioni supera il buy-and-hold, con Sharpe $0{,}453$ per la GCN e $0{,}610$ per la sua ablation contro $0{,}262$; bastano $10$ basis point per cambio di posizione a ridurli a $0{,}014$ e $0{,}051$, mentre il riferimento resta a $0{,}261$. Con un turnover prossimo a $0{,}75$ il segnale costa più di quanto renda.
+
+Il protocollo, dal walk-forward alla griglia fissata in anticipo fino alla correzione per confronti multipli, non lasciava margine per orientare il confronto verso un esito favorevole: è questo a rendere informativo il risultato negativo. Alla frequenza giornaliera e ad un passo, su quindici criptovalute, la struttura relazionale non offre un vantaggio predittivo misurabile.
+
+\subsection{L'evoluzione della struttura}
+
+Il \Cref{ch:graph-laplacian-theory} ha legato ogni autovalore all'irregolarità del proprio autovettore (\cref{sec:spectral-analysis}), dando un significato preciso alla connettività algebrica $\lambda_2$: cresce quando il grafo diventa difficile da separare in gruppi distinti, cioè quando il mercato smette di articolarsi e si muove in blocco. È una misura del compattamento che non richiede una soglia e che dipende da come i pesi sono distribuiti sulla struttura, non dal loro solo livello medio.
+
+Il \Cref{ch:topological-evolution} l'ha applicata, con altre cinque metriche, alle $1947$ finestre del periodo, trovando un mercato compatto in permanenza: la correlazione media vale $0{,}675$ sull'intero campione, la quota del modo di mercato $0{,}711$, e un solo autovalore eccede il bordo di Marchenko--Pastur in $1939$ finestre su $1947$. Oltre il modo comune a tutti gli asset, la matrice di correlazione empirica non contiene struttura che il rumore di stima non basti a spiegare.
+
+Attorno alla stretta cinese del maggio 2021 ogni metrica si muove nella direzione attesa e quasi ognuna raggiunge un estremo della propria distribuzione storica, con la correlazione media che raddoppia tra la finestra interamente precedente e quella interamente successiva. Terra/Luna e FTX spostano le stesse quantità di pochi punti percentuali, perché a sessanta giorni dai due eventi la correlazione media valeva già $0{,}799$ e $0{,}753$ e il grafo filtrato alla soglia calibrata era completo ad ogni offset letto. Nel 2022 il mercato si trovava già nello stato verso cui una crisi lo spingerebbe, e una metrica vicina al proprio estremo ha poco margine per muoversi. Il compattamento in crisi è confermato, ma come fenomeno di livello prima che di evento.
+
+\subsection{Il punto di incontro delle due questioni}
+
+Le due questioni non sono indipendenti e tirano in direzioni opposte. Il regime in cui il grafo si compatta, quello che rende interessante la seconda, è anche quello in cui un grafo denso annulla il vantaggio computazionale della convoluzione e anticipa l'over-smoothing (\cref{sec:known-limitations-gnn}), mentre una soglia calibrata una sola volta sull'intero campione lascia passare quasi ogni arco proprio quando servirebbe selezionare (\cref{sec:tau-calibration}). La struttura è più informativa quando è più difficile da sfruttare.
+
+Su questi dati è la condizione di partenza. Il grafo filtrato ha densità media $0{,}974$ e mediana $1{,}000$: in più di metà delle finestre la soglia non rimuove alcun arco. La GCN ha quindi operato, per la maggior parte del periodo, nelle condizioni in cui il \cref{ch:forecasting-models} ne prevede il comportamento peggiore.
+
+Il confronto fold per fold tra la densità media del grafo e lo skill score della GCN non trova però un'associazione distinguibile da zero ($\rho=-0{,}100$, $p=0{,}643$ alla soglia calibrata): con una densità compressa tra $0{,}887$ e $1{,}000$ il test dispone di poca della variazione di cui avrebbe bisogno. La tensione trova quindi conferma sulla struttura del grafo, non sul suo effetto misurabile sulla previsione.
+
+\section{Limiti del lavoro}
+\label{sec:limitations}
+
+Lo studio osserva quindici asset su un solo periodo, un solo exchange e una sola valuta di quotazione, selezionati per la loro quotazione continua sull'intero intervallo: gli asset delistati o collassati nel frattempo, Terra/Luna fra tutti, non vi compaiono, in una direzione che favorisce i risultati riportati (\cref{sec:crypto-universe}). La composizione dell'insieme $V$ non è ottimizzata, e i token meno liquidi producono serie rumorose e archi spuri (\cref{sec:stylized-facts}). L'esito riguarda dunque questo campione e questo protocollo, non la classe di modelli in generale.
+
+Il grafo è una costruzione imposta. La correlazione di Pearson misura la sola relazione lineare e non distingue una dipendenza diretta da un fattore comune non osservato (\cref{sec:correlation-dependence-pitfalls}); il peso degli archi e il criterio di filtraggio sono scelte di progetto calibrate una sola volta sull'intero campione, non riviste in funzione del regime (\cref{sec:tau-calibration}); la trasformazione di Mantegna, con la soglia sul segno della correlazione, lascia fuori dal grafo le relazioni di copertura (\cref{sec:sign-problem}). L'ampiezza $T_w$ della finestra mobile, vincolata dal basso dal rumore di stima e dall'alto dalla sovrapposizione di regimi diversi, resta priva di un criterio di scelta soddisfacente.
+
+La previsione è a un passo e a frequenza giornaliera: su orizzonti o frequenze di campionamento diversi il segnale potrebbe distribuirsi altrimenti. La profondità della rete resta fissa a due strati, scelta argomentata a partire dalla densità del grafo e dall'over-smoothing (\cref{sec:known-limitations-gnn}) e non verificata sperimentalmente. Il backtest, infine, addebita una commissione proporzionale al turnover ma non lo slippage né la capienza del mercato agli ordini simulati: le frizioni reali sarebbero più alte e agirebbero nella stessa direzione dell'esito osservato (\cref{sec:bt-results}).
+
+\section{Direzioni future}
+\label{sec:future-directions}
+
+Il grafo merita più attenzione dell'architettura. Imporre ad ogni finestra un numero fissato di archi, con il $k$-NN o con il PMFG della \cref{sec:edge-filtering-strategies}, che ne restituisce $3(N-2)$ qualunque sia il livello di correlazione, terrebbe il grafo sparso anche nei periodi di compattamento e toglierebbe alla densità il ruolo di variabile che confonde il confronto (\cref{sec:summary-research-questions}). Un meccanismo di attenzione nel senso del GAT~\cite{velickovic2018gat} andrebbe oltre, lasciando al modello la stima del peso di ciascun arco e riducendo la correlazione a un criterio di ammissibilità: quali coppie possano scambiarsi informazione, non quanta.
+
+Resta poi la qualità del segnale in ingresso. Il caso di studio ricava otto canali dai rendimenti e dai volumi (\cref{sec:tc-node-features}) e lascia inutilizzati indicatori di sentiment e metriche on-chain: è l'estensione meno elegante, ma l'esito del \cref{ch:training-and-comparison} indica proprio lì il vincolo effettivo.
+
+Più lontano dall'impianto di questa tesi, il \emph{neural relational inference} di \textcite{kipf2018nri} inferisce le interazioni tra entità dalle sole traiettorie osservate e riformula come apprendimento il problema della \cref{sec:correlation-matrix-to-graph}. I grafi di transazione on-chain, osservati anziché stimati, vivono invece ad un livello di aggregazione diverso, quello degli indirizzi: l'ipotesi interessante è combinarli con il grafo di correlazione, non sostituirli.
+
+Nessuna di queste direzioni risponde da sola all'esito del \cref{ch:training-and-comparison}. Un rendimento giornaliero è in larga parte imprevedibile, e la previsione nulla resta difficile da battere perché la media condizionata dei rendimenti è quasi nulla, non perché gli strumenti impiegati siano inadeguati. La struttura relazionale del mercato cripto esiste, è quantificabile con strumenti spettrali ben definiti e si compatta attorno agli eventi di crisi; alla frequenza e all'orizzonte esaminati non si traduce però né in un vantaggio predittivo misurabile né in un vantaggio economico che sopravviva ai costi di transazione.

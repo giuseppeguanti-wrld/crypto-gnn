@@ -2,14 +2,10 @@
 \addcontentsline{toc}{chapter}{Panoramica del progetto}
 \label{ch:project-overview}
 
-% Capitolo non numerato, come l'Introduzione: fa da cerniera tra la
-% motivazione (Introduzione) e i capitoli tecnici, con un registro proprio
-% (struttura del codice, non teoria né motivazione). Le sezioni interne sono
-% rinumerate localmente (1, 2) come nell'Introduzione; il contatore delle
-% sezioni va azzerato perché l'Introduzione ne ha già usate 4. Ripristinati
-% entrambi in fondo al capitolo.
 \let\oldthesection\thesection
+\let\oldtheHsection\theHsection
 \renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\theHsection}{po.\arabic{section}}
 \setcounter{section}{0}
 
 \section{Struttura del progetto}
@@ -48,6 +44,7 @@ project-thesis/
 \section{Suite di test}
 \label{sec:project-tests}
 
-La correttezza dell'intera pipeline è garantita da una suite di $568$ test in \path{tests/}, la cui struttura rispecchia quella di \path{src/cryptognn/}. In particolare, la classe \texttt{TestNoLookAhead} (\path{tests/evaluation/test_walkforward.py}) verifica l'assenza di \emph{look-ahead bias}, ovvero l'uso implicito, durante la previsione, di informazione che a quel momento non sarebbe ancora disponibile. L'errore non farebbe fallire la pipeline, ma renderebbe silenziosamente i risultati migliori di quanto sarebbero in un impiego reale. La relativa logica è discussa nel \Cref{ch:from-cnn-to-gnn}.
+La correttezza dell'intera pipeline è garantita da una suite di $568$ test in \path{tests/}, la cui struttura rispecchia quella di \path{src/cryptognn/}. In particolare, la classe \texttt{TestNoLookAhead} (\path{tests/evaluation/test_walkforward.py}) verifica l'assenza di \emph{look-ahead bias}, ovvero l'uso implicito, durante la previsione, di informazione che a quel momento non sarebbe ancora disponibile. L'errore non farebbe fallire la pipeline, ma renderebbe silenziosamente i risultati migliori di quanto sarebbero in un impiego reale. La relativa logica è discussa nella \cref{sec:tc-walkforward}.
 
 \let\thesection\oldthesection
+\let\theHsection\oldtheHsection

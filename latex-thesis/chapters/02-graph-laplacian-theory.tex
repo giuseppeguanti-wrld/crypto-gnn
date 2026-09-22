@@ -1,0 +1,110 @@
+\chapter{Fondamenti matematici: teoria dei grafi e Laplaciano}
+\label{ch:graph-laplacian-theory}
+
+\section{Grafi pesati: definizioni e notazione}
+\label{sec:weighted-graphs-notation}
+
+L'Introduzione ha motivato l'esigenza di rappresentare esplicitamente le relazioni tra criptovalute, anziché trattare ciascun asset come serie isolata, e la panoramica del progetto appena vista ne ha mostrato il riscontro concreto nella pipeline di \texttt{cryptognn}. Questo capitolo costruisce l'apparato formale su cui quella rappresentazione poggia, muovendo dalla nozione di grafo pesato fino al Laplaciano e alla sua lettura spettrale.
+\begin{definition}[Grafo pesato]
+\label{def:weighted-graph}
+Un grafo pesato è una tripla $G = (V, E, W)$, dove $V = \{v_1, \dots, v_N\}$ è l'insieme dei nodi, $E \subseteq V \times V$ è l'insieme degli archi e $W \in \mathbb{R}^{N \times N}$ è la matrice dei pesi: $w_{ij} \neq 0$ se e solo se $(v_i, v_j) \in E$. Il grafo si assume non orientato e privo di \enquote{self-loop} (archi che collegano un nodo a se stesso): $W$ è simmetrica ($w_{ij} = w_{ji}$) e ha diagonale nulla ($w_{ii} = 0$).
+\end{definition}
+
+Quando $w_{ij} \in \{0,1\}$, $W$ coincide con la matrice di adiacenza del grafo non pesato sottostante, che codifica solo la presenza o assenza di un arco, senza informazioni sulla sua intensità. Nel caso generale, $w_{ij}$ misura l'intensità della relazione tra $v_i$ e $v_j$. A partire dal \Cref{ch:dynamic-correlation-graph}, questa intensità sarà la correlazione tra i rendimenti dei due asset. A ciascun nodo si associa un grado\footnote{Il termine \emph{grado} è propriamente riservato al caso non pesato, dove conta il numero di vicini di un nodo; per un grafo pesato la quantità $d_{ii} = \sum_j w_{ij}$ è più propriamente detta \emph{forza} (\emph{strength}) del nodo. Nel seguito si userà comunque \enquote{grado} anche nel caso pesato, per coerenza con la letteratura sulle GCN e con il codice del progetto.}, raccolto nella matrice diagonale $D \in \mathbb{R}^{N\times N}$, $d_{ii} = \sum_{j} w_{ij}$.
+
+Un cammino tra $v_i$ e $v_j$ è una sequenza di nodi $v_i = u_0, u_1, \dots, u_k = v_j$ tale che $(u_{t-1}, u_t) \in E$ per ogni $t = 1, \dots, k$. $G$ è connesso se esiste un cammino tra ogni coppia di nodi e si dice componente connessa un sottoinsieme massimale di nodi mutuamente raggiungibili.
+
+La densità del grafo, cioè il rapporto tra il numero di archi effettivamente presenti e il numero massimo di connessioni possibili tra $N$ nodi, $\binom{N}{2}$, sarà il parametro chiave nel confronto di costo con il VAR (\cref{sec:var-baseline}).
+
+\begin{remark}
+\label{rem:negative-weights}
+La \Cref{def:weighted-graph} non impone alcun vincolo di segno su $W$. Questo è rilevante perché il peso che si userà nel seguito, ovvero la correlazione di Pearson tra rendimenti, è per costruzione compreso in $[-1,1]$. Sia la semidefinita positività del Laplaciano (\cref{prop:psd}) sia la caratterizzazione della molteplicità dell'autovalore nullo (\cref{prop:zero-multiplicity}) valgono solo sotto l'ipotesi $w_{ij}\geq 0$. La correlazione, però, è per natura un dato con segno: la soluzione sarà proposta nel \Cref{ch:dynamic-correlation-graph}.
+\end{remark}
+
+\section{Il Laplaciano del grafo}
+\label{sec:graph-laplacian}
+
+Prima di fornirne la definizione formale, è opportuno capire cosa il Laplaciano rappresenti intuitivamente. Ad ogni nodo del grafo si assegna un valore, detto \emph{segnale}. Il Laplaciano confronta il segnale di ogni nodo con quello dei suoi vicini, pesato in base alla forza della connessione, misurando quanto il segnale vari localmente lungo gli archi del grafo, non il valore del segnale stesso. Questa nozione di variazione locale è utile per i seguenti motivi:
+
+\begin{description}
+    \item[Diffusione.] Se in un nodo si introduce una perturbazione localizzata — un virus in una rete sociale; il fallimento di una banca in un sistema finanziario — il Laplaciano descrive come e in quanto tempo quella perturbazione si propaga al resto del grafo.
+    \item[Gruppi.] Rivela se il grafo si organizza in sottoinsiemi isolati o debolmente connessi tra loro, ovvero gruppi di nodi fittamente collegati al proprio interno e poco collegati verso l'esterno.
+    \item[Stabilità.] Misura quanto rapidamente il grafo ritorni in equilibrio dopo una perturbazione localizzata in un punto qualsiasi.
+\end{description}
+
+\begin{definition}[Laplaciano del grafo]
+\label{def:laplacian}
+Il Laplaciano combinatorio di $G$ è la matrice $L = D - W \in \mathbb{R}^{N \times N}$. Si definisce inoltre il Laplaciano normalizzato simmetrico:
+$$L_{\mathrm{sym}} = I - D^{-1/2}WD^{-1/2} = D^{-1/2}LD^{-1/2}.$$
+\end{definition}
+
+Se i nodi hanno un grado molto eterogeneo, come accade quando Bitcoin è connesso con peso elevato a decine di altcoin mentre un asset minore partecipa ad un numero nettamente minore di collegamenti, il Laplaciano combinatorio $L$ assegna implicitamente più peso ai nodi ad alto grado, distorcendo il confronto tra i loro autovalori. $L_{\mathrm{sym}}$ corregge questa eterogeneità riscalando il peso di ogni arco in base al grado dei due nodi che collega. Nel seguito del capitolo si lavora però con il Laplaciano combinatorio $L$, le cui caratteristiche si dimostrano più direttamente e si trasferiscono, a meno dell'intervallo esatto degli autovalori, a $L_{\mathrm{sym}}$. Si presentano di seguito le proprietà fondamentali del Laplaciano del grafo, formulate rispetto ad un segnale generico $x \in \mathbb{R}^N$.
+
+\begin{proposition}[Forma quadratica del Laplaciano]
+\label{prop:quadratic-form}
+Per ogni $x \in \mathbb{R}^N$:
+$$x^\top L x = \frac{1}{2}\sum_{i,j} w_{ij}(x_i - x_j)^2.$$
+\end{proposition}
+
+\begin{proof}
+Espandendo il quadrato:
+$$\frac12\sum_{i,j}w_{ij}(x_i-x_j)^2 = \frac12\sum_{i,j}w_{ij}x_i^2 - \sum_{i,j}w_{ij}x_ix_j + \frac12\sum_{i,j}w_{ij}x_j^2.$$
+Per definizione di $d_{ii}$:
+$$\sum_{i,j}w_{ij}x_i^2 = \sum_i x_i^2 \sum_j w_{ij} = \sum_i d_{ii}x_i^2.$$
+Scambiando gli indici di somma e usando la simmetria di $W$:
+$$\sum_{i,j}w_{ij}x_j^2 = \sum_{i,j}w_{ji}x_i^2 = \sum_i d_{ii}x_i^2.$$
+I due termini quadratici coincidono entrambi con $x^\top Dx$, e la somma si riduce a
+\begin{equation*}
+x^\top Dx - x^\top Wx = x^\top(D-W)x = x^\top Lx. \qedhere
+\end{equation*}
+\end{proof}
+
+\begin{proposition}[Semidefinita positività]
+\label{prop:psd}
+Se $w_{ij}\geq 0$ per ogni arco, allora $L \succeq 0$, cioè tutti gli autovalori di $L$ sono non negativi.
+\end{proposition}
+
+\begin{proof}
+Ogni addendo $w_{ij}(x_i-x_j)^2$ nella \cref{prop:quadratic-form} è non negativo, quindi $x^\top Lx \geq 0$ per ogni $x$. \qedhere
+\end{proof}
+
+Se invece si ammettono pesi negativi, caso segnalato nella \cref{rem:negative-weights}, la somma può contenere addendi negativi: $x^\top Lx$ non è più garantito essere non negativo e la \cref{prop:psd} non si applica. Per evitare questo comportamento, il progetto non utilizza direttamente la correlazione di Pearson $\rho_{ij}$ tra i rendimenti degli asset $i$ e $j$ come peso, ma applica preventivamente la trasformazione di Mantegna~\cite{mantegna1999hierarchical}, ripresa per esteso nel \cref{ch:dynamic-correlation-graph}, che mappa la correlazione — con segno, in $[-1,1]$ — in un peso non negativo compreso in $[0,1]$. Il problema del segno è dunque risolto interamente in fase di costruzione del grafo.
+
+\begin{proposition}[Molteplicità dell'autovalore nullo]
+\label{prop:zero-multiplicity}
+Sotto l'ipotesi $w_{ij}\geq 0$, ora garantita in pratica dalla trasformazione di Mantegna, la molteplicità dell'autovalore $0$ di $L$ è pari al numero di componenti connesse di $G$.
+\end{proposition}
+
+\begin{proof}
+Siano $C_1,\dots,C_m$ le componenti connesse di $G$ e $\mathbf{1}_{C_k}\in\mathbb{R}^N$ il vettore indicatore di $C_k$\footnote{Il vettore indicatore (o vettore caratteristico) di un sottoinsieme $C\subseteq V$ è il vettore $\mathbf{1}_C\in\mathbb{R}^N$ le cui componenti valgono $(\mathbf{1}_C)_i=1$ se $v_i\in C$ e $(\mathbf{1}_C)_i=0$ altrimenti.}. Per $i \in C_k$, tutti i vicini di $i$ appartengono a $C_k$ (non essendoci archi tra componenti diverse), quindi $(L\mathbf{1}_{C_k})_i = d_{ii} - \sum_{j} w_{ij}(\mathbf{1}_{C_k})_j = d_{ii} - d_{ii} = 0$; per $i \notin C_k$, sia $(\mathbf{1}_{C_k})_i$ sia ogni $w_{ij}$ con $j \in C_k$ sono nulli. Dunque $L\mathbf{1}_{C_k}=0$ per ogni $k$, e i vettori $\mathbf{1}_{C_1},\dots,\mathbf{1}_{C_m}$, avendo supporti disgiunti, sono linearmente indipendenti: la molteplicità di $0$ è almeno $m$.
+
+Viceversa, sia $x\in\ker(L)$, cioè $Lx=0$: allora $x^\top Lx = x^\top(Lx) = 0$, e la \cref{prop:quadratic-form} impone $w_{ij}(x_i-x_j)^2=0$ per ogni coppia $(i,j)$: dato che i pesi sono non negativi, ciò forza $x_i=x_j$ per ogni arco di peso non nullo, quindi $x$ è costante su ciascuna componente connessa, cioè $x\in\mathrm{span}\{\mathbf{1}_{C_1},\dots,\mathbf{1}_{C_m}\}$. Il nucleo di $L$ è allora esattamente questo spazio, di dimensione $m$: essendo $L$ simmetrico, questa molteplicità geometrica coincide con quella algebrica~\cite{chung1997spectral}. \qedhere
+\end{proof}
+
+La forma quadratica misura quanto un segnale $x$ definito sui nodi del grafo sia \enquote{irregolare}, nel senso di assumere valori molto diversi tra nodi fortemente connessi. Un segnale costante su ogni componente ha forma quadratica nulla; un segnale che oscilla bruscamente tra nodi vicini ha forma quadratica elevata. Applicata agli autovettori di $L$ piuttosto che ad un segnale generico, questa nozione di irregolarità suggerisce un'idea di \enquote{frequenza} del grafo.
+
+\section{Analisi spettrale: autovalori e autovettori}
+\label{sec:spectral-analysis}
+
+Per rendere precisa l'analogia tra irregolarità di un segnale e frequenza serve un modo per scomporre $L$ nelle sue componenti elementari: autovettori e autovalori.
+
+\begin{theorem}[Decomposizione spettrale del Laplaciano]
+\label{thm:spectral-decomposition}
+Essendo $L$ simmetrica e reale, esiste una decomposizione
+$$L = U\Lambda U^\top,$$
+con $U \in \mathbb{R}^{N\times N}$ ortogonale ($U^\top U = I$) le cui colonne $u_1,\dots,u_N$ sono autovettori di $L$ a norma unitaria e $\Lambda = \mathrm{diag}(\lambda_1,\dots,\lambda_N)$ la matrice diagonale dei corrispondenti autovalori, ordinati $0 = \lambda_1 \leq \lambda_2 \leq \dots \leq \lambda_N$ (l'ordinamento a partire da $\lambda_1=0$ segue dalla \cref{prop:psd} e dalla \cref{prop:zero-multiplicity}).
+\end{theorem}
+
+Chiamando $\lambda_1,\dots,\lambda_N$ lo spettro di $L$, il \cref{thm:spectral-decomposition} fornisce lo strumento per estendere l'interpretazione della \cref{prop:quadratic-form} da un segnale generico $x$ ad un singolo autovettore $u_k$: poiché il teorema garantisce che ogni $u_k$ abbia norma unitaria,
+$$\lambda_k = u_k^\top L u_k = \frac12\sum_{i,j}w_{ij}\big(u_k(i)-u_k(j)\big)^2,$$
+dove $u_k(i)$ denota la $i$-esima componente di $u_k$. L'autovalore $\lambda_k$ è quindi la misura di irregolarità del proprio autovettore, nel senso fissato nella \cref{sec:graph-laplacian}.
+
+Gli autovettori a basso indice, con $\lambda_k$ piccolo, variano poco tra nodi fortemente connessi e si dicono \emph{modi lisci}; quelli ad alto indice, con $\lambda_k$ grande, oscillano invece bruscamente tra nodi in stretta relazione e prendono il nome di \emph{modi oscillanti}. L'analogia con il concetto di frequenza di un segnale nel tempo è immediata: una bassa frequenza descrive un'onda che varia lentamente; una frequenza elevata un'onda che oscilla rapidamente. In modo analogo, un $\lambda_k$ piccolo corrisponde ad un modo quasi costante sul grafo, mentre un $\lambda_k$ grande rappresenta un modo che cambia segno da un nodo all'altro. Il termine \enquote{frequenza} sarà quindi utilizzato nel seguito per indicare gli autovalori di $L$.
+
+Tra queste frequenze, la prima non banale merita un'attenzione particolare. Assumendo $G$ connesso, la \cref{prop:zero-multiplicity} assegna molteplicità $1$ all'autovalore $\lambda_1=0$. Il modo $u_1$, a irregolarità nulla, è dunque costante su tutto il grafo ed è l'unico a non portare alcuna informazione sulla sua struttura. Il primo autovalore informativo è dunque $\lambda_2$. Quest'ultimo è, tra tutti i segnali non costanti sul grafo, ortogonali al modo costante $u_1$, il valore più piccolo che la forma quadratica della \cref{prop:quadratic-form} può assumere:
+$$\lambda_2 = \min_{\substack{x\neq 0 \\ x\perp u_1}} \frac{x^\top Lx}{x^\top x}.$$
+In altre parole, qualunque segnale non costante si scelga, la somma pesata delle sue variazioni tra nodi collegati non può mai scendere sotto $\lambda_2$. Questo rende $\lambda_2$ sensibile alla rimozione di un singolo arco $(i,j)$: l'operazione abbassa il valore della forma quadratica di $w_{ij}(x_i-x_j)^2$ per ogni segnale $x$, mentre il vincolo $x\perp u_1$ resta lo stesso, dato che il vettore costante $u_1$ appartiene al nucleo del Laplaciano qualunque siano i pesi (\cref{prop:zero-multiplicity}). Il minimo di una quantità che può solo diminuire, calcolato su un dominio invariato, non può quindi aumentare: $\lambda_2$ non cresce mai per rimozione di un arco. La sua diminuzione, però, non è affatto limitata dal peso dell'arco rimosso: se quell'arco è l'unico a connettere due parti del grafo, la sua rimozione disconnette $G$ e porta $\lambda_2$ esattamente a $0$ (\cref{prop:zero-multiplicity}), per quanto piccolo fosse il suo peso. Se il valore di partenza è invece elevato, portarlo a $0$ richiede la rimozione cumulativa di molti archi. L'autovalore $\lambda_2$ misura quindi quanto il grafo resista alla rimozione di archi: quanto più il suo valore è grande, tanto più risulta difficile disconnetterlo. Per questo motivo, $\lambda_2$ prende il nome di \emph{connettività algebrica}.
+
+L'autovettore $u_2$ associato a $\lambda_2$, detto \emph{vettore di Fiedler}, è il segnale non costante che realizza questo minimo.
+
+Questa logica suggerisce un modo naturale per misurare il compattamento del grafo di correlazione durante i periodi di crisi, tramite un aumento generalizzato di $\lambda_2$ dovuto a connessioni più forti e più diffuse. Nel \Cref{ch:topological-evolution} questa idea viene applicata direttamente alla serie storica del grafo di correlazione del progetto.

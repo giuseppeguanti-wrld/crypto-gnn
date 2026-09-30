@@ -124,11 +124,11 @@ La prima riguarda la scala. Una variazione assoluta di \$100 produce un impatto 
 
 La seconda è la stazionarietà. Una serie temporale $\{x_t\}$ si dice stazionaria in senso debole (o stazionaria in media e varianza) se il valore atteso, la varianza e la funzione di autocovarianza $\mathrm{Cov}(x_t, x_{t+h})$ risultano invarianti rispetto al tempo $t$, dipendendo esclusivamente dal ritardo $h$
 $$\mathbb{E}[x_t] = \mu, \quad \mathrm{Var}(x_t) = \sigma^2, \quad \mathrm{Cov}(x_t, x_{t+h}) = \gamma(h).$$
-La serie dei prezzi $\{P_t\}$ non soddisfa il requisito di stazionarietà. Formalizzando il processo come un cammino aleatorio privo di deriva
-$$P_t = P_{t-1} + \varepsilon_t, \quad \text{con } \mathbb{E}[\varepsilon_t] = 0 \text{ e } \mathrm{Var}(\varepsilon_t) = \sigma^2,$$
-la varianza incondizionata al tempo $t$ è pari a
+La serie dei prezzi $\{P_t\}$ non soddisfa il requisito di stazionarietà. Formalizzando il processo come un cammino aleatorio privo di deriva, a partire da un prezzo iniziale $P_0$ noto,
+$$P_t = P_{t-1} + \varepsilon_t,$$
+con incrementi $\varepsilon_t \sim \mathcal{N}(0,\sigma^2)$ indipendenti\footnote{La normalità è la specificazione classica del modello. Il risultato vale per qualunque distribuzione degli incrementi con media nulla e varianza $\sigma^2$, e i rendimenti osservati non sono normali (\cref{sec:stylized-facts}).}, la varianza al tempo $t$ è pari a
 $$\mathrm{Var}(P_t) = t\sigma^2.$$
-La dipendenza lineare della varianza da $t$ implica un'espansione indefinita della dispersione al procedere del tempo, violando la condizione di stazionarietà. Applicando l'operatore di differenza al logaritmo dei prezzi, come nell'equazione~\eqref{eq:price-returns}, si ottiene una serie trasformata a varianza costante nel tempo.
+La dipendenza lineare della varianza da $t$ implica un'espansione indefinita della dispersione al procedere del tempo, violando la condizione di stazionarietà. Differenziare la serie elimina l'accumulo degli incrementi che fa crescere la varianza: sotto questo modello, $P_t - P_{t-1} = \varepsilon_t$ ha varianza costante $\sigma^2$. I log-rendimenti dell'equazione~\eqref{eq:price-returns} applicano la stessa operazione al logaritmo dei prezzi, così da risolvere anche il problema di scala.
 
 Per queste ragioni, la modellistica finanziaria adotta la serie dei rendimenti anziché quella dei prezzi, articolata nelle due principali varianti operative:
 \begin{equation}
@@ -216,7 +216,9 @@ Skewness ed excess kurtosis sono inoltre affiancate, nella pipeline di progetto,
 
 \input{tables/tab_universe}
 
-Il mercato delle criptovalute presenta alcune specificità strutturali rilevanti per lo studio. Opera 24/7, senza aperture, chiusure né sospensioni, producendo un campionamento temporale uniforme che elimina i salti di prezzo overnight tipici dell'azionario, una semplificazione tecnica non trascurabile poiché l'allineamento delle serie su mercati con orari diversi è una delle maggiori fonti di errore nella stima delle correlazioni. L'estrema eterogeneità delle capitalizzazioni, con pochi asset a capitalizzazione elevata e una coda lunghissima di token minori, rende la scelta delle criptovalute da includere in $V$ non neutra, poiché i token meno liquidi\footnote{La liquidità di un asset misura quanto sia facile scambiarlo, senza alterarne significativamente il prezzo. Un asset liquido ha volumi di scambio elevati, al contrario di uno illiquido. Il prezzo di quest'ultimo è di conseguenza più sensibile a singoli ordini e più rumoroso.} hanno serie rumorose e producono archi spuri.
+% \clubpenalty locale: impedisce che la prima riga del paragrafo resti isolata sotto la Tabella 3.1.
+{\clubpenalty=10000
+Il mercato delle criptovalute presenta alcune specificità strutturali rilevanti per lo studio. Opera 24/7, senza aperture, chiusure né sospensioni, producendo un campionamento temporale uniforme che elimina i salti di prezzo overnight tipici dell'azionario, una semplificazione tecnica non trascurabile poiché l'allineamento delle serie su mercati con orari diversi è una delle maggiori fonti di errore nella stima delle correlazioni. L'estrema eterogeneità delle capitalizzazioni, con pochi asset a capitalizzazione elevata e una coda lunghissima di token minori, rende la scelta delle criptovalute da includere in $V$ non neutra, poiché i token meno liquidi\footnote{La liquidità di un asset misura quanto sia facile scambiarlo, senza alterarne significativamente il prezzo. Un asset liquido ha volumi di scambio elevati, al contrario di uno illiquido. Il prezzo di quest'ultimo è di conseguenza più sensibile a singoli ordini e più rumoroso.} hanno serie rumorose e producono archi spuri.\par}
 
 \section{Correlazione e dipendenza tra asset}
 \label{sec:correlation-dependence-pitfalls}
@@ -226,7 +228,7 @@ La costruzione del grafo richiede un modo per misurare quanto le criptovalute si
 \label{eq:pearson}
 \rho_{ij} = \frac{\mathrm{Cov}(r^{(i)},r^{(j)})}{\sqrt{\mathrm{Var}(r^{(i)})\,\mathrm{Var}(r^{(j)})}} \in [-1,1],
 \end{equation}
-che misura l'intensità della relazione \emph{lineare} tra le due serie temporali di rendimenti $r^{(i)}$ e $r^{(j)}$. La definizione~\eqref{eq:pearson} presuppone però che questa relazione resti invariata lungo tutto il campione, il che consentirebbe di stimare un solo $\rho_{ij}$. In realtà la dipendenza tra le criptovalute cambia a seconda del regime di mercato (\cref{sec:crypto-market-interconnected}), e una correlazione stimata sull'intero periodo descriverebbe una media che in nessun momento corrisponde alla struttura del mercato. Si stima quindi $\rho$ su una finestra mobile di ampiezza $T_w$, ottenendo una sequenza di matrici $\{C_t\}$ con $C_t\in\mathbb{R}^{N\times N}$ calcolata sulle osservazioni dei rendimenti $r$ (\cref{sec:returns-stationarity}) da $t-T_w+1$ a $t$.
+che misura l'intensità della relazione \emph{lineare} tra le due serie temporali di rendimenti $r^{(i)}$ e $r^{(j)}$. La definizione~\eqref{eq:pearson} presuppone però che questa relazione resti invariata lungo tutto il campione, il che consentirebbe di stimare un solo $\rho_{ij}$. In realtà la dipendenza tra le criptovalute cambia a seconda del regime di mercato (\cref{sec:crypto-market-interconnected} dell'Introduzione), e una correlazione stimata sull'intero periodo descriverebbe una media che in nessun momento corrisponde alla struttura del mercato. Si stima quindi $\rho$ su una finestra mobile di ampiezza $T_w$, ottenendo una sequenza di matrici $\{C_t\}$ con $C_t\in\mathbb{R}^{N\times N}$ calcolata sulle osservazioni dei rendimenti $r$ (\cref{sec:returns-stationarity}) da $t-T_w+1$ a $t$.
 
 La scelta di $T_w$ è un compromesso tra distorsione e varianza. La matrice $C_t$ ha $N(N-1)/2$ entrate indipendenti stimate dalle stesse $T_w$ osservazioni, una per ciascuna coppia distinta di asset. Quanto più $T_w$ è piccolo rispetto al numero di coefficienti da stimare, tanto meno ciascuna correlazione campionaria è vincolata dai dati, e tanto più la matrice risultante riflette il rumore di campionamento invece della struttura reale. Una finestra corta reagisce prontamente ai cambiamenti di regime ma produce stime rumorose; una finestra lunga dà stime stabili, al prezzo di reagire in ritardo e di mescolare regimi diversi. Il parametro che governa il fenomeno è il rapporto
 $$q = \frac{N}{T_w}.$$
@@ -311,7 +313,7 @@ def mantegna_weights(corr: np.ndarray) -> np.ndarray:
 \label{lst:mantegna-weights}
 \end{listing}
 
-La diagonale di $w_{ij}$ è posta a zero: senza questo accorgimento varrebbe $w_{ii}=1$, poiché la correlazione di un asset con sé stesso è $\rho_{ii}=1$, da cui $d_{ii}=0$ — un self-loop già presente in \texttt{weights} ($W$). Sommato all'$I$ del renormalization trick del \cref{ch:forecasting-models}, il self-loop verrebbe contato due volte anziché una.
+La diagonale di $W$ è posta a zero. Poiché la correlazione di un asset con sé stesso è $\rho_{ii}=1$, la distanza corrispondente è nulla e, per l'equazione~\eqref{eq:mantegna-weight}, il peso vale $w_{ii}=1$. Senza l'azzeramento ogni nodo avrebbe quindi un self-loop di peso unitario, escluso dalla \cref{def:weighted-graph}, che sommato all'$I$ del renormalization trick del \cref{ch:forecasting-models} verrebbe contato due volte anziché una.
 
 \subsection{Strategie di filtraggio degli archi}
 \label{sec:edge-filtering-strategies}
@@ -365,6 +367,7 @@ Il grafo ottenuto dall'equazione~\eqref{eq:mantegna-weight} è completo: ogni co
 \centering
 \caption[Confronto tra le strategie di costruzione del grafo]{Confronto tra le strategie di filtraggio. $N$ è il numero di asset, $\tau$ la soglia di correlazione, $k$ il numero di vicini mantenuti per nodo.}
 \label{tab:graph-construction}
+\small
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Strategia} & \textbf{Archi} & \textbf{Parametri} & \textbf{Connessione} & \textbf{Substrato GNN} \\

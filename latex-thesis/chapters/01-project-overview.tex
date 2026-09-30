@@ -44,7 +44,10 @@ project-thesis/
 \section{Suite di test}
 \label{sec:project-tests}
 
-La correttezza dell'intera pipeline è garantita da una suite di $568$ test in \path{tests/}, la cui struttura rispecchia quella di \path{src/cryptognn/}. In particolare, la classe \texttt{TestNoLookAhead} (\path{tests/evaluation/test_walkforward.py}) verifica l'assenza di \emph{look-ahead bias}, ovvero l'uso implicito, durante la previsione, di informazione che a quel momento non sarebbe ancora disponibile. L'errore non farebbe fallire la pipeline, ma renderebbe silenziosamente i risultati migliori di quanto sarebbero in un impiego reale. La relativa logica è discussa nella \cref{sec:tc-walkforward}.
+% sloppypar: TestNoLookAhead non è sillababile e altrimenti sborda dal margine.
+\begin{sloppypar}
+L'affidabilità della pipeline è sostenuta da una suite di $566$ test in \path{tests/}, la cui struttura rispecchia quella di \path{src/cryptognn/}, che verificano il comportamento atteso di ciascun componente nei casi considerati. In particolare, la classe \texttt{TestNoLookAhead} (\path{tests/evaluation/test_walkforward.py}) verifica l'assenza di \emph{look-ahead bias}, ovvero l'uso implicito, durante la previsione, di informazione che a quel momento non sarebbe ancora disponibile. L'errore non farebbe fallire la pipeline, ma renderebbe silenziosamente i risultati migliori di quanto sarebbero in un impiego reale. La relativa logica è discussa nella \cref{sec:tc-walkforward}.
+\end{sloppypar}
 
 \let\thesection\oldthesection
 \let\theHsection\oldtheHsection

@@ -327,6 +327,7 @@ Si ottengono quindi quattro configurazioni, ciascuna delle quali è addestrata, 
 \centering
 \caption[MSE di validazione sulla griglia GCN]{MSE di validazione medio sui $24$ fold per ciascuna cella della griglia fissata, per i due bracci dell'ablation.}
 \label{tab:tc-gcn-grid}
+\small
 \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}rrrr@{}}
 \toprule
 \textbf{Hidden units} & \textbf{Dropout} & \textbf{GCN} & \textbf{GCN senza grafo} \\
@@ -343,6 +344,7 @@ $32$ & $0{,}5$ & $0{,}001725$ & $0{,}001733$ \\
 \centering
 \caption[Esito della selezione sulla griglia GCN]{Configurazione più spesso selezionata sui $24$ fold, con il suo MSE di validazione, le epoche medie di addestramento e la quota di addestramenti interrotti dall'early stopping.}
 \label{tab:tc-gcn-selection}
+\small
 \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcrrr@{}}
 \toprule
 \textbf{Braccio} & \textbf{Configurazione} & \textbf{MSE val.} & \textbf{Epoche} & \textbf{Early stop} \\
@@ -592,6 +594,7 @@ La media sul pannello nasconde le differenze tra i quindici asset, che si distin
 \centering
 \caption[Skill score per asset]{Skill score contro la previsione nulla dello stesso asset, per i due bracci della GCN.}
 \label{tab:tc-skill-by-asset}
+\small
 \begin{tabular}{@{}lrr@{}}
 \toprule
 \textbf{Asset} & \textbf{GCN} & \textbf{GCN senza grafo} \\
